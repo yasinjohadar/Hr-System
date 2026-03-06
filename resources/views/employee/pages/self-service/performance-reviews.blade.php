@@ -24,8 +24,8 @@
                                 <div class="card">
                                     <div class="card-body">
                                         <h6 class="card-title">تقييم الأداء</h6>
-                                        <p class="mb-2"><strong>الفترة:</strong> {{ $review->review_period_start->format('Y-m-d') }} - {{ $review->review_period_end->format('Y-m-d') }}</p>
-                                        <p class="mb-2"><strong>تاريخ التقييم:</strong> {{ $review->review_date->format('Y-m-d') }}</p>
+                                        <p class="mb-2"><strong>الفترة:</strong> {{ $review->review_period_start?->format('Y-m-d') ?? '-' }} - {{ $review->review_period_end?->format('Y-m-d') ?? '-' }}</p>
+                                        <p class="mb-2"><strong>تاريخ التقييم:</strong> {{ $review->review_date?->format('Y-m-d') ?? '-' }}</p>
                                         <p class="mb-2"><strong>المقيّم:</strong> {{ $review->reviewer->name ?? '-' }}</p>
                                         <p class="mb-2">
                                             <strong>التقييم الإجمالي:</strong>

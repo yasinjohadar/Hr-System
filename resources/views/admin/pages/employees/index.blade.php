@@ -214,6 +214,16 @@
                                                         <i class="fa-solid fa-eye"></i>
                                                     </a>
                                                     @endcan
+                                                    @if($employee->user_id && $employee->user && $employee->user->is_active)
+                                                        @can('employee-show')
+                                                        <form action="{{ route('admin.employees.login-as', $employee) }}" method="POST" class="d-inline">
+                                                            @csrf
+                                                            <button type="submit" class="btn btn-outline-secondary btn-sm me-1" title="الدخول كموظف">
+                                                                <i class="fa-solid fa-right-to-bracket"></i>
+                                                            </button>
+                                                        </form>
+                                                        @endcan
+                                                    @endif
                                                     @can('employee-delete')
                                                     <a class="btn btn-danger btn-sm me-1" data-bs-toggle="modal"
                                                         data-bs-target="#delete{{ $employee->id }}"

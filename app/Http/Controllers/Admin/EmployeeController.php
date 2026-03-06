@@ -9,7 +9,10 @@ use App\Models\Position;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class EmployeeController extends Controller
 {
@@ -20,7 +23,7 @@ class EmployeeController extends Controller
         $this->middleware('permission:employee-create')->only(['create', 'store']);
         $this->middleware('permission:employee-edit')->only(['edit', 'update']);
         $this->middleware('permission:employee-delete')->only('destroy');
-        $this->middleware('permission:employee-show')->only('show');
+        $this->middleware('permission:employee-show')->only(['show', 'loginAs', 'generateLoginCode']);
     }
 
     /**
@@ -302,5 +305,51 @@ class EmployeeController extends Controller
         $employee->delete();
 
         return redirect()->route("admin.employees.index")->with("success", "تم حذف الموظف بنجاح");
+    }
+
+    /**
+     * الدخول بحساب الموظف (نسخ الجلسة) بدون كلمة مرور.
+     */
+    public function loginAs(Employee $employee)
+    {
+        if (!$employee->user_id) {
+            return redirect()->back()->with('error', 'هذا الموظف غير مرتبط بحساب دخول.');
+        }
+
+        $user = $employee->user;
+        if (!$user || !$user->is_active) {
+            return redirect()->back()->with('error', 'حساب الموظف غير نشط.');
+        }
+
+        session()->put('impersonator_id', Auth::id());
+        Auth::login($user);
+
+        return redirect()->route('employee.dashboard')->with('success', 'تم الدخول بحساب الموظف.');
+    }
+
+    /**
+     * إنشاء كود دخول لمرة واحدة لاستخدامه في متصفح آخر.
+     */
+    public function generateLoginCode(Employee $employee)
+    {
+        if (!$employee->user_id) {
+            return response()->json(['error' => 'هذا الموظف غير مرتبط بحساب دخول.'], 422);
+        }
+
+        $user = $employee->user;
+        if (!$user || !$user->is_active) {
+            return response()->json(['error' => 'حساب الموظف غير نشط.'], 422);
+        }
+
+        $code = Str::random(12);
+        $cacheKey = 'employee_login_code:' . $code;
+        Cache::put($cacheKey, ['employee_id' => $employee->id], now()->addMinutes(15));
+
+        $url = route('employee.login-by-code', ['code' => $code]);
+
+        return response()->json([
+            'code' => $code,
+            'url' => $url,
+        ]);
     }
 }

@@ -43,6 +43,22 @@
                             <span class="badge bg-{{ $employee->is_active ? 'success' : 'danger' }} fs-14">
                                 {{ $employee->is_active ? 'نشط' : 'غير نشط' }}
                             </span>
+                            @if($employee->user_id && $employee->user && $employee->user->is_active)
+                                @can('employee-show')
+                                <div class="mt-3">
+                                    <form action="{{ route('admin.employees.login-as', $employee) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-outline-primary btn-sm" title="الدخول بحساب الموظف بدون كلمة مرور">
+                                            <i class="fas fa-user-secret me-1"></i>الدخول كموظف
+                                        </button>
+                                    </form>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm ms-1" id="btnLoginCode" title="كود دخول لمتصفح آخر"
+                                            data-url="{{ route('admin.employees.login-code', $employee) }}">
+                                        <i class="fas fa-link me-1"></i>كود دخول لمتصفح آخر
+                                    </button>
+                                </div>
+                                @endcan
+                            @endif
                         </div>
                     </div>
 
@@ -232,4 +248,90 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal كود الدخول لمتصفح آخر -->
+    <div class="modal fade" id="loginCodeModal" tabindex="-1" aria-labelledby="loginCodeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="loginCodeModalLabel">كود دخول لمتصفح آخر</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-3">صالح لمدة 15 دقيقة ولا يعمل إلا مرة واحدة. انسخ الرابط وافتحه في المتصفح الآخر.</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">الكود</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="loginCodeValue" readonly>
+                            <button class="btn btn-outline-secondary" type="button" id="copyCodeBtn" title="نسخ الكود">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label fw-bold">الرابط</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="loginCodeUrl" readonly>
+                            <button class="btn btn-outline-secondary" type="button" id="copyUrlBtn" title="نسخ الرابط">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 @stop
+
+@section('js')
+<script>
+(function() {
+    const btn = document.getElementById('btnLoginCode');
+    if (!btn) return;
+    const modal = new bootstrap.Modal(document.getElementById('loginCodeModal'));
+    const codeInput = document.getElementById('loginCodeValue');
+    const urlInput = document.getElementById('loginCodeUrl');
+    const copyCodeBtn = document.getElementById('copyCodeBtn');
+    const copyUrlBtn = document.getElementById('copyUrlBtn');
+    const url = btn.getAttribute('data-url');
+
+    btn.addEventListener('click', function() {
+        btn.disabled = true;
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({})
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.error) {
+                alert(data.error);
+                btn.disabled = false;
+                return;
+            }
+            codeInput.value = data.code || '';
+            urlInput.value = data.url || '';
+            modal.show();
+            btn.disabled = false;
+        })
+        .catch(function() {
+            alert('حدث خطأ أثناء إنشاء الكود.');
+            btn.disabled = false;
+        });
+    });
+
+    function copyToClipboard(el) {
+        el.select();
+        document.execCommand('copy');
+        return false;
+    }
+    copyCodeBtn.addEventListener('click', function() { copyToClipboard(codeInput); });
+    copyUrlBtn.addEventListener('click', function() { copyToClipboard(urlInput); });
+})();
+</script>
+@endsection

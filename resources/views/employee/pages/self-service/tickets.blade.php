@@ -11,6 +11,11 @@
                 <div class="my-auto">
                     <h5 class="page-title fs-21 mb-1">التذاكر</h5>
                 </div>
+                <div>
+                    <a href="{{ route('employee.tickets.create') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>تذكرة جديدة
+                    </a>
+                </div>
             </div>
 
             <div class="card">
@@ -36,7 +41,7 @@
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $ticket->ticket_code }}</td>
-                                        <td>{{ $ticket->subject }}</td>
+                                        <td>{{ $ticket->title }}</td>
                                         <td><span class="badge bg-info">{{ $ticket->category_name_ar }}</span></td>
                                         <td>
                                             <span class="badge bg-{{ $ticket->priority == 'high' ? 'danger' : ($ticket->priority == 'medium' ? 'warning' : 'info') }}">

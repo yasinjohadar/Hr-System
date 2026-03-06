@@ -46,5 +46,14 @@ class AdminUserSeeder extends Seeder
         ];
 
         $userRole->syncPermissions($userPermissions);
+
+        // إنشاء دور الموظف (لوحة التحكم الذاتية فقط، بدون صلاحيات الإدارة)
+        $employeeRole = Role::firstOrCreate(['name' => 'employee']);
+        $employeePermissions = [
+            'dashboard-view',
+        ];
+        $employeeRole->syncPermissions(
+            Permission::whereIn('name', $employeePermissions)->pluck('name')
+        );
     }
 }

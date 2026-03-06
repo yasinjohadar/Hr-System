@@ -1,13 +1,17 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 
 Route::get('/', function () {
-    return redirect()->route('admin.dashboard');
+    return Auth::user()->hasRole('employee')
+        ? redirect()->route('employee.dashboard')
+        : redirect()->route('admin.dashboard');
 })->middleware('auth');
 
 Route::get('/dashboard', function () {
@@ -18,6 +22,7 @@ Route::middleware(['auth', 'check.user.active'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::post('leave-impersonation', [ImpersonationController::class, 'leave'])->name('leave-impersonation');
 
     // Admin routes
     Route::resource('users', UserController::class);

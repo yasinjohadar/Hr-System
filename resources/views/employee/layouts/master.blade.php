@@ -43,6 +43,18 @@
         @include('employee.layouts.main-sidebar')
 
 
+        @if(session('impersonator_id'))
+        <div class="alert alert-warning alert-dismissible fade show rounded-0 mb-0 border-0" role="alert">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <span><i class="fas fa-user-secret me-2"></i>أنت تدخل بحساب الموظف. للعودة إلى لوحة الإدارة:</span>
+                <form action="{{ route('leave-impersonation') }}" method="POST" class="d-inline">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-dark">خروج من حساب الموظف</button>
+                </form>
+            </div>
+        </div>
+        @endif
+
         @yield('content')
 
 

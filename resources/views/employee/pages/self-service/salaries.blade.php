@@ -61,6 +61,46 @@
                     </div>
                 </div>
             </div>
+
+            @if(isset($payrolls) && $payrolls->isNotEmpty())
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">كشوف الرواتب الشهرية — تحميل القسيمة PDF</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>كود الكشف</th>
+                                    <th>الشهر/السنة</th>
+                                    <th>الصافي</th>
+                                    <th>الحالة</th>
+                                    <th>إجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($payrolls as $p)
+                                    <tr>
+                                        <td>{{ $loop->iteration }}</td>
+                                        <td>{{ $p->payroll_code }}</td>
+                                        <td>{{ $p->month_name ?? $p->payroll_month }}/{{ $p->payroll_year }}</td>
+                                        <td>{{ $p->net_salary ? number_format($p->net_salary, 2) : '-' }} {{ $p->currency->symbol ?? $p->currency->code ?? 'ر.س' }}</td>
+                                        <td><span class="badge bg-{{ $p->status === 'approved' || $p->status === 'paid' ? 'success' : 'warning' }}">{{ $p->status_name_ar }}</span></td>
+                                        <td>
+                                            <a href="{{ route('employee.payrolls.payslip.pdf', $p->id) }}" class="btn btn-sm btn-primary" target="_blank">
+                                                <i class="fas fa-file-pdf me-1"></i>تحميل PDF
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            @endif
         </div>
     </div>
 @stop

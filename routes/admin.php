@@ -76,7 +76,7 @@ use App\Http\Controllers\Admin\ContractController;
 use App\Http\Controllers\Admin\EmployeeJobChangeController;
 use App\Http\Controllers\Admin\PolicyController;
 
-Route::middleware(['auth', 'check.user.active'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'check.user.active', 'ensure.admin'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
@@ -88,6 +88,8 @@ Route::middleware(['auth', 'check.user.active'])->prefix('admin')->name('admin.'
     Route::post('contracts/{contract}/renew', [ContractController::class, 'storeRenew'])->name('contracts.store-renew');
     Route::resource('contracts', ContractController::class);
     // Routes للموظفين
+    Route::post('employees/{employee}/login-code', [EmployeeController::class, 'generateLoginCode'])->name('employees.login-code');
+    Route::post('employees/{employee}/login-as', [EmployeeController::class, 'loginAs'])->name('employees.login-as');
     Route::resource('employees', EmployeeController::class);
 
     // Routes للتغييرات الوظيفية (النقل والترقية)

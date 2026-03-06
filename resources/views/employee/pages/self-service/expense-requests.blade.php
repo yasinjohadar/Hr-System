@@ -11,6 +11,11 @@
                 <div class="my-auto">
                     <h5 class="page-title fs-21 mb-1">طلبات المصروفات</h5>
                 </div>
+                <div>
+                    <a href="{{ route('employee.expense-requests.create') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>طلب مصروفات جديد
+                    </a>
+                </div>
             </div>
 
             <div class="card">
@@ -25,7 +30,7 @@
                                     <th>#</th>
                                     <th>التاريخ</th>
                                     <th>التصنيف</th>
-                                    <th>العنوان</th>
+                                    <th>الوصف</th>
                                     <th>المبلغ</th>
                                     <th>الحالة</th>
                                     <th>الإجراءات</th>
@@ -35,9 +40,9 @@
                                 @forelse ($expenseRequests as $request)
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
-                                        <td>{{ $request->request_date->format('Y-m-d') }}</td>
+                                        <td>{{ $request->expense_date->format('Y-m-d') }}</td>
                                         <td>{{ $request->category->name_ar ?? $request->category->name }}</td>
-                                        <td>{{ $request->title }}</td>
+                                        <td>{{ \Illuminate\Support\Str::limit($request->description, 40) }}</td>
                                         <td>
                                             {{ number_format($request->amount, 2) }} 
                                             {{ $request->currency->symbol ?? $request->currency->code ?? '' }}
@@ -65,15 +70,15 @@
                                                 <div class="modal-body">
                                                     <div class="row mb-3">
                                                         <div class="col-md-6"><strong>التاريخ:</strong></div>
-                                                        <div class="col-md-6">{{ $request->request_date->format('Y-m-d') }}</div>
+                                                        <div class="col-md-6">{{ $request->expense_date->format('Y-m-d') }}</div>
                                                     </div>
                                                     <div class="row mb-3">
                                                         <div class="col-md-6"><strong>التصنيف:</strong></div>
                                                         <div class="col-md-6">{{ $request->category->name_ar ?? $request->category->name }}</div>
                                                     </div>
                                                     <div class="row mb-3">
-                                                        <div class="col-md-6"><strong>العنوان:</strong></div>
-                                                        <div class="col-md-6">{{ $request->title }}</div>
+                                                        <div class="col-md-6"><strong>الوصف:</strong></div>
+                                                        <div class="col-md-6">{{ $request->description }}</div>
                                                     </div>
                                                     <div class="row mb-3">
                                                         <div class="col-md-6"><strong>المبلغ:</strong></div>
@@ -82,12 +87,6 @@
                                                             {{ $request->currency->symbol ?? $request->currency->code ?? '' }}
                                                         </div>
                                                     </div>
-                                                    @if($request->description)
-                                                    <div class="row mb-3">
-                                                        <div class="col-md-6"><strong>الوصف:</strong></div>
-                                                        <div class="col-md-6">{{ $request->description }}</div>
-                                                    </div>
-                                                    @endif
                                                     <div class="row mb-3">
                                                         <div class="col-md-6"><strong>الحالة:</strong></div>
                                                         <div class="col-md-6">

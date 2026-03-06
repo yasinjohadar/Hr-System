@@ -24,7 +24,15 @@ use App\Models\ExpenseRequest;
 use App\Models\AssetAssignment;
 use App\Models\EmployeeViolation;
 use App\Models\Announcement;
+use App\Models\Policy;
+use App\Models\PolicyAcknowledgment;
+use App\Models\Contract;
+use App\Models\Payroll;
+use App\Models\ExpenseCategory;
+use App\Models\Currency;
+use App\Models\TrainingRecord;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 
 class SelfServiceController extends Controller
@@ -233,7 +241,14 @@ class SelfServiceController extends Controller
             ->orderBy('salary_month', 'desc')
             ->paginate(12);
 
-        return view('employee.pages.self-service.salaries', compact('salaries'));
+        $payrolls = Payroll::where('employee_id', $employee->id)
+            ->with('currency')
+            ->orderByDesc('payroll_year')
+            ->orderByDesc('payroll_month')
+            ->limit(24)
+            ->get();
+
+        return view('employee.pages.self-service.salaries', compact('salaries', 'payrolls'));
     }
 
     /**
@@ -413,9 +428,9 @@ class SelfServiceController extends Controller
             return redirect()->route('dashboard')->with('error', 'لا يوجد ملف موظف مرتبط بحسابك');
         }
 
-        $tickets = Ticket::where('requester_id', $employee->id)
-            ->orWhere('assigned_to_id', $employee->id)
-            ->with(['requester', 'assignedTo'])
+        $tickets = Ticket::where('employee_id', $employee->id)
+            ->orWhere('assigned_to', $employee->id)
+            ->with(['employee', 'assignedTo'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
@@ -503,5 +518,291 @@ class SelfServiceController extends Controller
             ->paginate(20);
 
         return view('employee.pages.self-service.violations', compact('violations'));
+    }
+
+    /**
+     * عرض السياسات المطلوب الاعتراف بها
+     */
+    public function policies()
+    {
+        $user = Auth::user();
+        $employee = $user->employee;
+
+        if (!$employee) {
+            return redirect()->route('dashboard')->with('error', 'لا يوجد ملف موظف مرتبط بحسابك');
+        }
+
+        $policiesPending = Policy::active()
+            ->whereDoesntHave('acknowledgments', function ($q) use ($employee) {
+                $q->where('employee_id', $employee->id);
+            })
+            ->orderBy('effective_date', 'desc')
+            ->paginate(10);
+
+        $policiesAcknowledged = Policy::active()
+            ->whereHas('acknowledgments', function ($q) use ($employee) {
+                $q->where('employee_id', $employee->id);
+            })
+            ->with(['acknowledgments' => function ($q) use ($employee) {
+                $q->where('employee_id', $employee->id);
+            }])
+            ->orderBy('effective_date', 'desc')
+            ->limit(20)
+            ->get();
+
+        return view('employee.pages.self-service.policies', compact('policiesPending', 'policiesAcknowledged'));
+    }
+
+    /**
+     * تسجيل اعتراف الموظف بسياسة
+     */
+    public function acknowledgePolicy(Request $request)
+    {
+        $user = Auth::user();
+        $employee = $user->employee;
+
+        if (!$employee) {
+            return redirect()->back()->with('error', 'لا يوجد ملف موظف مرتبط بحسابك');
+        }
+
+        $request->validate([
+            'policy_id' => 'required|exists:policies,id',
+        ]);
+
+        $policy = Policy::findOrFail($request->policy_id);
+
+        if (! $policy->is_active) {
+            return redirect()->back()->with('error', 'هذه السياسة غير نشطة.');
+        }
+
+        $exists = PolicyAcknowledgment::where('policy_id', $policy->id)
+            ->where('employee_id', $employee->id)
+            ->exists();
+
+        if ($exists) {
+            return redirect()->route('employee.policies')->with('info', 'أنت معترف مسبقاً بهذه السياسة.');
+        }
+
+        PolicyAcknowledgment::create([
+            'policy_id' => $policy->id,
+            'employee_id' => $employee->id,
+            'acknowledged_at' => now(),
+            'ip_address' => $request->ip(),
+        ]);
+
+        return redirect()->route('employee.policies')->with('success', 'تم تسجيل اعترافك بالسياسة بنجاح.');
+    }
+
+    /**
+     * عرض عقد الموظف الحالي
+     */
+    public function contract()
+    {
+        $user = Auth::user();
+        $employee = $user->employee;
+
+        if (!$employee) {
+            return redirect()->route('dashboard')->with('error', 'لا يوجد ملف موظف مرتبط بحسابك');
+        }
+
+        $currentContract = $employee->currentContract();
+        $contracts = Contract::where('employee_id', $employee->id)
+            ->orderByDesc('start_date')
+            ->get();
+
+        return view('employee.pages.self-service.contract', compact('employee', 'currentContract', 'contracts'));
+    }
+
+    /**
+     * تحميل قسيمة الراتب PDF (كشوف الرواتب الشهرية)
+     */
+    public function payslipPdf(string $id)
+    {
+        $user = Auth::user();
+        $employee = $user->employee;
+
+        if (!$employee) {
+            abort(403, 'لا يوجد ملف موظف مرتبط بحسابك');
+        }
+
+        $payroll = Payroll::with([
+            'employee',
+            'currency',
+            'items',
+            'overtimeRecords',
+            'approvedBy'
+        ])->where('employee_id', $employee->id)->findOrFail($id);
+
+        $pdf = app('dompdf.wrapper');
+        $pdf->loadView('admin.pages.payrolls.payslip', compact('payroll'));
+        $filename = 'payslip-' . $payroll->payroll_code . '.pdf';
+
+        return $pdf->download($filename);
+    }
+
+    /**
+     * نموذج طلب مصروفات جديد
+     */
+    public function createExpenseRequest()
+    {
+        $user = Auth::user();
+        $employee = $user->employee;
+
+        if (!$employee) {
+            return redirect()->route('dashboard')->with('error', 'لا يوجد ملف موظف مرتبط بحسابك');
+        }
+
+        $categories = ExpenseCategory::where('is_active', true)->get();
+        $currencies = Currency::where('is_active', true)->get();
+
+        return view('employee.pages.self-service.expense-request-create', compact('categories', 'currencies'));
+    }
+
+    /**
+     * حفظ طلب مصروفات جديد
+     */
+    public function storeExpenseRequest(Request $request)
+    {
+        $user = Auth::user();
+        $employee = $user->employee;
+
+        if (!$employee) {
+            return redirect()->back()->with('error', 'لا يوجد ملف موظف مرتبط بحسابك');
+        }
+
+        $request->validate([
+            'expense_category_id' => 'required|exists:expense_categories,id',
+            'amount' => 'required|numeric|min:0.01',
+            'currency_id' => 'nullable|exists:currencies,id',
+            'expense_date' => 'required|date',
+            'description' => 'required|string',
+            'receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
+            'payment_method' => 'nullable|in:cash,card,transfer,check',
+            'vendor_name' => 'nullable|string|max:255',
+            'notes' => 'nullable|string',
+        ]);
+
+        $category = ExpenseCategory::findOrFail($request->expense_category_id);
+        if ($category->max_amount && $request->amount > $category->max_amount) {
+            return redirect()->back()->withInput()->with('error', 'المبلغ يتجاوز الحد الأقصى المسموح به: ' . number_format($category->max_amount, 2));
+        }
+        if ($category->requires_receipt && !$request->hasFile('receipt')) {
+            return redirect()->back()->withInput()->with('error', 'إيصال المصروف مطلوب لهذا التصنيف.');
+        }
+
+        $data = $request->only([
+            'expense_category_id', 'amount', 'currency_id', 'expense_date', 'description',
+            'payment_method', 'vendor_name', 'notes'
+        ]);
+        $data['employee_id'] = $employee->id;
+        $data['created_by'] = $user->id;
+        $data['status'] = 'pending';
+        $data['request_code'] = 'EXP-' . strtoupper(Str::random(8));
+
+        if ($request->hasFile('receipt')) {
+            $file = $request->file('receipt');
+            $data['receipt_path'] = $file->store('expense_receipts', 'public');
+            $data['receipt_file_name'] = $file->getClientOriginalName();
+        }
+
+        ExpenseRequest::create($data);
+
+        return redirect()->route('employee.expense-requests')->with('success', 'تم إرسال طلب المصروف بنجاح.');
+    }
+
+    /**
+     * نموذج فتح تذكرة جديدة
+     */
+    public function createTicket()
+    {
+        $user = Auth::user();
+        $employee = $user->employee;
+
+        if (!$employee) {
+            return redirect()->route('dashboard')->with('error', 'لا يوجد ملف موظف مرتبط بحسابك');
+        }
+
+        return view('employee.pages.self-service.ticket-create');
+    }
+
+    /**
+     * حفظ تذكرة جديدة
+     */
+    public function storeTicket(Request $request)
+    {
+        $user = Auth::user();
+        $employee = $user->employee;
+
+        if (!$employee) {
+            return redirect()->back()->with('error', 'لا يوجد ملف موظف مرتبط بحسابك');
+        }
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'category' => 'required|in:technical,hr,it,facilities,other',
+            'priority' => 'required|in:low,medium,high,urgent',
+        ]);
+
+        \App\Models\Ticket::create([
+            'title' => $request->title,
+            'description' => $request->description,
+            'category' => $request->category,
+            'priority' => $request->priority,
+            'employee_id' => $employee->id,
+            'status' => 'open',
+            'created_by' => $user->id,
+        ]);
+
+        return redirect()->route('employee.tickets')->with('success', 'تم فتح التذكرة بنجاح.');
+    }
+
+    /**
+     * صفحة الإعلانات
+     */
+    public function announcements()
+    {
+        $user = Auth::user();
+        $employee = $user->employee;
+
+        if (!$employee) {
+            return redirect()->route('dashboard')->with('error', 'لا يوجد ملف موظف مرتبط بحسابك');
+        }
+
+        $announcements = Announcement::visible()
+            ->where(function ($q) use ($employee) {
+                $q->where('target_type', 'all')
+                  ->orWhere(function ($q2) use ($employee) {
+                      $q2->where('target_type', 'department')->where('department_id', $employee->department_id);
+                  })
+                  ->orWhere(function ($q2) use ($employee) {
+                      $q2->where('target_type', 'branch')->where('branch_id', $employee->branch_id);
+                  });
+            })
+            ->orderByDesc('publish_date')
+            ->orderByDesc('created_at')
+            ->paginate(15);
+
+        return view('employee.pages.self-service.announcements', compact('announcements'));
+    }
+
+    /**
+     * سجل التدريب للموظف
+     */
+    public function trainingRecords()
+    {
+        $user = Auth::user();
+        $employee = $user->employee;
+
+        if (!$employee) {
+            return redirect()->route('dashboard')->with('error', 'لا يوجد ملف موظف مرتبط بحسابك');
+        }
+
+        $records = TrainingRecord::where('employee_id', $employee->id)
+            ->with('training')
+            ->orderByDesc('registration_date')
+            ->paginate(15);
+
+        return view('employee.pages.self-service.training-records', compact('records'));
     }
 }
