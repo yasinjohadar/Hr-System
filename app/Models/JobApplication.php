@@ -82,6 +82,14 @@ class JobApplication extends Model
     }
 
     /**
+     * العلاقة مع عروض التعيين
+     */
+    public function offerLetters(): HasMany
+    {
+        return $this->hasMany(OfferLetter::class)->orderByDesc('created_at');
+    }
+
+    /**
      * Accessor للحالة بالعربية
      */
     public function getStatusNameArAttribute(): string

@@ -20,6 +20,8 @@ use App\Models\ExpenseRequest;
 use App\Models\EmployeeViolation;
 use App\Models\Project;
 use App\Models\Task;
+use App\Models\Announcement;
+use App\Models\Contract;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -71,6 +73,9 @@ class DashboardController extends Controller
         // بيانات الرسوم البيانية
         $chartData = $this->getChartData();
         
+        // إعلانات الشركة الظاهرة حالياً
+        $announcements = Announcement::visible()->orderByDesc('publish_date')->orderByDesc('created_at')->limit(5)->get();
+        
         return view('admin.dashboard', compact(
             'stats',
             'attendanceStats',
@@ -82,7 +87,8 @@ class DashboardController extends Controller
             'recentActivities',
             'urgentTasks',
             'importantNotifications',
-            'chartData'
+            'chartData',
+            'announcements'
         ));
     }
 
@@ -317,9 +323,9 @@ class DashboardController extends Controller
                 ->where('expiry_date', '>=', Carbon::today())
                 ->where('expiry_date', '<=', Carbon::today()->addDays(30))
                 ->count(),
-            'contracts_expiring' => Employee::where('contract_end_date', '>=', Carbon::today())
-                ->where('contract_end_date', '<=', Carbon::today()->addDays(90))
-                ->where('is_active', true)
+            'contracts_expiring' => Contract::active()
+                ->whereDate('end_date', '>=', Carbon::today())
+                ->whereDate('end_date', '<=', Carbon::today()->addDays(90))
                 ->count(),
         ];
     }

@@ -82,6 +82,7 @@ class CustomNotification extends Model
             'benefit' => 'ميزة',
             'system' => 'نظام',
             'reminder' => 'تذكير',
+            'contract_expiry_reminder' => 'تذكير انتهاء عقد',
             default => $this->type,
         };
     }

@@ -143,6 +143,22 @@ class Employee extends Model
     }
 
     /**
+     * العلاقة مع العقود
+     */
+    public function contracts(): HasMany
+    {
+        return $this->hasMany(Contract::class);
+    }
+
+    /**
+     * العقد النشط الحالي (أحدث عقد بحالة active)
+     */
+    public function currentContract(): ?Contract
+    {
+        return $this->contracts()->where('status', Contract::STATUS_ACTIVE)->latest('start_date')->first();
+    }
+
+    /**
      * العلاقة مع طلبات المصروفات
      */
     public function expenseRequests(): HasMany
@@ -272,6 +288,32 @@ class Employee extends Model
     public function subordinates(): HasMany
     {
         return $this->hasMany(Employee::class, 'manager_id');
+    }
+
+    /**
+     * العلاقة مع التغييرات الوظيفية
+     */
+    public function jobChanges(): HasMany
+    {
+        return $this->hasMany(EmployeeJobChange::class)->orderBy('effective_date', 'desc');
+    }
+
+    /**
+     * سجلات اعتراف الموظف بالسياسات
+     */
+    public function policyAcknowledgments(): HasMany
+    {
+        return $this->hasMany(PolicyAcknowledgment::class);
+    }
+
+    /**
+     * السياسات التي اعترف بها الموظف (عبر جدول الاعترافات)
+     */
+    public function acknowledgedPolicies(): BelongsToMany
+    {
+        return $this->belongsToMany(Policy::class, 'policy_acknowledgments')
+            ->withPivot('acknowledged_at', 'ip_address')
+            ->withTimestamps();
     }
 
     /**

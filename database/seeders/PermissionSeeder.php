@@ -153,6 +153,13 @@ class PermissionSeeder extends Seeder
             "interview-delete",
             "interview-show",
 
+            // صلاحيات عروض التعيين
+            "offer-letter-list",
+            "offer-letter-create",
+            "offer-letter-edit",
+            "offer-letter-delete",
+            "offer-letter-show",
+
             // صلاحيات المزايا والتعويضات
             "benefit-type-list",
             "benefit-type-create",

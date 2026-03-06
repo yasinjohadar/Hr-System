@@ -15,6 +15,11 @@
                     <a href="{{ route('admin.job-applications.index') }}" class="btn btn-secondary">
                         <i class="fas fa-arrow-right me-2"></i>العودة للقائمة
                     </a>
+                    @can('offer-letter-create')
+                    <a href="{{ route('admin.offer-letters.create', ['job_application_id' => $application->id]) }}" class="btn btn-success me-2">
+                        <i class="fas fa-file-contract me-2"></i>إنشاء عرض تعيين
+                    </a>
+                    @endcan
                     @can('job-application-edit')
                     <a href="{{ route('admin.job-applications.edit', $application->id) }}" class="btn btn-primary">
                         <i class="fas fa-edit me-2"></i>تعديل

@@ -66,7 +66,7 @@
                 <th>القسم</th>
                 <td>{{ $payroll->employee->department->name ?? '-' }}</td>
                 <th>المنصب</th>
-                <td>{{ $payroll->employee->position->name ?? '-' }}</td>
+                <td>{{ $payroll->employee->position->title ?? '-' }}</td>
             </tr>
         </table>
 

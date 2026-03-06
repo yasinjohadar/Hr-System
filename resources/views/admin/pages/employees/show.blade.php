@@ -78,11 +78,11 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label fw-bold">القسم:</label>
-                                    <p class="form-control-plaintext">{{ $employee->department->name_ar ?? $employee->department->name ?? '-' }}</p>
+                                    <p class="form-control-plaintext">{{ $employee->department->name ?? '-' }}</p>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label fw-bold">المنصب:</label>
-                                    <p class="form-control-plaintext">{{ $employee->position->title_ar ?? $employee->position->title ?? '-' }}</p>
+                                    <p class="form-control-plaintext">{{ $employee->position->title ?? '-' }}</p>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label fw-bold">الفرع:</label>
@@ -171,6 +171,63 @@
                         </div>
                     </div>
                     @endif
+
+                    <!-- سجل التغييرات الوظيفية -->
+                    <div class="card mt-3">
+                        <div class="card-header d-flex align-items-center justify-content-between">
+                            <h5 class="card-title mb-0">سجل التغييرات الوظيفية</h5>
+                            <a href="{{ route('admin.employee-job-changes.index', ['employee_id' => $employee->id]) }}" class="btn btn-sm btn-outline-primary">عرض كل الطلبات</a>
+                        </div>
+                        <div class="card-body">
+                            @if(isset($jobChangeHistory) && $jobChangeHistory->isNotEmpty())
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>التاريخ الفعال</th>
+                                                <th>نوع التغيير</th>
+                                                <th>ملخص التغيير</th>
+                                                <th>عمليات</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($jobChangeHistory as $change)
+                                                <tr>
+                                                    <td>{{ $change->effective_date->format('Y-m-d') }}</td>
+                                                    <td><span class="badge bg-info">{{ $change->change_type_label }}</span></td>
+                                                    <td>
+                                                        @php
+                                                            $parts = [];
+                                                            if ($change->new_department_id && ($change->old_department_id != $change->new_department_id))
+                                                                $parts[] = 'القسم: ' . ($change->oldDepartment->name ?? '-') . ' → ' . ($change->newDepartment->name ?? '-');
+                                                            if ($change->new_position_id && ($change->old_position_id != $change->new_position_id))
+                                                                $parts[] = 'المنصب: ' . ($change->oldPosition->title ?? '-') . ' → ' . ($change->newPosition->title ?? '-');
+                                                            if ($change->new_branch_id && ($change->old_branch_id != $change->new_branch_id))
+                                                                $parts[] = 'الفرع: ' . ($change->oldBranch->name ?? '-') . ' → ' . ($change->newBranch->name ?? '-');
+                                                            if ($change->new_manager_id && ($change->old_manager_id != $change->new_manager_id))
+                                                                $parts[] = 'المدير: ' . ($change->oldManager->full_name ?? '-') . ' → ' . ($change->newManager->full_name ?? '-');
+                                                            if ($change->new_salary !== null && (string)$change->old_salary !== (string)$change->new_salary)
+                                                                $parts[] = 'الراتب: ' . number_format($change->old_salary ?? 0, 2) . ' → ' . number_format($change->new_salary, 2) . ' ر.س';
+                                                        @endphp
+                                                        @if(count($parts) > 0)
+                                                            {{ implode(' | ', $parts) }}
+                                                        @else
+                                                            —
+                                                        @endif
+                                                    </td>
+                                                    <td>
+                                                        <a href="{{ route('admin.employee-job-changes.show', $change) }}" class="btn btn-sm btn-info" title="عرض"><i class="fa fa-eye"></i></a>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @else
+                                <p class="text-muted mb-0">لا يوجد سجل تغييرات وظيفية.</p>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

@@ -13,7 +13,7 @@
                 </div>
                 <div>
                     @can('audit-log-export')
-                    <a href="{{ route('admin.audit-logs.export') }}" class="btn btn-primary">
+                    <a href="{{ route('admin.audit-logs.export', request()->query()) }}" class="btn btn-primary">
                         <i class="fas fa-download me-2"></i>تصدير
                     </a>
                     @endcan

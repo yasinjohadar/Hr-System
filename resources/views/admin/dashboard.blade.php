@@ -246,7 +246,8 @@
                                 <div class="col-md-4">
                                     <div class="alert alert-danger">
                                         <i class="fas fa-file-contract me-2"></i>
-                                        <strong>عقود تنتهي قريباً:</strong> {{ $importantNotifications['contracts_expiring'] ?? 0 }}
+                                        <strong>عقود تنتهي قريباً:</strong>
+                                        <a href="{{ route('admin.contracts.index', ['expiring' => 90]) }}" class="alert-link">{{ $importantNotifications['contracts_expiring'] ?? 0 }}</a>
                                     </div>
                                 </div>
                             </div>
@@ -254,6 +255,41 @@
                     </div>
                 </div>
             </div>
+
+            <!-- إعلانات الشركة -->
+            @if(isset($announcements) && $announcements->isNotEmpty())
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-bullhorn text-primary me-2"></i>
+                                إعلانات الشركة
+                            </h5>
+                            <a href="{{ route('admin.announcements.index') }}" class="btn btn-sm btn-outline-primary">عرض الكل</a>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group list-group-flush">
+                                @foreach($announcements as $announcement)
+                                    <div class="list-group-item border-0 border-bottom px-0">
+                                        <h6 class="mb-1">{{ $announcement->title }}</h6>
+                                        @if($announcement->content)
+                                            <p class="mb-1 text-muted small">{{ Str::limit(strip_tags($announcement->content), 120) }}</p>
+                                        @endif
+                                        <small class="text-muted">
+                                            {{ $announcement->publish_date?->format('Y-m-d') ?? $announcement->created_at->format('Y-m-d') }}
+                                            @if($announcement->expiry_date)
+                                                — حتى {{ $announcement->expiry_date->format('Y-m-d') }}
+                                            @endif
+                                        </small>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
 
             <!-- آخر الأنشطة -->
             <div class="row">

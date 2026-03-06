@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\TrainingRecordController;
 use App\Http\Controllers\Admin\JobVacancyController;
 use App\Http\Controllers\Admin\CandidateController;
 use App\Http\Controllers\Admin\JobApplicationController;
+use App\Http\Controllers\Admin\OfferLetterController;
 use App\Http\Controllers\Admin\InterviewController;
 use App\Http\Controllers\Admin\BenefitTypeController;
 use App\Http\Controllers\Admin\EmployeeBenefitController;
@@ -70,16 +71,33 @@ use App\Http\Controllers\Admin\PayrollApprovalController;
 use App\Http\Controllers\Admin\CalendarEventController;
 use App\Http\Controllers\Admin\ApprovalController;
 use App\Http\Controllers\Admin\ExportController;
+use App\Http\Controllers\Admin\AnnouncementController;
+use App\Http\Controllers\Admin\ContractController;
+use App\Http\Controllers\Admin\EmployeeJobChangeController;
+use App\Http\Controllers\Admin\PolicyController;
 
 Route::middleware(['auth', 'check.user.active'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
     Route::get('/dashboard/stats', [DashboardController::class, 'getStats'])->name('dashboard.stats');
+    // Routes لإعلانات الشركة
+    Route::resource('announcements', AnnouncementController::class);
+    // Routes لإدارة العقود
+    Route::get('contracts/{contract}/renew', [ContractController::class, 'renew'])->name('contracts.renew');
+    Route::post('contracts/{contract}/renew', [ContractController::class, 'storeRenew'])->name('contracts.store-renew');
+    Route::resource('contracts', ContractController::class);
     // Routes للموظفين
     Route::resource('employees', EmployeeController::class);
-    
-    // Routes للأقسام
+
+    // Routes للتغييرات الوظيفية (النقل والترقية)
+    Route::post('employee-job-changes/{employee_job_change}/approve', [EmployeeJobChangeController::class, 'approve'])->name('employee-job-changes.approve');
+    Route::post('employee-job-changes/{employee_job_change}/reject', [EmployeeJobChangeController::class, 'reject'])->name('employee-job-changes.reject');
+    Route::resource('employee-job-changes', EmployeeJobChangeController::class)->except(['destroy']);
+
+    // السياسات واللوائح والاعتراف بالمستندات
+    Route::post('policies/{policy}/acknowledge', [PolicyController::class, 'acknowledge'])->name('policies.acknowledge');
+    Route::resource('policies', PolicyController::class);
     Route::resource('departments', DepartmentController::class);
     
     // Routes للفروع
@@ -126,6 +144,10 @@ Route::middleware(['auth', 'check.user.active'])->prefix('admin')->name('admin.'
     Route::resource('job-vacancies', JobVacancyController::class);
     Route::resource('candidates', CandidateController::class);
     Route::resource('job-applications', JobApplicationController::class);
+    Route::post('offer-letters/{offer_letter}/send', [OfferLetterController::class, 'send'])->name('offer-letters.send');
+    Route::post('offer-letters/{offer_letter}/accept', [OfferLetterController::class, 'accept'])->name('offer-letters.accept');
+    Route::post('offer-letters/{offer_letter}/reject', [OfferLetterController::class, 'reject'])->name('offer-letters.reject');
+    Route::resource('offer-letters', OfferLetterController::class);
     Route::resource('interviews', InterviewController::class);
     
     // Routes للمزايا والتعويضات
@@ -276,6 +298,7 @@ Route::middleware(['auth', 'check.user.active'])->prefix('admin')->name('admin.'
     Route::resource('document-templates', DocumentTemplateController::class);
 
     // Routes لنظام الرواتب المتقدم
+    Route::get('payrolls/{id}/payslip/pdf', [PayrollController::class, 'payslipPdf'])->name('payrolls.payslip.pdf');
     Route::resource('payrolls', PayrollController::class);
     Route::post('payrolls/{id}/calculate', [PayrollController::class, 'calculate'])->name('payrolls.calculate');
     Route::post('payrolls/{id}/approve', [PayrollController::class, 'approve'])->name('payrolls.approve');

@@ -13,6 +13,7 @@
                     <a href="{{ route('admin.payrolls.index') }}" class="btn btn-secondary btn-sm">رجوع</a>
                     @if($payroll->status == 'calculated' || $payroll->status == 'approved')
                     <a href="{{ route('admin.payrolls.payslip', $payroll->id) }}" class="btn btn-info btn-sm" target="_blank">طباعة كشف الراتب</a>
+                    <a href="{{ route('admin.payrolls.payslip.pdf', $payroll->id) }}" class="btn btn-danger btn-sm" target="_blank">تحميل PDF</a>
                     @endif
                 </div>
             </div>

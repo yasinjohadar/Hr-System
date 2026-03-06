@@ -26,7 +26,7 @@ class PayrollController extends Controller
         $this->middleware('permission:payroll-create')->only(['create', 'store', 'calculate']);
         $this->middleware('permission:payroll-edit')->only(['edit', 'update', 'approve']);
         $this->middleware('permission:payroll-delete')->only('destroy');
-        $this->middleware('permission:payroll-show')->only('show');
+        $this->middleware('permission:payroll-show')->only(['show', 'payslip', 'payslipPdf']);
     }
 
     public function index(Request $request)
@@ -576,7 +576,26 @@ class PayrollController extends Controller
             'approvedBy'
         ])->findOrFail($id);
 
-        // TODO: استخدام مكتبة PDF (مثل dompdf أو barryvdh/laravel-dompdf)
         return view('admin.pages.payrolls.payslip', compact('payroll'));
+    }
+
+    /**
+     * تحميل قسيمة الراتب كـ PDF
+     */
+    public function payslipPdf(string $id)
+    {
+        $payroll = Payroll::with([
+            'employee',
+            'currency',
+            'items',
+            'overtimeRecords',
+            'approvedBy'
+        ])->findOrFail($id);
+
+        $pdf = app('dompdf.wrapper');
+        $pdf->loadView('admin.pages.payrolls.payslip', compact('payroll'));
+        $filename = 'payslip-' . $payroll->payroll_code . '.pdf';
+
+        return $pdf->download($filename);
     }
 }

@@ -100,6 +100,37 @@
                 </div>
             </div>
 
+            <!-- إعلانات الشركة -->
+            @if(isset($announcements) && $announcements->isNotEmpty())
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="card border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0"><i class="fas fa-bullhorn me-2"></i>إعلانات الشركة</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group list-group-flush">
+                                @foreach($announcements as $announcement)
+                                    <div class="list-group-item border-0 border-bottom px-0">
+                                        <h6 class="mb-1">{{ $announcement->title }}</h6>
+                                        @if($announcement->content)
+                                            <p class="mb-1 text-muted small">{{ Str::limit(strip_tags($announcement->content), 150) }}</p>
+                                        @endif
+                                        <small class="text-muted">
+                                            {{ $announcement->publish_date?->format('Y-m-d') ?? $announcement->created_at->format('Y-m-d') }}
+                                            @if($announcement->expiry_date)
+                                                — حتى {{ $announcement->expiry_date->format('Y-m-d') }}
+                                            @endif
+                                        </small>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             <!-- آخر الإجازات -->
             <div class="row mb-3">
                 <div class="col-md-6">

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Employee;
+use App\Models\EmployeeJobChange;
 use App\Models\Department;
 use App\Models\Position;
 use App\Models\User;
@@ -178,7 +179,15 @@ class EmployeeController extends Controller
     public function show(string $id)
     {
         $employee = Employee::with(['user', 'department', 'position', 'manager', 'creator'])->findOrFail($id);
-        return view("admin.pages.employees.show", compact("employee"));
+
+        // جلب سجل التغييرات الوظيفية المعتمدة مع العلاقات للعرض
+        $jobChangeHistory = EmployeeJobChange::where('employee_id', $employee->id)
+            ->where('status', EmployeeJobChange::STATUS_APPROVED)
+            ->with(['oldDepartment', 'newDepartment', 'oldPosition', 'newPosition', 'oldBranch', 'newBranch', 'oldManager', 'newManager'])
+            ->orderByDesc('effective_date')
+            ->get();
+
+        return view("admin.pages.employees.show", compact("employee", "jobChangeHistory"));
     }
 
     /**

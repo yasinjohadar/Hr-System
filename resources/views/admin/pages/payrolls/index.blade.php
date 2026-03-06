@@ -129,6 +129,9 @@
                                                         @endif
                                                         @can('payroll-show')
                                                         <a href="{{ route('admin.payrolls.payslip', $payroll->id) }}" class="btn btn-sm btn-secondary" target="_blank">كشف راتب</a>
+                                                        @if(in_array($payroll->status, ['calculated', 'approved', 'paid']))
+                                                        <a href="{{ route('admin.payrolls.payslip.pdf', $payroll->id) }}" class="btn btn-sm btn-danger" target="_blank">تحميل PDF</a>
+                                                        @endif
                                                         @endcan
                                                     </div>
                                                 </td>

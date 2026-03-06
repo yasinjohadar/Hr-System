@@ -23,6 +23,7 @@ use App\Models\MeetingAttendee;
 use App\Models\ExpenseRequest;
 use App\Models\AssetAssignment;
 use App\Models\EmployeeViolation;
+use App\Models\Announcement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -70,7 +71,23 @@ class SelfServiceController extends Controller
             ->limit(10)
             ->get();
 
-        return view('employee.pages.self-service.dashboard', compact('employee', 'stats', 'recentLeaves', 'recentAttendance'));
+        // إعلانات الشركة الظاهرة لهذا الموظف
+        $announcements = Announcement::visible()
+            ->where(function ($q) use ($employee) {
+                $q->where('target_type', 'all')
+                  ->orWhere(function ($q2) use ($employee) {
+                      $q2->where('target_type', 'department')->where('department_id', $employee->department_id);
+                  })
+                  ->orWhere(function ($q2) use ($employee) {
+                      $q2->where('target_type', 'branch')->where('branch_id', $employee->branch_id);
+                  });
+            })
+            ->orderByDesc('publish_date')
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get();
+
+        return view('employee.pages.self-service.dashboard', compact('employee', 'stats', 'recentLeaves', 'recentAttendance', 'announcements'));
     }
 
     /**
