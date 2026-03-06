@@ -7,6 +7,7 @@ use App\Models\Employee;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class AttendanceController extends Controller
 {
@@ -26,6 +27,15 @@ class AttendanceController extends Controller
     public function index(Request $request)
     {
         $attendancesQuery = Attendance::with(['employee.user']);
+
+        if (Auth::user()->isDepartmentHead()) {
+            $employeeIds = Auth::user()->getManagedEmployeeIds();
+            if (!empty($employeeIds)) {
+                $attendancesQuery->whereIn('employee_id', $employeeIds);
+            } else {
+                $attendancesQuery->whereRaw('1 = 0');
+            }
+        }
 
         // فلترة حسب الموظف
         if ($request->filled('employee_id')) {
@@ -55,6 +65,10 @@ class AttendanceController extends Controller
             ->paginate(50);
 
         $employees = Employee::where('is_active', true)->with('user')->get();
+        if (Auth::user()->isDepartmentHead()) {
+            $managedIds = Auth::user()->getManagedEmployeeIds();
+            $employees = $employees->whereIn('id', $managedIds)->values();
+        }
         $currentStartDate = $request->input('start_date', Carbon::now()->subDays(30)->format('Y-m-d'));
         $currentEndDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
 
@@ -127,6 +141,14 @@ class AttendanceController extends Controller
     public function show(string $id)
     {
         $attendance = Attendance::with(['employee.user', 'creator'])->findOrFail($id);
+
+        if (Auth::user()->isDepartmentHead()) {
+            $employeeIds = Auth::user()->getManagedEmployeeIds();
+            if (!in_array($attendance->employee_id, $employeeIds)) {
+                abort(403, 'غير مصرح لك بعرض هذا السجل.');
+            }
+        }
+
         return view("admin.pages.attendances.show", compact("attendance"));
     }
 

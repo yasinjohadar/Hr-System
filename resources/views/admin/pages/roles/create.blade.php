@@ -66,22 +66,37 @@
                                 </div>
 
                                 <div class="mb-4">
-                                    <label class="form-label fw-bold d-block mb-2">الصلاحيات:</label>
-                                    <div class="row">
-                                        @foreach ($permissions as $permission)
-                                            <div class="col-md-4 mb-2">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox"
-                                                           name="permissions[{{ $permission->name }}]"
-                                                           value="{{ $permission->name }}"
-                                                           id="perm_{{ $permission->id }}">
-                                                    <label class="form-check-label" for="perm_{{ $permission->id }}">
-                                                        {{ $permission->name }}
-                                                    </label>
+                                    <label class="form-label fw-bold d-block mb-3">الصلاحيات</label>
+                                    @foreach ($permissionsGrouped as $categoryName => $permissions)
+                                        <div class="card card-bordered mb-3">
+                                            <div class="card-header bg-light py-2">
+                                                <h6 class="mb-0 fw-bold">{{ $categoryName }}</h6>
+                                            </div>
+                                            <div class="card-body py-2">
+                                                <div class="row">
+                                                    @foreach ($permissions->split(3) as $chunk)
+                                                        <div class="col-md-4">
+                                                            <ul class="list-unstyled mb-0">
+                                                                @foreach ($chunk as $permission)
+                                                                    <li class="mb-1">
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input" type="checkbox"
+                                                                                name="permissions[{{ $permission->name }}]"
+                                                                                value="{{ $permission->name }}"
+                                                                                id="perm_create_{{ $permission->id }}">
+                                                                            <label class="form-check-label small" for="perm_create_{{ $permission->id }}">
+                                                                                {{ $permission->name }}
+                                                                            </label>
+                                                                        </div>
+                                                                    </li>
+                                                                @endforeach
+                                                            </ul>
+                                                        </div>
+                                                    @endforeach
                                                 </div>
                                             </div>
-                                        @endforeach
-                                    </div>
+                                        </div>
+                                    @endforeach
                                 </div>
 
                                 <div class="d-flex justify-content-end">

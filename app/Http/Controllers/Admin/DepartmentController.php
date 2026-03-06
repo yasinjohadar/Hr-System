@@ -6,6 +6,7 @@ use App\Models\Department;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Spatie\Permission\Models\Role;
 
 class DepartmentController extends Controller
 {
@@ -83,6 +84,10 @@ class DepartmentController extends Controller
             'is_active' => $request->has('is_active'),
         ]);
 
+        if ($request->manager_id) {
+            $this->ensureUserHasDepartmentHeadRole(User::find($request->manager_id));
+        }
+
         return redirect()->route("admin.departments.index")->with("success", "تم إضافة القسم بنجاح");
     }
 
@@ -128,14 +133,24 @@ class DepartmentController extends Controller
             'code.unique' => 'كود القسم مستخدم بالفعل',
         ]);
 
+        $oldManagerId = $department->manager_id;
+        $newManagerId = $request->manager_id ? (int) $request->manager_id : null;
+
         $department->update([
             'name' => $request->name,
             'code' => $request->code,
             'description' => $request->description,
-            'manager_id' => $request->manager_id,
+            'manager_id' => $newManagerId,
             'parent_id' => $request->parent_id,
             'is_active' => $request->has('is_active'),
         ]);
+
+        if ($newManagerId) {
+            $this->ensureUserHasDepartmentHeadRole(User::find($newManagerId));
+        }
+        if ($oldManagerId && $oldManagerId !== $newManagerId) {
+            $this->revokeDepartmentHeadRoleIfNotManager(User::find($oldManagerId));
+        }
 
         return redirect()->route('admin.departments.index')->with('success', 'تم تحديث بيانات القسم بنجاح');
     }
@@ -146,8 +161,41 @@ class DepartmentController extends Controller
     public function destroy(Request $request)
     {
         $department = Department::findOrFail($request->id);
+        $managerId = $department->manager_id;
         $department->delete();
 
+        if ($managerId) {
+            $this->revokeDepartmentHeadRoleIfNotManager(User::find($managerId));
+        }
+
         return redirect()->route("admin.departments.index")->with("success", "تم حذف القسم بنجاح");
+    }
+
+    /**
+     * منح دور رئيس القسم للمستخدم إن لم يكن لديه (ولا يكون مديراً عاماً).
+     */
+    protected function ensureUserHasDepartmentHeadRole(?User $user): void
+    {
+        if (!$user || $user->hasRole('admin')) {
+            return;
+        }
+        $role = Role::firstOrCreate(['name' => 'department_head']);
+        if (!$user->hasRole('department_head')) {
+            $user->assignRole($role);
+        }
+    }
+
+    /**
+     * نزع دور رئيس القسم عن المستخدم إذا لم يعد مديراً لأي قسم.
+     */
+    protected function revokeDepartmentHeadRoleIfNotManager(?User $user): void
+    {
+        if (!$user) {
+            return;
+        }
+        $stillManager = Department::where('manager_id', $user->id)->exists();
+        if (!$stillManager && $user->hasRole('department_head')) {
+            $user->removeRole('department_head');
+        }
     }
 }

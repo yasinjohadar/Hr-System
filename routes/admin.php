@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\PerformanceReviewController;
 use App\Http\Controllers\Admin\TrainingController;
 use App\Http\Controllers\Admin\TrainingRecordController;
+use App\Http\Controllers\Admin\RequisitionController;
 use App\Http\Controllers\Admin\JobVacancyController;
 use App\Http\Controllers\Admin\CandidateController;
 use App\Http\Controllers\Admin\JobApplicationController;
@@ -150,6 +151,9 @@ Route::middleware(['auth', 'check.user.active', 'ensure.admin'])->prefix('admin'
     Route::post('offer-letters/{offer_letter}/accept', [OfferLetterController::class, 'accept'])->name('offer-letters.accept');
     Route::post('offer-letters/{offer_letter}/reject', [OfferLetterController::class, 'reject'])->name('offer-letters.reject');
     Route::resource('offer-letters', OfferLetterController::class);
+    Route::post('requisitions/{requisition}/approve', [RequisitionController::class, 'approve'])->name('requisitions.approve');
+    Route::post('requisitions/{requisition}/reject', [RequisitionController::class, 'reject'])->name('requisitions.reject');
+    Route::resource('requisitions', RequisitionController::class);
     Route::resource('interviews', InterviewController::class);
     
     // Routes للمزايا والتعويضات
@@ -168,6 +172,9 @@ Route::middleware(['auth', 'check.user.active', 'ensure.admin'])->prefix('admin'
         Route::get('/recruitment', [ReportController::class, 'recruitmentReport'])->name('recruitment');
         Route::get('/benefits', [ReportController::class, 'benefitsReport'])->name('benefits');
         Route::get('/dashboard', [ReportController::class, 'dashboardReport'])->name('dashboard');
+        Route::get('/turnover', [ReportController::class, 'turnoverReport'])->name('turnover');
+        Route::get('/training-effectiveness', [ReportController::class, 'trainingEffectivenessReport'])->name('training-effectiveness');
+        Route::get('/kpis', [ReportController::class, 'kpisReport'])->name('kpis');
     });
     
     // Routes للإشعارات
@@ -300,6 +307,7 @@ Route::middleware(['auth', 'check.user.active', 'ensure.admin'])->prefix('admin'
     Route::resource('document-templates', DocumentTemplateController::class);
 
     // Routes لنظام الرواتب المتقدم
+    Route::get('payrolls/export-bank-file', [PayrollController::class, 'exportBankFile'])->name('payrolls.export-bank-file');
     Route::get('payrolls/{id}/payslip/pdf', [PayrollController::class, 'payslipPdf'])->name('payrolls.payslip.pdf');
     Route::resource('payrolls', PayrollController::class);
     Route::post('payrolls/{id}/calculate', [PayrollController::class, 'calculate'])->name('payrolls.calculate');

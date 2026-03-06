@@ -206,7 +206,55 @@
                     </div>
                 </div>
 
-                <!-- التقرير الشامل -->
+                <!-- معدل دوران الموظفين -->
+                <div class="col-xl-3 col-lg-6 col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="avatar avatar-md bg-orange text-white rounded">
+                                        <i class="fas fa-exchange-alt fa-lg"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-1">معدل دوران الموظفين</h6>
+                                    <p class="mb-0 text-muted">نسبة المنتهية خدمتهم لفترة محددة</p>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <a href="{{ route('admin.reports.turnover') }}" class="btn btn-orange btn-sm w-100">
+                                    <i class="fas fa-chart-line me-2"></i>عرض التقرير
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- فعالية التدريب -->
+                <div class="col-xl-3 col-lg-6 col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="avatar avatar-md bg-cyan text-white rounded">
+                                        <i class="fas fa-award fa-lg"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-1">فعالية التدريب</h6>
+                                    <p class="mb-0 text-muted">معدل الإكمال والموظفين المدربين</p>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <a href="{{ route('admin.reports.training-effectiveness') }}" class="btn btn-cyan btn-sm w-100">
+                                    <i class="fas fa-chart-pie me-2"></i>عرض التقرير
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- التقرير الشامل / لوحة المؤشرات -->
                 <div class="col-xl-12">
                     <div class="card">
                         <div class="card-body">
@@ -221,9 +269,12 @@
                                     <p class="mb-0 text-muted">نظرة شاملة على جميع جوانب النظام</p>
                                 </div>
                             </div>
-                            <div class="mt-3">
-                                <a href="{{ route('admin.reports.dashboard') }}" class="btn btn-primary btn-lg w-100">
+                            <div class="mt-3 d-flex gap-2 flex-wrap">
+                                <a href="{{ route('admin.reports.dashboard') }}" class="btn btn-primary btn-lg">
                                     <i class="fas fa-dashboard me-2"></i>عرض التقرير الشامل
+                                </a>
+                                <a href="{{ route('admin.reports.kpis') }}" class="btn btn-outline-primary btn-lg">
+                                    <i class="fas fa-chart-bar me-2"></i>لوحة المؤشرات الإدارية
                                 </a>
                             </div>
                         </div>
@@ -251,6 +302,16 @@
         .btn-teal {
             background-color: #20c997;
             border-color: #20c997;
+            color: white;
+        }
+        .btn-orange {
+            background-color: #fd7e14;
+            border-color: #fd7e14;
+            color: white;
+        }
+        .btn-cyan {
+            background-color: #0dcaf0;
+            border-color: #0dcaf0;
             color: white;
         }
     </style>

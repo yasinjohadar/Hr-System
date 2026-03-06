@@ -13,6 +13,7 @@ use App\Services\ApprovalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class ExpenseRequestController extends Controller
 {
@@ -34,6 +35,15 @@ class ExpenseRequestController extends Controller
     public function index(Request $request)
     {
         $query = ExpenseRequest::with(['employee', 'category', 'currency', 'creator']);
+
+        if (Auth::user()->isDepartmentHead()) {
+            $employeeIds = Auth::user()->getManagedEmployeeIds();
+            if (!empty($employeeIds)) {
+                $query->whereIn('employee_id', $employeeIds);
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        }
 
         if ($request->filled('employee_id')) {
             $query->where('employee_id', $request->input('employee_id'));
@@ -57,6 +67,10 @@ class ExpenseRequestController extends Controller
 
         $expenseRequests = $query->latest()->paginate(15);
         $employees = Employee::where('is_active', true)->get();
+        if (Auth::user()->isDepartmentHead()) {
+            $managedIds = Auth::user()->getManagedEmployeeIds();
+            $employees = $employees->whereIn('id', $managedIds)->values();
+        }
         $categories = ExpenseCategory::where('is_active', true)->get();
 
         return view('admin.pages.expense-requests.index', compact('expenseRequests', 'employees', 'categories'));
@@ -142,6 +156,13 @@ class ExpenseRequestController extends Controller
             'payer',
             'creator'
         ])->findOrFail($id);
+
+        if (Auth::user()->isDepartmentHead()) {
+            $employeeIds = Auth::user()->getManagedEmployeeIds();
+            if (!in_array($expenseRequest->employee_id, $employeeIds)) {
+                abort(403, 'غير مصرح لك بعرض هذا الطلب.');
+            }
+        }
 
         return view('admin.pages.expense-requests.show', compact('expenseRequest'));
     }
@@ -246,7 +267,14 @@ class ExpenseRequestController extends Controller
     public function showApproveForm(string $id)
     {
         $expenseRequest = ExpenseRequest::with(['employee', 'category'])->findOrFail($id);
-        
+
+        if (Auth::user()->isDepartmentHead()) {
+            $employeeIds = Auth::user()->getManagedEmployeeIds();
+            if (!in_array($expenseRequest->employee_id, $employeeIds)) {
+                abort(403, 'غير مصرح لك بالموافقة على هذا الطلب.');
+            }
+        }
+
         if ($expenseRequest->status !== 'pending') {
             return redirect()->back()->with('error', 'لا يمكن الموافقة على طلب في هذه الحالة.');
         }
@@ -261,6 +289,13 @@ class ExpenseRequestController extends Controller
     {
         $expenseRequest = ExpenseRequest::findOrFail($id);
         $employee = $expenseRequest->employee;
+
+        if (Auth::user()->isDepartmentHead()) {
+            $employeeIds = Auth::user()->getManagedEmployeeIds();
+            if (!in_array($expenseRequest->employee_id, $employeeIds)) {
+                abort(403, 'غير مصرح لك بالموافقة على هذا الطلب.');
+            }
+        }
 
         if ($expenseRequest->status !== 'pending') {
             return redirect()->back()->with('error', 'لا يمكن الموافقة على طلب في هذه الحالة.');
@@ -346,6 +381,13 @@ class ExpenseRequestController extends Controller
     {
         $expenseRequest = ExpenseRequest::findOrFail($id);
         $employee = $expenseRequest->employee;
+
+        if (Auth::user()->isDepartmentHead()) {
+            $employeeIds = Auth::user()->getManagedEmployeeIds();
+            if (!in_array($expenseRequest->employee_id, $employeeIds)) {
+                abort(403, 'غير مصرح لك برفض هذا الطلب.');
+            }
+        }
 
         // البحث عن workflow instance
         $instance = \App\Models\WorkflowInstance::where('entity_type', 'ExpenseRequest')

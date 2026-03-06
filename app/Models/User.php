@@ -71,4 +71,37 @@ class User extends Authenticatable
     {
         return $this->hasOne(Employee::class);
     }
+
+    /**
+     * هل المستخدم رئيس قسم فقط (وليس مديراً عاماً)
+     */
+    public function isDepartmentHead(): bool
+    {
+        return $this->hasRole('department_head') && ! $this->hasRole('admin');
+    }
+
+    /**
+     * أقسام يديرها المستخدم (كمدير قسم) — للاستخدام في تقييد النطاق
+     */
+    public function getManagedDepartmentIds(): array
+    {
+        if (! $this->isDepartmentHead()) {
+            return [];
+        }
+
+        return \App\Models\Department::where('manager_id', $this->id)->pluck('id')->all();
+    }
+
+    /**
+     * معرفات الموظفين التابعين لأقسام يديرها المستخدم
+     */
+    public function getManagedEmployeeIds(): array
+    {
+        $departmentIds = $this->getManagedDepartmentIds();
+        if (empty($departmentIds)) {
+            return [];
+        }
+
+        return \App\Models\Employee::whereIn('department_id', $departmentIds)->pluck('id')->all();
+    }
 }

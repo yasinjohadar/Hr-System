@@ -27,6 +27,7 @@ class PayrollController extends Controller
         $this->middleware('permission:payroll-edit')->only(['edit', 'update', 'approve']);
         $this->middleware('permission:payroll-delete')->only('destroy');
         $this->middleware('permission:payroll-show')->only(['show', 'payslip', 'payslipPdf']);
+        $this->middleware('permission:payroll-list')->only(['exportBankFile']);
     }
 
     public function index(Request $request)
@@ -597,5 +598,59 @@ class PayrollController extends Controller
         $filename = 'payslip-' . $payroll->payroll_code . '.pdf';
 
         return $pdf->download($filename);
+    }
+
+    /**
+     * عرض صفحة تصدير ملف الرواتب للبنك أو تحميل الملف
+     */
+    public function exportBankFile(Request $request)
+    {
+        $month = $request->input('month');
+        $year = $request->input('year');
+
+        if ($month && $year) {
+            return $this->downloadBankFile((int) $month, (int) $year);
+        }
+
+        return view('admin.pages.payrolls.export-bank', []);
+    }
+
+    /**
+     * توليد وتحميل ملف CSV للبنك لشهر/سنة معينين
+     */
+    protected function downloadBankFile(int $month, int $year)
+    {
+        $payrolls = Payroll::with(['employee.primaryBankAccount', 'employee.bankAccounts', 'currency'])
+            ->whereIn('status', ['approved', 'paid'])
+            ->where('payroll_month', $month)
+            ->where('payroll_year', $year)
+            ->orderBy('employee_id')
+            ->get();
+
+        $filename = 'payroll-bank-' . $year . '-' . str_pad((string) $month, 2, '0', STR_PAD_LEFT) . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        return response()->streamDownload(function () use ($payrolls) {
+            $out = fopen('php://output', 'w');
+            fprintf($out, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM
+            fputcsv($out, ['beneficiary_name', 'iban', 'account_number', 'amount', 'currency', 'reference']);
+
+            foreach ($payrolls as $payroll) {
+                $account = $payroll->employee->primaryBankAccount ?? $payroll->employee->bankAccounts->where('is_active', true)->first();
+                $beneficiaryName = $account?->account_holder_name ?? $payroll->employee->full_name ?? 'N/A';
+                $iban = $account?->iban ?? '';
+                $accountNumber = $account?->account_number ?? '';
+                $amount = number_format((float) $payroll->net_salary, 2, '.', '');
+                $currency = $payroll->currency->code ?? 'SAR';
+                $reference = $payroll->payroll_code ?? '';
+
+                fputcsv($out, [$beneficiaryName, $iban, $accountNumber, $amount, $currency, $reference]);
+            }
+
+            fclose($out);
+        }, $filename, $headers);
     }
 }

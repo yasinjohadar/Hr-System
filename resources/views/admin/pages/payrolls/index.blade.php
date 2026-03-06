@@ -28,6 +28,9 @@
                             @can('payroll-create')
                             <a href="{{ route('admin.payrolls.create') }}" class="btn btn-primary btn-sm">إنشاء كشف راتب جديد</a>
                             @endcan
+                            @can('payroll-list')
+                            <a href="{{ route('admin.payrolls.export-bank-file') }}" class="btn btn-success btn-sm">تصدير للبنك</a>
+                            @endcan
 
                             <div class="flex-shrink-0">
                                 <form action="{{ route('admin.payrolls.index') }}" method="GET" class="d-flex align-items-center gap-2">

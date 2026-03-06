@@ -37,6 +37,16 @@ class EmployeeController extends Controller
         // بدء استعلام الموظفين
         $employeesQuery = Employee::with(['user', 'department', 'position', 'manager']);
 
+        // تقييد رئيس القسم بموظفي أقسامه فقط
+        if (Auth::user()->isDepartmentHead()) {
+            $departmentIds = Auth::user()->getManagedDepartmentIds();
+            if (!empty($departmentIds)) {
+                $employeesQuery->whereIn('department_id', $departmentIds);
+            } else {
+                $employeesQuery->whereRaw('1 = 0'); // لا أقسام يديرها = لا موظفين
+            }
+        }
+
         // فلترة حسب البحث
         if ($request->filled('query')) {
             $search = $request->input('query');
@@ -182,6 +192,14 @@ class EmployeeController extends Controller
     public function show(string $id)
     {
         $employee = Employee::with(['user', 'department', 'position', 'manager', 'creator'])->findOrFail($id);
+
+        // رئيس القسم يرى فقط موظفي أقسامه
+        if (Auth::user()->isDepartmentHead()) {
+            $departmentIds = Auth::user()->getManagedDepartmentIds();
+            if (empty($departmentIds) || !in_array($employee->department_id, $departmentIds)) {
+                abort(403, 'غير مصرح لك بعرض هذا الموظف.');
+            }
+        }
 
         // جلب سجل التغييرات الوظيفية المعتمدة مع العلاقات للعرض
         $jobChangeHistory = EmployeeJobChange::where('employee_id', $employee->id)

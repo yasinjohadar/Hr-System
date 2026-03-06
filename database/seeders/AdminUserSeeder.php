@@ -55,5 +55,28 @@ class AdminUserSeeder extends Seeder
         $employeeRole->syncPermissions(
             Permission::whereIn('name', $employeePermissions)->pluck('name')
         );
+
+        // إنشاء دور رئيس القسم (نفس لوحة الإدارة مع صلاحيات محدودة بنطاق القسم)
+        $departmentHeadRole = Role::firstOrCreate(['name' => 'department_head']);
+        $departmentHeadPermissions = [
+            'employee-list',
+            'employee-show',
+            'leave-request-list',
+            'leave-request-show',
+            'leave-request-approve',
+            'attendance-list',
+            'attendance-show',
+            'expense-request-list',
+            'expense-request-show',
+            'expense-request-approve',
+            'performance-review-list',
+            'performance-review-show',
+            'performance-review-approve',
+            'report-view',
+            'dashboard-view',
+        ];
+        $departmentHeadRole->syncPermissions(
+            Permission::whereIn('name', $departmentHeadPermissions)->pluck('name')
+        );
     }
 }

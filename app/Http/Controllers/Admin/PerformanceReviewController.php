@@ -8,6 +8,7 @@ use App\Services\ApprovalService;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class PerformanceReviewController extends Controller
 {
@@ -28,6 +29,15 @@ class PerformanceReviewController extends Controller
     public function index(Request $request)
     {
         $reviewsQuery = PerformanceReview::with(['employee.user', 'reviewer.user', 'approver']);
+
+        if (Auth::user()->isDepartmentHead()) {
+            $employeeIds = Auth::user()->getManagedEmployeeIds();
+            if (!empty($employeeIds)) {
+                $reviewsQuery->whereIn('employee_id', $employeeIds);
+            } else {
+                $reviewsQuery->whereRaw('1 = 0');
+            }
+        }
 
         // فلترة حسب الموظف
         if ($request->filled('employee_id')) {
@@ -54,6 +64,10 @@ class PerformanceReviewController extends Controller
             ->paginate(20);
 
         $employees = Employee::where('is_active', true)->with('user')->get();
+        if (Auth::user()->isDepartmentHead()) {
+            $managedIds = Auth::user()->getManagedEmployeeIds();
+            $employees = $employees->whereIn('id', $managedIds)->values();
+        }
 
         return view("admin.pages.performance-reviews.index", compact("reviews", "employees"));
     }
@@ -163,6 +177,14 @@ class PerformanceReviewController extends Controller
     public function show(string $id)
     {
         $review = PerformanceReview::with(['employee.user', 'reviewer.user', 'approver', 'creator'])->findOrFail($id);
+
+        if (Auth::user()->isDepartmentHead()) {
+            $employeeIds = Auth::user()->getManagedEmployeeIds();
+            if (!in_array($review->employee_id, $employeeIds)) {
+                abort(403, 'غير مصرح لك بعرض هذا التقييم.');
+            }
+        }
+
         return view("admin.pages.performance-reviews.show", compact("review"));
     }
 
@@ -278,6 +300,13 @@ class PerformanceReviewController extends Controller
         $review = PerformanceReview::findOrFail($id);
         $employee = $review->employee;
 
+        if (Auth::user()->isDepartmentHead()) {
+            $employeeIds = Auth::user()->getManagedEmployeeIds();
+            if (!in_array($review->employee_id, $employeeIds)) {
+                abort(403, 'غير مصرح لك بالموافقة على هذا التقييم.');
+            }
+        }
+
         // التحقق من أن المستخدم الحالي هو المقيّم أو لديه صلاحية الموافقة
         $approvalService = app(ApprovalService::class);
         $currentUser = auth()->user();
@@ -319,6 +348,13 @@ class PerformanceReviewController extends Controller
     public function reject(Request $request, string $id)
     {
         $review = PerformanceReview::findOrFail($id);
+
+        if (Auth::user()->isDepartmentHead()) {
+            $employeeIds = Auth::user()->getManagedEmployeeIds();
+            if (!in_array($review->employee_id, $employeeIds)) {
+                abort(403, 'غير مصرح لك برفض هذا التقييم.');
+            }
+        }
 
         if ($review->status != 'completed') {
             return back()->with('error', 'يمكن رفض فقط التقييمات المكتملة');

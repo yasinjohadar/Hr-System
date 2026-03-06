@@ -160,6 +160,14 @@ class PermissionSeeder extends Seeder
             "offer-letter-delete",
             "offer-letter-show",
 
+            // صلاحيات طلب التعيين
+            "requisition-list",
+            "requisition-create",
+            "requisition-edit",
+            "requisition-delete",
+            "requisition-show",
+            "requisition-approve",
+
             // صلاحيات المزايا والتعويضات
             "benefit-type-list",
             "benefit-type-create",
