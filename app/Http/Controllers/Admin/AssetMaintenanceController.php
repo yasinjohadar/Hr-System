@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Asset;
 use App\Models\AssetMaintenance;
 use App\Models\User;
+use App\Services\AssetLifecycleRecorder;
 use Illuminate\Http\Request;
 
 class AssetMaintenanceController extends Controller
@@ -83,7 +84,9 @@ class AssetMaintenanceController extends Controller
         $data = $request->all();
         $data['created_by'] = auth()->id();
 
-        AssetMaintenance::create($data);
+        $maintenance = AssetMaintenance::create($data);
+
+        app(AssetLifecycleRecorder::class)->recordMaintenanceCreated($maintenance);
 
         // تحديث حالة الأصل إذا كانت الصيانة قيد التنفيذ
         if ($request->status === 'in_progress') {
@@ -141,6 +144,9 @@ class AssetMaintenanceController extends Controller
         ]);
 
         $maintenance->update($request->all());
+        $maintenance->refresh();
+
+        app(AssetLifecycleRecorder::class)->recordMaintenanceStatusChanged($maintenance, $oldStatus);
 
         // تحديث حالة الأصل
         $asset = Asset::findOrFail($request->asset_id);

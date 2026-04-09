@@ -15,8 +15,8 @@ use App\Models\PerformanceReview;
 use App\Models\LeaveType;
 use App\Models\EmployeeBenefit;
 use App\Models\Task;
-use App\Models\TaskAssignment;
 use App\Models\Project;
+use App\Models\ProjectTimeEntry;
 use App\Models\Ticket;
 use App\Models\Meeting;
 use App\Models\MeetingAttendee;
@@ -379,11 +379,10 @@ class SelfServiceController extends Controller
             return redirect()->route('dashboard')->with('error', 'لا يوجد ملف موظف مرتبط بحسابك');
         }
 
-        $tasks = Task::where('assigned_to', $employee->id)
-            ->orWhereHas('assignments', function($q) use ($employee) {
-                $q->where('employee_id', $employee->id);
-            })
-            ->with(['project', 'assignedTo'])
+        $tasks = Task::whereHas('assignments', function ($q) use ($employee) {
+            $q->where('employee_id', $employee->id);
+        })
+            ->with(['project'])
             ->orderBy('due_date', 'asc')
             ->paginate(20);
 
@@ -402,13 +401,15 @@ class SelfServiceController extends Controller
             return redirect()->route('dashboard')->with('error', 'لا يوجد ملف موظف مرتبط بحسابك');
         }
 
-        $projects = Project::where('manager_id', $employee->id)
-            ->orWhereHas('tasks', function($q) use ($employee) {
-                $q->where('assigned_to', $employee->id)
-                  ->orWhereHas('assignments', function($q2) use ($employee) {
-                      $q2->where('employee_id', $employee->id);
-                  });
-            })
+        $projects = Project::where(function ($q) use ($employee) {
+            $q->where('manager_id', $employee->id)
+                ->orWhereHas('members', function ($q2) use ($employee) {
+                    $q2->where('employee_id', $employee->id);
+                })
+                ->orWhereHas('tasks.assignments', function ($q2) use ($employee) {
+                    $q2->where('employee_id', $employee->id);
+                });
+        })
             ->with(['manager', 'department', 'currency'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
@@ -804,5 +805,126 @@ class SelfServiceController extends Controller
             ->paginate(15);
 
         return view('employee.pages.self-service.training-records', compact('records'));
+    }
+
+    /**
+     * تفاصيل مشروع يشارك فيه الموظف
+     */
+    public function showProject(Project $project)
+    {
+        $user = Auth::user();
+        $employee = $user->employee;
+
+        if (! $employee) {
+            return redirect()->route('dashboard')->with('error', 'لا يوجد ملف موظف مرتبط بحسابك');
+        }
+
+        if (! $project->employeeCanParticipate($employee)) {
+            abort(403, 'ليس لديك صلاحية عرض هذا المشروع');
+        }
+
+        $project->load(['department', 'manager', 'currency', 'members.employee', 'documents.uploader']);
+
+        $myTasks = Task::where('project_id', $project->id)
+            ->whereHas('assignments', fn ($q) => $q->where('employee_id', $employee->id))
+            ->orderBy('due_date')
+            ->get();
+
+        $totalMyHours = (float) $project->timeEntries()
+            ->where('employee_id', $employee->id)
+            ->sum('hours');
+
+        return view('employee.pages.self-service.project-show', compact('project', 'employee', 'myTasks', 'totalMyHours'));
+    }
+
+    /**
+     * تسجيل وقت عمل على مشروع (الموظف الحالي فقط)
+     */
+    public function storeProjectTime(Request $request, Project $project)
+    {
+        $user = Auth::user();
+        $employee = $user->employee;
+
+        if (! $employee) {
+            return redirect()->back()->with('error', 'لا يوجد ملف موظف مرتبط بحسابك');
+        }
+
+        if (! $project->employeeCanParticipate($employee)) {
+            abort(403);
+        }
+
+        if (! $project->allowsTimeLogging()) {
+            return redirect()->back()->with('error', 'لا يمكن تسجيل وقت على هذا المشروع في وضعه الحالي.');
+        }
+
+        $validated = $request->validate([
+            'task_id' => 'nullable|exists:tasks,id',
+            'worked_date' => 'required|date',
+            'hours' => 'required|numeric|min:0.01|max:24',
+            'description' => 'nullable|string|max:2000',
+        ]);
+
+        if (! empty($validated['task_id'])) {
+            $belongs = Task::where('project_id', $project->id)
+                ->where('id', $validated['task_id'])
+                ->exists();
+            if (! $belongs) {
+                return redirect()->back()->withInput()->with('error', 'المهمة لا تنتمي لهذا المشروع.');
+            }
+        }
+
+        ProjectTimeEntry::create([
+            'project_id' => $project->id,
+            'employee_id' => $employee->id,
+            'task_id' => $validated['task_id'] ?? null,
+            'worked_date' => $validated['worked_date'],
+            'hours' => $validated['hours'],
+            'description' => $validated['description'] ?? null,
+            'created_by' => $user->id,
+        ]);
+
+        return redirect()
+            ->route('employee.projects.show', $project)
+            ->with('success', 'تم تسجيل الوقت بنجاح.');
+    }
+
+    /**
+     * سجلات وقت الموظف (فلترة بالمشروع والفترة)
+     */
+    public function projectTimeIndex(Request $request)
+    {
+        $user = Auth::user();
+        $employee = $user->employee;
+
+        if (! $employee) {
+            return redirect()->route('dashboard')->with('error', 'لا يوجد ملف موظف مرتبط بحسابك');
+        }
+
+        $query = ProjectTimeEntry::where('employee_id', $employee->id)
+            ->with(['project', 'task']);
+
+        if ($request->filled('project_id')) {
+            $query->where('project_id', $request->input('project_id'));
+        }
+
+        if ($request->filled('from')) {
+            $query->whereDate('worked_date', '>=', $request->input('from'));
+        }
+
+        if ($request->filled('to')) {
+            $query->whereDate('worked_date', '<=', $request->input('to'));
+        }
+
+        $entries = $query->orderByDesc('worked_date')->orderByDesc('id')->paginate(20)->withQueryString();
+
+        $accessibleProjects = Project::where(function ($q) use ($employee) {
+            $q->where('manager_id', $employee->id)
+                ->orWhereHas('members', fn ($q2) => $q2->where('employee_id', $employee->id))
+                ->orWhereHas('tasks.assignments', fn ($q2) => $q2->where('employee_id', $employee->id));
+        })
+            ->orderBy('name')
+            ->get();
+
+        return view('employee.pages.self-service.project-time', compact('entries', 'accessibleProjects'));
     }
 }

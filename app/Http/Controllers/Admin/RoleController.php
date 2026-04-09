@@ -12,6 +12,7 @@ class RoleController extends Controller
 
 public function __construct()
 {
+    $this->middleware('auth');
     // يمكنه فقط رؤية قائمة الصلاحيات (index)
     $this->middleware(['permission:role-list'])->only('index');
 
@@ -32,7 +33,7 @@ public function __construct()
     {
         return [
             'المستخدمون والأدوار' => ['role-', 'user-'],
-            'إدارة الموارد البشرية' => ['employee-', 'department-', 'position-', 'branch-', 'country-', 'currency-'],
+            'إدارة الموارد البشرية' => ['employee-', 'department-', 'position-', 'branch-', 'country-', 'currency-', 'announcement-', 'contract-', 'policy-', 'employee-job-change-'],
             'الرواتب وكشوف الرواتب' => ['salary-', 'payroll-', 'salary-component-', 'tax-setting-', 'bank-account-', 'payroll-payment-', 'payroll-approval-'],
             'إدارة الإجازات' => ['leave-type-', 'leave-request-', 'leave-balance-'],
             'الحضور والانصراف' => ['attendance-', 'shift-', 'shift-assignment-', 'attendance-rule-', 'overtime-', 'attendance-location-', 'attendance-break-'],
@@ -40,6 +41,7 @@ public function __construct()
             'التوظيف والعروض' => ['job-vacancy-', 'candidate-', 'job-application-', 'interview-', 'offer-letter-', 'requisition-'],
             'المزايا والتعويضات' => ['benefit-type-', 'employee-benefit-'],
             'التقارير' => ['report-', 'reports-'],
+            'مركز الموافقات' => ['approval-'],
             'المصروفات' => ['expense-category-', 'expense-request-'],
             'المستندات والمهارات والشهادات والأهداف' => ['employee-document-', 'employee-skill-', 'employee-certificate-', 'employee-goal-'],
             'إنهاء الخدمة' => ['employee-exit-'],

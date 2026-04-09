@@ -14,6 +14,12 @@ class PolicyController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+        $this->middleware('permission:policy-list')->only('index');
+        $this->middleware('permission:policy-create')->only(['create', 'store']);
+        $this->middleware('permission:policy-edit')->only(['edit', 'update']);
+        $this->middleware('permission:policy-delete')->only('destroy');
+        $this->middleware('permission:policy-show')->only('show');
+        $this->middleware('permission:policy-acknowledge')->only('acknowledge');
     }
 
     public function index(Request $request)

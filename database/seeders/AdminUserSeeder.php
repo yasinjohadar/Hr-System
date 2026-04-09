@@ -42,7 +42,9 @@ class AdminUserSeeder extends Seeder
         // منح صلاحيات محدودة للمستخدم العادي
         $userPermissions = [
             'dashboard-view',
-            'user-show', // يمكنه رؤية ملفه الشخصي فقط
+            'user-show',
+            'notification-list',
+            'notification-mark-read',
         ];
 
         $userRole->syncPermissions($userPermissions);
@@ -56,7 +58,8 @@ class AdminUserSeeder extends Seeder
             Permission::whereIn('name', $employeePermissions)->pluck('name')
         );
 
-        // إنشاء دور رئيس القسم (نفس لوحة الإدارة مع صلاحيات محدودة بنطاق القسم)
+        // إنشاء دور رئيس القسم (لوحة الإدارة مع صلاحيات محدودة بنطاق القسم؛ يُدمج غالباً مع employee للبوابة الذاتية)
+        // انظر plan/department-head-runtime.md لتعيين manager_id على الأقسام والأدوار الموصى بها.
         $departmentHeadRole = Role::firstOrCreate(['name' => 'department_head']);
         $departmentHeadPermissions = [
             'employee-list',
@@ -72,11 +75,61 @@ class AdminUserSeeder extends Seeder
             'performance-review-list',
             'performance-review-show',
             'performance-review-approve',
+            'approval-list',
+            'approval-show',
             'report-view',
+            'report-employees',
+            'report-attendance',
+            'report-salaries',
+            'report-leaves',
+            'report-performance',
+            'report-training',
+            'report-recruitment',
+            'report-benefits',
+            'report-dashboard',
+            'report-turnover',
+            'report-training-effectiveness',
+            'report-kpis',
+            'notification-list',
+            'notification-mark-read',
             'dashboard-view',
         ];
         $departmentHeadRole->syncPermissions(
             Permission::whereIn('name', $departmentHeadPermissions)->pluck('name')
         );
+
+        // المدير التنفيذي والمدير العام — خطوات سير العمل (Workflow) للموافقة التسلسلية بعد رئيس القسم
+        $hierarchyApprovalPermissions = [
+            'dashboard-view',
+            'approval-list',
+            'approval-show',
+            'leave-request-list',
+            'leave-request-show',
+            'leave-request-approve',
+            'expense-request-list',
+            'expense-request-show',
+            'expense-request-approve',
+            'employee-job-change-list',
+            'employee-job-change-show',
+            'employee-job-change-approve',
+            'employee-job-change-reject',
+            'notification-list',
+            'notification-mark-read',
+        ];
+        $hierarchyPermNames = Permission::whereIn('name', $hierarchyApprovalPermissions)->pluck('name');
+
+        $executiveRole = Role::firstOrCreate(['name' => 'executive_director']);
+        $executiveRole->syncPermissions($hierarchyPermNames);
+
+        $generalManagerRole = Role::firstOrCreate(['name' => 'general_manager']);
+        $generalManagerRole->syncPermissions($hierarchyPermNames);
+
+        // للتطوير: ربط المدير الافتراضي بهذين الدورين حتى يعمل getRoleApprover (يُفضّل لاحقاً مستخدمون منفصلون)
+        if (! $adminUser->hasRole($executiveRole)) {
+            $adminUser->assignRole($executiveRole);
+        }
+        if (! $adminUser->hasRole($generalManagerRole)) {
+            $adminUser->assignRole($generalManagerRole);
+        }
     }
 }

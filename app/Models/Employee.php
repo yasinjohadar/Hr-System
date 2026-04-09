@@ -225,6 +225,14 @@ class Employee extends Model
     }
 
     /**
+     * العلاقة مع السلف
+     */
+    public function advances(): HasMany
+    {
+        return $this->hasMany(EmployeeAdvance::class);
+    }
+
+    /**
      * العلاقة مع طلبات الإجازات
      */
     public function leaveRequests(): HasMany

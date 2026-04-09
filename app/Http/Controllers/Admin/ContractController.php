@@ -14,6 +14,12 @@ class ContractController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+        $this->middleware('permission:contract-list')->only('index');
+        $this->middleware('permission:contract-create')->only(['create', 'store']);
+        $this->middleware('permission:contract-edit')->only(['edit', 'update']);
+        $this->middleware('permission:contract-delete')->only('destroy');
+        $this->middleware('permission:contract-show')->only('show');
+        $this->middleware('permission:contract-renew')->only(['renew', 'storeRenew']);
     }
 
     public function index(Request $request)

@@ -25,6 +25,8 @@ class PermissionSeeder extends Seeder
             "user-edit",
             "user-delete",
             "user-show",
+            "user-change-password",
+            "user-toggle-status",
 
             // صلاحيات الموظفين
             "employee-list",
@@ -68,19 +70,17 @@ class PermissionSeeder extends Seeder
             "currency-delete",
             "currency-show",
 
-            // صلاحيات المناصب
-            "position-list",
-            "position-create",
-            "position-edit",
-            "position-delete",
-            "position-show",
-
             // صلاحيات الرواتب
             "salary-list",
             "salary-create",
             "salary-edit",
             "salary-delete",
             "salary-show",
+
+            "employee-advance-list",
+            "employee-advance-create",
+            "employee-advance-edit",
+            "employee-advance-delete",
 
             // صلاحيات أنواع الإجازات
             "leave-type-list",
@@ -96,6 +96,7 @@ class PermissionSeeder extends Seeder
             "leave-request-delete",
             "leave-request-show",
             "leave-request-approve",
+            "leave-request-approve-all",
 
             // صلاحيات أرصدة الإجازات
             "leave-balance-list",
@@ -184,6 +185,18 @@ class PermissionSeeder extends Seeder
             "report-view",
             "report-export",
             "report-create",
+            "report-employees",
+            "report-attendance",
+            "report-salaries",
+            "report-leaves",
+            "report-performance",
+            "report-training",
+            "report-recruitment",
+            "report-benefits",
+            "report-dashboard",
+            "report-turnover",
+            "report-training-effectiveness",
+            "report-kpis",
 
             // صلاحيات الإشعارات
             "notification-list",
@@ -191,6 +204,7 @@ class PermissionSeeder extends Seeder
             "notification-edit",
             "notification-delete",
             "notification-show",
+            "notification-mark-read",
 
             // صلاحيات الإعدادات
             "setting-view",
@@ -268,6 +282,7 @@ class PermissionSeeder extends Seeder
             "expense-request-delete",
             "expense-request-show",
             "expense-request-approve",
+            "expense-request-approve-all",
             "expense-request-pay",
 
             // صلاحيات أنواع المخالفات
@@ -479,6 +494,41 @@ class PermissionSeeder extends Seeder
             "overtime-edit",
             "overtime-delete",
             "overtime-show",
+
+            // صلاحيات الإعلانات
+            "announcement-list",
+            "announcement-create",
+            "announcement-edit",
+            "announcement-delete",
+            "announcement-show",
+
+            // صلاحيات العقود
+            "contract-list",
+            "contract-create",
+            "contract-edit",
+            "contract-delete",
+            "contract-show",
+            "contract-renew",
+
+            // صلاحيات السياسات
+            "policy-list",
+            "policy-create",
+            "policy-edit",
+            "policy-delete",
+            "policy-show",
+            "policy-acknowledge",
+
+            // مركز الموافقات
+            "approval-list",
+            "approval-show",
+
+            // التغييرات الوظيفية
+            "employee-job-change-list",
+            "employee-job-change-create",
+            "employee-job-change-edit",
+            "employee-job-change-show",
+            "employee-job-change-approve",
+            "employee-job-change-reject",
 
             // صلاحيات إضافية للنظام
             "dashboard-view",

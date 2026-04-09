@@ -21,8 +21,8 @@ class EnsureUserIsAdmin
         }
 
         $user = Auth::user();
-        // من لديه دور موظف فقط (بدون دور إداري) يُوجّه إلى لوحة الموظف
-        if ($user->hasRole('employee') && !$user->hasAnyRole(['admin', 'user'])) {
+        // من لديه دور موظف فقط (بدون أي دور يسمح بالوصول للإدارة) يُوجّه إلى لوحة الموظف
+        if ($user->hasRole('employee') && ! $user->hasAnyRole(['admin', 'user', 'department_head'])) {
             return redirect()->route('employee.dashboard')
                 ->with('error', 'ليس لديك صلاحية الدخول إلى لوحة الإدارة.');
         }

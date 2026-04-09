@@ -14,7 +14,7 @@ class EmployeeExitController extends Controller
         $this->middleware('auth');
         $this->middleware('permission:employee-exit-list')->only(['index', 'show']);
         $this->middleware('permission:employee-exit-create')->only(['create', 'store']);
-        $this->middleware('permission:employee-exit-edit')->only(['edit', 'update']);
+        $this->middleware('permission:employee-exit-edit')->only(['edit', 'update', 'completeExitInterview', 'approve']);
         $this->middleware('permission:employee-exit-delete')->only('destroy');
     }
 

@@ -11,6 +11,18 @@ use Illuminate\Support\Facades\Log;
 class ApprovalService
 {
     /**
+     * صلاحية "الموافقة على الكل" المقابلة لنوع سير العمل (أسماء Spatie تستخدم شرطات).
+     */
+    public function approveAllPermissionForWorkflow(string $workflowType): ?string
+    {
+        return match ($workflowType) {
+            'leave_request' => 'leave-request-approve-all',
+            'expense_request' => 'expense-request-approve-all',
+            default => null,
+        };
+    }
+
+    /**
      * تحديد الموافق بناءً على نوع الموافق في WorkflowStep
      * 
      * @param WorkflowStep $step
@@ -184,8 +196,8 @@ class ApprovalService
             return true;
         }
 
-        // التحقق من الصلاحيات الإضافية (مثل admin يمكنه الموافقة على كل شيء)
-        if ($user->hasPermissionTo($workflowType . '-approve-all')) {
+        $approveAll = $this->approveAllPermissionForWorkflow($workflowType);
+        if ($approveAll && $user->hasPermissionTo($approveAll)) {
             return true;
         }
 

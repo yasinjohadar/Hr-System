@@ -62,7 +62,7 @@
 
 
 
-                            <form method="POST" action="{{ route('roles.update', 'test') }}">
+                            <form id="role-edit-form" method="POST" action="{{ route('roles.update', $role->id) }}">
                                 @csrf
                                 @method('PUT')
                                 <div class="row">
@@ -74,6 +74,11 @@
                                     </div>
                                 </div>
 
+                                <div class="sticky-top py-2 mb-3 border-bottom d-flex justify-content-end gap-2 align-items-center bg-body"
+                                    style="z-index: 1020;">
+                                    <a href="{{ route('roles.index') }}" class="btn btn-danger">إغلاق</a>
+                                    <button type="submit" class="btn btn-primary">تعديل بيانات الرول</button>
+                                </div>
 
                                 <div class="mb-4">
                                     <label class="form-label fw-bold d-block mb-3">الصلاحيات</label>
@@ -95,8 +100,9 @@
                                                                                 value="{{ $permission->name }}"
                                                                                 id="perm_edit_{{ $permission->id }}"
                                                                                 {{ $role->hasPermissionTo($permission->name) ? 'checked' : '' }}>
-                                                                            <label class="form-check-label small" for="perm_edit_{{ $permission->id }}">
-                                                                                {{ $permission->name }}
+                                                                            <label class="form-check-label small" for="perm_edit_{{ $permission->id }}"
+                                                                                title="{{ $permission->name }}">
+                                                                                {{ permission_label($permission->name) }}
                                                                             </label>
                                                                         </div>
                                                                     </li>
@@ -112,8 +118,8 @@
 
                                 <input type="hidden" value="{{ $role->id }}" name="id">
 
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">إغلاق</button>
+                                <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                                    <a href="{{ route('roles.index') }}" class="btn btn-danger">إغلاق</a>
                                     <button type="submit" class="btn btn-primary">تعديل بيانات الرول</button>
                                 </div>
 

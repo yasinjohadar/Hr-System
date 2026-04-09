@@ -59,7 +59,7 @@ class WorkflowService
             'workflow_step_id' => $firstStep->id,
             'entity_type' => $entityType,
             'entity_id' => $entityId,
-            'status' => 'pending',
+            'status' => 'in_progress',
             'initiated_by' => auth()->id(),
             'started_at' => now(),
         ]);
@@ -187,6 +187,7 @@ class WorkflowService
         return match($entityType) {
             'LeaveRequest' => \App\Models\LeaveRequest::class,
             'ExpenseRequest' => \App\Models\ExpenseRequest::class,
+            'EmployeeJobChange' => \App\Models\EmployeeJobChange::class,
             'OvertimeRecord' => \App\Models\OvertimeRecord::class,
             'Payroll' => \App\Models\Payroll::class,
             'PerformanceReview' => \App\Models\PerformanceReview::class,
@@ -215,22 +216,27 @@ class WorkflowService
      */
     private function updateEntityStatus($entity, string $status, ?string $rejectionReason = null): void
     {
-        if (method_exists($entity, 'update')) {
-            $updateData = ['status' => $status];
-            
-            if ($status === 'approved' && method_exists($entity, 'approved_by')) {
+        if (! method_exists($entity, 'update')) {
+            return;
+        }
+
+        $updateData = ['status' => $status];
+        $fillable = $entity->getFillable();
+
+        if ($status === 'approved') {
+            if (in_array('approved_by', $fillable, true)) {
                 $updateData['approved_by'] = auth()->id();
+            }
+            if (in_array('approved_at', $fillable, true)) {
                 $updateData['approved_at'] = now();
             }
-            
-            if ($status === 'rejected' && $rejectionReason) {
-                if (method_exists($entity, 'rejection_reason')) {
-                    $updateData['rejection_reason'] = $rejectionReason;
-                }
-            }
-
-            $entity->update($updateData);
         }
+
+        if ($status === 'rejected' && $rejectionReason && in_array('rejection_reason', $fillable, true)) {
+            $updateData['rejection_reason'] = $rejectionReason;
+        }
+
+        $entity->update($updateData);
     }
 
     /**
@@ -289,6 +295,7 @@ class WorkflowService
             return match($entityType) {
                 'LeaveRequest' => "إجازة من {$entity->start_date->format('Y-m-d')} إلى {$entity->end_date->format('Y-m-d')}",
                 'ExpenseRequest' => "مصروف: {$entity->amount} " . ($entity->currency?->code ?? $entity->currency_id ?? 'SAR'),
+                'EmployeeJobChange' => 'تغيير وظيفي: ' . ($entity->change_type_label ?? $entity->change_type ?? ''),
                 'OvertimeRecord' => "ساعات إضافية: " . ($entity->overtime_hours ?? $entity->hours ?? 0) . " ساعة",
                 'PerformanceReview' => "تقييم أداء: " . ($entity->review_period ?? 'غير محدد'),
                 default => 'طلب موافقة',

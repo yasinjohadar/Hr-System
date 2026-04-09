@@ -87,6 +87,11 @@ class Task extends Model
         return $this->hasMany(TaskAssignment::class);
     }
 
+    public function projectTimeEntries(): HasMany
+    {
+        return $this->hasMany(ProjectTimeEntry::class);
+    }
+
     /**
      * العلاقة مع الموظفين المعينين (Many-to-Many عبر TaskAssignment)
      */

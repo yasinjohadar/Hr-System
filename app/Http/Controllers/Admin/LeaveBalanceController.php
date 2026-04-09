@@ -49,9 +49,16 @@ class LeaveBalanceController extends Controller
         $employees = Employee::where('is_active', true)->with('user')->get();
         $leaveTypes = LeaveType::where('is_active', true)->get();
         $years = LeaveBalance::select('year')->distinct()->orderBy('year', 'desc')->pluck('year');
-        $currentYear = $request->input('year', date('Y'));
 
-        return view("admin.pages.leave-balances.index", compact("leaveBalances", "employees", "leaveTypes", "years", "currentYear"));
+        if ($request->ajax() || $request->boolean('ajax')) {
+            return response()->json([
+                'html_rows' => view('admin.pages.leave-balances._index_rows', compact('leaveBalances'))->render(),
+                'html_pagination' => view('admin.pages.leave-balances._index_pagination', compact('leaveBalances'))->render(),
+                'total' => $leaveBalances->total(),
+            ]);
+        }
+
+        return view("admin.pages.leave-balances.index", compact("leaveBalances", "employees", "leaveTypes", "years"));
     }
 
     /**

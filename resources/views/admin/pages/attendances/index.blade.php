@@ -32,153 +32,97 @@
                 <div class="my-auto">
                     <h5 class="page-title fs-21 mb-1">كافة سجلات الحضور والانصراف</h5>
                 </div>
+                <div class="mt-2 mt-md-0">
+                    @can('attendance-create')
+                        <a href="{{ route('admin.attendances.create') }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-1"></i>إضافة سجل حضور جديد
+                        </a>
+                    @endcan
+                </div>
             </div>
 
-            <div class="row">
-                <div class="col-xl-12">
-                    <div class="card">
-                        <div class="card-header align-items-center d-flex gap-3">
-                            @can('attendance-create')
-                            <a href="{{ route('admin.attendances.create') }}" class="btn btn-primary btn-sm">إضافة سجل حضور جديد</a>
-                            @endcan
-
-                            <div class="flex-shrink-0">
-                                <form action="{{ route('admin.attendances.index') }}" method="GET" class="d-flex align-items-center gap-2">
-                                    <select name="employee_id" class="form-select" style="width: 200px;">
-                                        <option value="">كل الموظفين</option>
-                                        @foreach ($employees as $employee)
-                                            <option value="{{ $employee->id }}" {{ request('employee_id') == $employee->id ? 'selected' : '' }}>
-                                                {{ $employee->full_name ?? $employee->first_name . ' ' . $employee->last_name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <input type="date" name="start_date" class="form-control" style="width: 150px;"
-                                           value="{{ request('start_date', $currentStartDate) }}">
-                                    <input type="date" name="end_date" class="form-control" style="width: 150px;"
-                                           value="{{ request('end_date', $currentEndDate) }}">
-                                    <select name="status" class="form-select" style="width: 150px;">
-                                        <option value="">كل الحالات</option>
-                                        <option value="present" {{ request('status') == 'present' ? 'selected' : '' }}>حاضر</option>
-                                        <option value="absent" {{ request('status') == 'absent' ? 'selected' : '' }}>غائب</option>
-                                        <option value="late" {{ request('status') == 'late' ? 'selected' : '' }}>متأخر</option>
-                                        <option value="half_day" {{ request('status') == 'half_day' ? 'selected' : '' }}>نصف يوم</option>
-                                        <option value="on_leave" {{ request('status') == 'on_leave' ? 'selected' : '' }}>في إجازة</option>
-                                        <option value="holiday" {{ request('status') == 'holiday' ? 'selected' : '' }}>عطلة</option>
-                                    </select>
-                                    <button type="submit" class="btn btn-secondary">بحث</button>
-                                    <a href="{{ route('admin.attendances.index') }}" class="btn btn-danger">مسح</a>
-                                </form>
-                            </div>
+            <div class="card mb-3">
+                <div class="card-body py-3">
+                    <form id="attendances-filter-form" method="GET" action="{{ route('admin.attendances.index') }}"
+                        class="row g-2 align-items-end"
+                        data-default-start="{{ \Carbon\Carbon::now()->subDays(30)->format('Y-m-d') }}"
+                        data-default-end="{{ \Carbon\Carbon::now()->format('Y-m-d') }}">
+                        <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                            <label class="form-label small text-muted mb-0" for="att-filter-employee">الموظف</label>
+                            <select name="employee_id" id="att-filter-employee" class="form-select form-select-sm">
+                                <option value="">كل الموظفين</option>
+                                @foreach ($employees as $employee)
+                                    <option value="{{ $employee->id }}" {{ request()->filled('employee_id') && (string) request('employee_id') === (string) $employee->id ? 'selected' : '' }}>
+                                        {{ $employee->full_name ?? $employee->first_name . ' ' . $employee->last_name }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
-
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-striped table-hover align-middle table-nowrap mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>#</th>
-                                            <th>الموظف</th>
-                                            <th>التاريخ</th>
-                                            <th>وقت الدخول</th>
-                                            <th>وقت الخروج</th>
-                                            <th>ساعات العمل</th>
-                                            <th>التأخير</th>
-                                            <th>ساعات إضافية</th>
-                                            <th>الحالة</th>
-                                            <th>العمليات</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse ($attendances as $attendance)
-                                            <tr>
-                                                <th>{{ $loop->iteration }}</th>
-                                                <td>
-                                                    <strong>{{ $attendance->employee->full_name ?? $attendance->employee->first_name . ' ' . $attendance->employee->last_name }}</strong>
-                                                    <br><small class="text-muted">{{ $attendance->employee->employee_code ?? '' }}</small>
-                                                </td>
-                                                <td>{{ $attendance->attendance_date->format('Y-m-d') }}</td>
-                                                <td>
-                                                    @if ($attendance->check_in)
-                                                        <span class="badge bg-success">{{ is_string($attendance->check_in) ? $attendance->check_in : $attendance->check_in->format('H:i') }}</span>
-                                                    @else
-                                                        <span class="text-muted">-</span>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    @if ($attendance->check_out)
-                                                        <span class="badge bg-info">{{ is_string($attendance->check_out) ? $attendance->check_out : $attendance->check_out->format('H:i') }}</span>
-                                                    @else
-                                                        <span class="text-muted">-</span>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    @if ($attendance->hours_worked > 0)
-                                                        <span class="badge bg-primary">{{ $attendance->hours_worked_formatted }}</span>
-                                                    @else
-                                                        <span class="text-muted">-</span>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    @if ($attendance->late_minutes > 0)
-                                                        <span class="badge bg-warning">{{ $attendance->late_minutes }} دقيقة</span>
-                                                    @else
-                                                        <span class="text-muted">-</span>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    @if ($attendance->overtime_minutes > 0)
-                                                        <span class="badge bg-success">{{ floor($attendance->overtime_minutes / 60) }}:{{ str_pad($attendance->overtime_minutes % 60, 2, '0', STR_PAD_LEFT) }}</span>
-                                                    @else
-                                                        <span class="text-muted">-</span>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    @if ($attendance->status == 'present')
-                                                        <span class="badge bg-success">حاضر</span>
-                                                    @elseif ($attendance->status == 'absent')
-                                                        <span class="badge bg-danger">غائب</span>
-                                                    @elseif ($attendance->status == 'late')
-                                                        <span class="badge bg-warning">متأخر</span>
-                                                    @elseif ($attendance->status == 'half_day')
-                                                        <span class="badge bg-info">نصف يوم</span>
-                                                    @elseif ($attendance->status == 'on_leave')
-                                                        <span class="badge bg-secondary">في إجازة</span>
-                                                    @else
-                                                        <span class="badge bg-primary">عطلة</span>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    @can('attendance-show')
-                                                    <a class="btn btn-info btn-sm me-1" href="{{ route('admin.attendances.show', $attendance->id) }}" title="عرض">
-                                                        <i class="fa-solid fa-eye"></i>
-                                                    </a>
-                                                    @endcan
-                                                    @can('attendance-edit')
-                                                    <a class="btn btn-warning btn-sm me-1" href="{{ route('admin.attendances.edit', $attendance->id) }}" title="تعديل">
-                                                        <i class="fa-solid fa-pen-to-square"></i>
-                                                    </a>
-                                                    @endcan
-                                                    @can('attendance-delete')
-                                                    <a class="btn btn-danger btn-sm me-1" data-bs-toggle="modal" data-bs-target="#delete{{ $attendance->id }}" title="حذف">
-                                                        <i class="fa-solid fa-trash-can"></i>
-                                                    </a>
-                                                    @endcan
-                                                </td>
-                                            </tr>
-                                            @include('admin.pages.attendances.delete')
-                                        @empty
-                                            <tr>
-                                                <td colspan="10" class="text-center text-danger fw-bold">لا توجد بيانات متاحة</td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-
-                                <div class="mt-3">
-                                    {{ $attendances->withQueryString()->links() }}
-                                </div>
-                            </div>
+                        <div class="col-12 col-sm-6 col-md-4 col-xl-2">
+                            <label class="form-label small text-muted mb-0" for="att-filter-start">من تاريخ</label>
+                            <input type="date" name="start_date" id="att-filter-start" class="form-control form-control-sm"
+                                value="{{ request('start_date', $currentStartDate) }}">
                         </div>
+                        <div class="col-12 col-sm-6 col-md-4 col-xl-2">
+                            <label class="form-label small text-muted mb-0" for="att-filter-end">إلى تاريخ</label>
+                            <input type="date" name="end_date" id="att-filter-end" class="form-control form-control-sm"
+                                value="{{ request('end_date', $currentEndDate) }}">
+                        </div>
+                        <div class="col-12 col-sm-6 col-md-4 col-xl-2">
+                            <label class="form-label small text-muted mb-0" for="att-filter-status">الحالة</label>
+                            <select name="status" id="att-filter-status" class="form-select form-select-sm">
+                                <option value="">كل الحالات</option>
+                                <option value="present" {{ request()->filled('status') && request('status') === 'present' ? 'selected' : '' }}>حاضر</option>
+                                <option value="absent" {{ request()->filled('status') && request('status') === 'absent' ? 'selected' : '' }}>غائب</option>
+                                <option value="late" {{ request()->filled('status') && request('status') === 'late' ? 'selected' : '' }}>متأخر</option>
+                                <option value="half_day" {{ request()->filled('status') && request('status') === 'half_day' ? 'selected' : '' }}>نصف يوم</option>
+                                <option value="on_leave" {{ request()->filled('status') && request('status') === 'on_leave' ? 'selected' : '' }}>في إجازة</option>
+                                <option value="holiday" {{ request()->filled('status') && request('status') === 'holiday' ? 'selected' : '' }}>عطلة</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-sm-6 col-md-4 col-xl-1">
+                            <label class="form-label small text-muted mb-0 d-block" for="att-filter-submit">&nbsp;</label>
+                            <button type="submit" id="att-filter-submit" class="btn btn-sm btn-primary w-100 text-nowrap">
+                                <i class="fas fa-search me-1"></i>بحث
+                            </button>
+                        </div>
+                        <div class="col-12 col-sm-6 col-md-4 col-xl-2">
+                            <label class="form-label small text-muted mb-0 d-block" for="attendances-filter-clear">&nbsp;</label>
+                            <button type="button" class="btn btn-sm btn-outline-secondary w-100 text-nowrap" id="attendances-filter-clear">إلغاء الفلترة</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card position-relative" id="attendances-table-card">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <h5 class="card-title mb-0">سجلات الحضور (<span id="attendances-total">{{ $attendances->total() }}</span>)</h5>
+                    <span id="attendances-loading" class="spinner-border spinner-border-sm text-primary d-none" role="status" aria-hidden="true"></span>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover align-middle table-nowrap mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>الموظف</th>
+                                    <th>التاريخ</th>
+                                    <th>وقت الدخول</th>
+                                    <th>وقت الخروج</th>
+                                    <th>ساعات العمل</th>
+                                    <th>التأخير</th>
+                                    <th>ساعات إضافية</th>
+                                    <th>الحالة</th>
+                                    <th>العمليات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendances-table-body">
+                                @include('admin.pages.attendances._index_rows', ['attendances' => $attendances])
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-3" id="attendances-pagination">
+                        @include('admin.pages.attendances._index_pagination', ['attendances' => $attendances])
                     </div>
                 </div>
             </div>
@@ -187,5 +131,109 @@
 @stop
 
 @section('js')
-@stop
+<script>
+(function () {
+    const form = document.getElementById('attendances-filter-form');
+    const tbody = document.getElementById('attendances-table-body');
+    const paginationEl = document.getElementById('attendances-pagination');
+    const totalEl = document.getElementById('attendances-total');
+    const loadingEl = document.getElementById('attendances-loading');
 
+    const jsonHeaders = {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json',
+    };
+
+    function setLoading(on) {
+        if (loadingEl) loadingEl.classList.toggle('d-none', !on);
+    }
+
+    function loadAttendances(url) {
+        const absoluteUrl = url.startsWith('http') ? url : new URL(url, window.location.origin).href;
+        setLoading(true);
+        fetch(absoluteUrl, {
+            method: 'GET',
+            headers: jsonHeaders,
+            credentials: 'same-origin',
+        })
+            .then(function (r) {
+                if (!r.ok) throw new Error('Network error');
+                return r.json();
+            })
+            .then(function (data) {
+                tbody.innerHTML = data.html_rows;
+                paginationEl.innerHTML = data.html_pagination;
+                totalEl.textContent = data.total;
+                try {
+                    const u = new URL(absoluteUrl);
+                    history.pushState({ attendancesAjax: true }, '', u.pathname + u.search);
+                } catch (e) { /* ignore */ }
+            })
+            .catch(function () {
+                window.location.href = url;
+            })
+            .finally(function () {
+                setLoading(false);
+            });
+    }
+
+    function filterUrlPageOne() {
+        const action = form.getAttribute('action');
+        const params = new URLSearchParams(new FormData(form));
+        params.set('page', '1');
+        return action + (params.toString() ? '?' + params.toString() : '');
+    }
+
+    const clearBtn = document.getElementById('attendances-filter-clear');
+    if (clearBtn && form) {
+        clearBtn.addEventListener('click', function () {
+            const ds = form.getAttribute('data-default-start') || '';
+            const de = form.getAttribute('data-default-end') || '';
+            form.querySelectorAll('select').forEach(function (sel) {
+                sel.selectedIndex = 0;
+            });
+            const startIn = form.querySelector('[name="start_date"]');
+            const endIn = form.querySelector('[name="end_date"]');
+            if (startIn) startIn.value = ds;
+            if (endIn) endIn.value = de;
+            loadAttendances(filterUrlPageOne());
+        });
+    }
+
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            loadAttendances(filterUrlPageOne());
+        });
+
+        form.querySelectorAll('select').forEach(function (sel) {
+            sel.addEventListener('change', function () {
+                loadAttendances(filterUrlPageOne());
+            });
+        });
+
+        ['att-filter-start', 'att-filter-end'].forEach(function (id) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('change', function () {
+                    loadAttendances(filterUrlPageOne());
+                });
+            }
+        });
+    }
+
+    document.addEventListener('click', function (e) {
+        const pagLink = e.target.closest('#attendances-pagination a[href]');
+        if (!pagLink) return;
+        const href = pagLink.getAttribute('href');
+        if (!href || href === '#') return;
+        e.preventDefault();
+        loadAttendances(href);
+    });
+
+    window.addEventListener('popstate', function () {
+        window.location.reload();
+    });
+})();
+</script>
+@stop

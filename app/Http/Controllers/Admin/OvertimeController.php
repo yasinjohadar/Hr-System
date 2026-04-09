@@ -16,7 +16,7 @@ class OvertimeController extends Controller
         $this->middleware('auth');
         $this->middleware('permission:overtime-list')->only('index');
         $this->middleware('permission:overtime-create')->only(['create', 'store']);
-        $this->middleware('permission:overtime-edit')->only(['edit', 'update', 'approve', 'reject']);
+        $this->middleware('permission:overtime-edit')->only(['edit', 'update', 'approve', 'reject', 'calculateFromAttendance']);
         $this->middleware('permission:overtime-delete')->only('destroy');
         $this->middleware('permission:overtime-show')->only('show');
     }

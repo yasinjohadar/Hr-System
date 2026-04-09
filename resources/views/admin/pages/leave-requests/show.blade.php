@@ -20,12 +20,9 @@
                     </a>
                     @if ($leaveRequest->status == 'pending')
                         @can('leave-request-approve')
-                        <form action="{{ route('admin.leave-requests.approve', $leaveRequest->id) }}" method="POST" class="d-inline">
-                            @csrf
-                            <button type="submit" class="btn btn-success" onclick="return confirm('هل أنت متأكد من الموافقة على هذا الطلب؟')">
-                                <i class="fas fa-check me-2"></i>موافقة
-                            </button>
-                        </form>
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#approve{{ $leaveRequest->id }}">
+                            <i class="fas fa-check me-2"></i>موافقة
+                        </button>
                         @endcan
                         @can('leave-request-edit')
                         <a href="{{ route('admin.leave-requests.edit', $leaveRequest->id) }}" class="btn btn-primary">
@@ -43,90 +40,109 @@
                             <h5 class="card-title mb-0">معلومات طلب الإجازة</h5>
                         </div>
                         <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">الموظف:</label>
-                                    <p class="form-control-plaintext">
-                                        <strong>{{ $leaveRequest->employee->full_name ?? $leaveRequest->employee->first_name . ' ' . $leaveRequest->employee->last_name }}</strong>
-                                        <br><small class="text-muted">{{ $leaveRequest->employee->employee_code ?? '' }}</small>
-                                    </p>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">نوع الإجازة:</label>
-                                    <p class="form-control-plaintext">
-                                        <span class="badge bg-info">{{ $leaveRequest->leaveType->name_ar ?? $leaveRequest->leaveType->name }}</span>
-                                    </p>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">من تاريخ:</label>
-                                    <p class="form-control-plaintext">{{ $leaveRequest->start_date->format('Y-m-d') }}</p>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">إلى تاريخ:</label>
-                                    <p class="form-control-plaintext">{{ $leaveRequest->end_date->format('Y-m-d') }}</p>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">عدد الأيام:</label>
-                                    <p class="form-control-plaintext">
-                                        <span class="badge bg-primary">{{ $leaveRequest->days_count }} يوم</span>
-                                    </p>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">الحالة:</label>
-                                    <p class="form-control-plaintext">
-                                        @if ($leaveRequest->status == 'approved')
-                                            <span class="badge bg-success">موافق عليه</span>
-                                        @elseif ($leaveRequest->status == 'pending')
-                                            <span class="badge bg-warning">قيد الانتظار</span>
-                                        @elseif ($leaveRequest->status == 'rejected')
-                                            <span class="badge bg-danger">مرفوض</span>
-                                        @else
-                                            <span class="badge bg-secondary">ملغي</span>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover align-middle table-nowrap mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>الموظف</th>
+                                            <th>نوع الإجازة</th>
+                                            <th>من تاريخ</th>
+                                            <th>إلى تاريخ</th>
+                                            <th>عدد الأيام</th>
+                                            <th>الحالة</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <th scope="row">{{ $leaveRequest->id }}</th>
+                                            <td>
+                                                <strong>{{ $leaveRequest->employee->full_name ?? $leaveRequest->employee->first_name . ' ' . $leaveRequest->employee->last_name }}</strong>
+                                                @if ($leaveRequest->employee->employee_code ?? null)
+                                                    <br><small class="text-muted">{{ $leaveRequest->employee->employee_code }}</small>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">{{ $leaveRequest->leaveType->name_ar ?? $leaveRequest->leaveType->name }}</span>
+                                            </td>
+                                            <td>{{ $leaveRequest->start_date->format('Y-m-d') }}</td>
+                                            <td>{{ $leaveRequest->end_date->format('Y-m-d') }}</td>
+                                            <td><span class="badge bg-primary">{{ $leaveRequest->days_count }} يوم</span></td>
+                                            <td>
+                                                @if ($leaveRequest->status == 'approved')
+                                                    <span class="badge bg-success">موافق عليه</span>
+                                                @elseif ($leaveRequest->status == 'pending')
+                                                    <span class="badge bg-warning">قيد الانتظار</span>
+                                                @elseif ($leaveRequest->status == 'rejected')
+                                                    <span class="badge bg-danger">مرفوض</span>
+                                                @else
+                                                    <span class="badge bg-secondary">ملغي</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="table-responsive mt-3">
+                                <table class="table table-striped table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="w-25">البند</th>
+                                            <th>التفاصيل</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if ($leaveRequest->reason)
+                                            <tr>
+                                                <th scope="row" class="table-light text-nowrap">سبب الإجازة</th>
+                                                <td>{{ $leaveRequest->reason }}</td>
+                                            </tr>
                                         @endif
-                                    </p>
-                                </div>
-                                @if ($leaveRequest->approved_by)
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">وافق عليه:</label>
-                                    <p class="form-control-plaintext">
-                                        {{ $leaveRequest->approver->name ?? '-' }}
-                                        @if ($leaveRequest->approved_at)
-                                            <br><small class="text-muted">{{ $leaveRequest->approved_at->format('Y-m-d H:i') }}</small>
+                                        @if ($leaveRequest->notes)
+                                            <tr>
+                                                <th scope="row" class="table-light text-nowrap">ملاحظات</th>
+                                                <td>{{ $leaveRequest->notes }}</td>
+                                            </tr>
                                         @endif
-                                    </p>
-                                </div>
-                                @endif
-                                @if ($leaveRequest->rejection_reason)
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">سبب الرفض:</label>
-                                    <p class="form-control-plaintext text-danger">{{ $leaveRequest->rejection_reason }}</p>
-                                </div>
-                                @endif
-                                @if ($leaveRequest->reason)
-                                <div class="col-12 mb-3">
-                                    <label class="form-label fw-bold">سبب الإجازة:</label>
-                                    <p class="form-control-plaintext">{{ $leaveRequest->reason }}</p>
-                                </div>
-                                @endif
-                                @if ($leaveRequest->notes)
-                                <div class="col-12 mb-3">
-                                    <label class="form-label fw-bold">ملاحظات:</label>
-                                    <p class="form-control-plaintext">{{ $leaveRequest->notes }}</p>
-                                </div>
-                                @endif
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">تاريخ الإنشاء:</label>
-                                    <p class="form-control-plaintext">{{ $leaveRequest->created_at->format('Y-m-d H:i') }}</p>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">أنشأ بواسطة:</label>
-                                    <p class="form-control-plaintext">{{ $leaveRequest->creator->name ?? '-' }}</p>
-                                </div>
+                                        @if ($leaveRequest->approved_by)
+                                            <tr>
+                                                <th scope="row" class="table-light text-nowrap">وافق عليه</th>
+                                                <td>
+                                                    {{ $leaveRequest->approver->name ?? '-' }}
+                                                    @if ($leaveRequest->approved_at)
+                                                        <br><small class="text-muted">{{ $leaveRequest->approved_at->format('Y-m-d H:i') }}</small>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endif
+                                        @if ($leaveRequest->rejection_reason)
+                                            <tr>
+                                                <th scope="row" class="table-light text-nowrap">سبب الرفض</th>
+                                                <td class="text-danger">{{ $leaveRequest->rejection_reason }}</td>
+                                            </tr>
+                                        @endif
+                                        <tr>
+                                            <th scope="row" class="table-light text-nowrap">تاريخ الإنشاء</th>
+                                            <td>{{ $leaveRequest->created_at->format('Y-m-d H:i') }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row" class="table-light text-nowrap">أنشأ بواسطة</th>
+                                            <td>{{ $leaveRequest->creator->name ?? '-' }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            @if ($leaveRequest->status == 'pending')
+                @can('leave-request-approve')
+                    @include('admin.pages.leave-requests.approve', ['request' => $leaveRequest])
+                @endcan
+            @endif
         </div>
     </div>
 @stop

@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\CountryController;
 use App\Http\Controllers\Admin\CurrencyController;
 use App\Http\Controllers\Admin\PositionController;
 use App\Http\Controllers\Admin\SalaryController;
+use App\Http\Controllers\Admin\EmployeeAdvanceController;
 use App\Http\Controllers\Admin\LeaveTypeController;
 use App\Http\Controllers\Admin\LeaveRequestController;
 use App\Http\Controllers\Admin\LeaveBalanceController;
@@ -40,6 +41,9 @@ use App\Http\Controllers\Admin\ViolationTypeController;
 use App\Http\Controllers\Admin\DisciplinaryActionController;
 use App\Http\Controllers\Admin\EmployeeViolationController;
 use App\Http\Controllers\Admin\ProjectController;
+use App\Http\Controllers\Admin\ProjectMemberController;
+use App\Http\Controllers\Admin\ProjectDocumentController;
+use App\Http\Controllers\Admin\ProjectTimeEntryController;
 use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\OrganizationChartController;
 use App\Http\Controllers\Admin\EmployeeDirectoryController;
@@ -117,6 +121,8 @@ Route::middleware(['auth', 'check.user.active', 'ensure.admin'])->prefix('admin'
     
     // Routes للرواتب
     Route::resource('salaries', SalaryController::class);
+
+    Route::resource('employee-advances', EmployeeAdvanceController::class)->except(['show']);
     
     // Routes لأنواع الإجازات
     Route::resource('leave-types', LeaveTypeController::class);
@@ -218,6 +224,7 @@ Route::middleware(['auth', 'check.user.active', 'ensure.admin'])->prefix('admin'
     Route::post('employee-exits/{id}/approve', [EmployeeExitController::class, 'approve'])->name('employee-exits.approve');
     
     // Routes لإدارة الأصول
+    Route::post('assets/{asset}/lifecycle-events', [AssetController::class, 'storeLifecycleEvent'])->name('assets.lifecycle-events.store');
     Route::resource('assets', AssetController::class);
     Route::resource('asset-assignments', AssetAssignmentController::class);
     Route::get('asset-assignments/{id}/return', [AssetAssignmentController::class, 'showReturnForm'])->name('asset-assignments.return-form');
@@ -247,6 +254,13 @@ Route::middleware(['auth', 'check.user.active', 'ensure.admin'])->prefix('admin'
     Route::post('employee-violations/{id}/apply-action', [EmployeeViolationController::class, 'applyAction'])->name('employee-violations.apply-action');
 
     // Routes للمشاريع
+    Route::get('projects/{project}/time-entries/export', [ProjectController::class, 'exportTimeEntries'])->name('projects.time-entries.export');
+    Route::post('projects/{project}/members', [ProjectMemberController::class, 'store'])->name('projects.members.store');
+    Route::delete('projects/{project}/members/{member}', [ProjectMemberController::class, 'destroy'])->name('projects.members.destroy');
+    Route::post('projects/{project}/documents', [ProjectDocumentController::class, 'store'])->name('projects.documents.store');
+    Route::delete('projects/{project}/documents/{document}', [ProjectDocumentController::class, 'destroy'])->name('projects.documents.destroy');
+    Route::post('projects/{project}/time-entries', [ProjectTimeEntryController::class, 'store'])->name('projects.time-entries.store');
+    Route::delete('projects/{project}/time-entries/{timeEntry}', [ProjectTimeEntryController::class, 'destroy'])->name('projects.time-entries.destroy');
     Route::resource('projects', ProjectController::class);
 
     // Routes للمهام
@@ -346,9 +360,9 @@ Route::middleware(['auth', 'check.user.active', 'ensure.admin'])->prefix('admin'
     Route::get('approvals/{type}/{id}', [ApprovalController::class, 'show'])->name('approvals.show');
     
     // Route للصفحة الرئيسية للتصدير
-    Route::get('export', function() {
+    Route::get('export', function () {
         return view('admin.pages.export.index');
-    })->name('export.index');
+    })->middleware('permission:export-data')->name('export.index');
 
     // Routes للتصدير
     Route::prefix('export')->name('export.')->group(function () {

@@ -18,7 +18,7 @@ class ProjectController extends Controller
         $this->middleware('permission:project-create')->only(['create', 'store']);
         $this->middleware('permission:project-edit')->only(['edit', 'update']);
         $this->middleware('permission:project-delete')->only('destroy');
-        $this->middleware('permission:project-show')->only('show');
+        $this->middleware('permission:project-show')->only(['show', 'exportTimeEntries']);
     }
 
     /**
@@ -103,17 +103,69 @@ class ProjectController extends Controller
      */
     public function show(string $id)
     {
-        $project = Project::with([
-            'department',
-            'manager',
-            'currency',
-            'creator',
-            'tasks' => function ($query) {
-                $query->withCount('assignments');
-            }
-        ])->findOrFail($id);
+        $project = Project::withCount('tasks')
+            ->withSum('timeEntries as total_logged_hours', 'hours')
+            ->with([
+                'department',
+                'manager',
+                'currency',
+                'creator',
+                'members.employee',
+                'documents.uploader',
+                'timeEntries' => function ($query) {
+                    $query->with(['employee', 'task', 'creator'])
+                        ->orderByDesc('worked_date')
+                        ->orderByDesc('id')
+                        ->limit(250);
+                },
+                'tasks' => function ($query) {
+                    $query->withCount('assignments');
+                },
+            ])
+            ->findOrFail($id);
 
-        return view('admin.pages.projects.show', compact('project'));
+        $employees = Employee::where('is_active', true)->orderBy('full_name')->get();
+
+        return view('admin.pages.projects.show', compact('project', 'employees'));
+    }
+
+    /**
+     * تصدير سجلات وقت المشروع (CSV)
+     */
+    public function exportTimeEntries(string $id)
+    {
+        $project = Project::findOrFail($id);
+
+        $entries = $project->timeEntries()
+            ->with(['employee', 'task'])
+            ->orderBy('worked_date')
+            ->orderBy('id')
+            ->get();
+
+        $filename = 'project-'.$project->project_code.'-time.csv';
+
+        return response()->streamDownload(function () use ($entries, $project) {
+            $out = fopen('php://output', 'w');
+            fprintf($out, chr(0xEF).chr(0xBB).chr(0xBF));
+            fputcsv($out, ['رمز المشروع', 'الموظف', 'التاريخ', 'الساعات', 'المهمة', 'الوصف']);
+            foreach ($entries as $e) {
+                $taskLabel = '';
+                if ($e->task) {
+                    $taskLabel = $e->task->task_code.' — '.($e->task->title_ar ?? $e->task->title);
+                }
+                fputcsv($out, [
+                    $project->project_code,
+                    $e->employee->full_name ?? '',
+                    $e->worked_date->format('Y-m-d'),
+                    (string) $e->hours,
+                    $taskLabel,
+                    $e->description ?? '',
+                ]);
+            }
+            fclose($out);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
 
     /**

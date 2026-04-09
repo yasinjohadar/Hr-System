@@ -84,7 +84,15 @@ class EmployeeController extends Controller
         // تنفيذ الاستعلام
         $employees = $employeesQuery->paginate(10);
 
-        return view("admin.pages.employees.index", compact("employees", "departments", "positions"));
+        if ($request->ajax() || $request->boolean('ajax')) {
+            return response()->json([
+                'html_rows' => view('admin.pages.employees._index_rows', compact('employees'))->render(),
+                'html_pagination' => view('admin.pages.employees._index_pagination', compact('employees'))->render(),
+                'total' => $employees->total(),
+            ]);
+        }
+
+        return view('admin.pages.employees.index', compact('employees', 'departments', 'positions'));
     }
 
     /**

@@ -77,7 +77,15 @@ class LeaveRequestController extends Controller
 
         $leaveTypes = LeaveType::where('is_active', true)->get();
 
-        return view("admin.pages.leave-requests.index", compact("leaveRequests", "employees", "leaveTypes"));
+        if ($request->ajax() || $request->boolean('ajax')) {
+            return response()->json([
+                'html_rows' => view('admin.pages.leave-requests._index_rows', compact('leaveRequests'))->render(),
+                'html_pagination' => view('admin.pages.leave-requests._index_pagination', compact('leaveRequests'))->render(),
+                'total' => $leaveRequests->total(),
+            ]);
+        }
+
+        return view('admin.pages.leave-requests.index', compact('leaveRequests', 'employees', 'leaveTypes'));
     }
 
     /**

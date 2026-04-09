@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Asset;
 use App\Models\Branch;
 use App\Models\Department;
+use App\Services\AssetLifecycleRecorder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -20,6 +21,7 @@ class AssetController extends Controller
         $this->middleware('permission:asset-edit')->only(['edit', 'update']);
         $this->middleware('permission:asset-delete')->only('destroy');
         $this->middleware('permission:asset-show')->only('show');
+        $this->middleware('permission:asset-edit')->only('storeLifecycleEvent');
     }
 
     /**
@@ -66,6 +68,14 @@ class AssetController extends Controller
         $assets = $query->latest()->paginate(15);
         $branches = Branch::where('is_active', true)->get();
         $departments = Department::where('is_active', true)->get();
+
+        if ($request->ajax() || $request->boolean('ajax')) {
+            return response()->json([
+                'html_rows' => view('admin.pages.assets._index_rows', compact('assets'))->render(),
+                'html_pagination' => view('admin.pages.assets._index_pagination', compact('assets'))->render(),
+                'total' => $assets->total(),
+            ]);
+        }
 
         return view('admin.pages.assets.index', compact('assets', 'branches', 'departments'));
     }
@@ -121,7 +131,9 @@ class AssetController extends Controller
             $data['photo'] = $request->file('image')->store('assets', 'public');
         }
 
-        Asset::create($data);
+        $asset = Asset::create($data);
+
+        app(AssetLifecycleRecorder::class)->recordCreated($asset);
 
         return redirect()->route('admin.assets.index')->with('success', 'تم إضافة الأصل بنجاح.');
     }
@@ -132,16 +144,21 @@ class AssetController extends Controller
     public function show(string $id)
     {
         $asset = Asset::with([
-            'branch', 
-            'department', 
+            'branch',
+            'department',
             'creator',
             'assignments.employee',
             'assignments.assigner',
             'assignments.returner',
-            'maintenances'
+            'maintenances',
         ])->findOrFail($id);
 
-        return view('admin.pages.assets.show', compact('asset'));
+        $lifecycleEvents = $asset->lifecycleEvents()
+            ->with(['user', 'employee', 'attachments', 'assignment', 'maintenance'])
+            ->limit(250)
+            ->get();
+
+        return view('admin.pages.assets.show', compact('asset', 'lifecycleEvents'));
     }
 
     /**
@@ -186,6 +203,8 @@ class AssetController extends Controller
 
         $data = $request->except('image');
 
+        $before = $asset->only(['status', 'branch_id', 'department_id', 'photo']);
+
         // رفع صورة جديدة
         if ($request->hasFile('image')) {
             // حذف الصورة القديمة
@@ -196,6 +215,9 @@ class AssetController extends Controller
         }
 
         $asset->update($data);
+        $asset->refresh();
+
+        app(AssetLifecycleRecorder::class)->recordAfterUpdate($asset, $before);
 
         return redirect()->route('admin.assets.index')->with('success', 'تم تحديث الأصل بنجاح.');
     }
@@ -220,5 +242,31 @@ class AssetController extends Controller
         $asset->delete();
 
         return redirect()->route('admin.assets.index')->with('success', 'تم حذف الأصل بنجاح.');
+    }
+
+    /**
+     * إضافة ملاحظة/مرفقات إلى السجل الزمني للأصل
+     */
+    public function storeLifecycleEvent(Request $request, Asset $asset)
+    {
+        $request->validate([
+            'summary' => 'required|string|max:500',
+            'notes' => 'nullable|string|max:5000',
+            'attachments' => 'nullable|array|max:10',
+            'attachments.*' => 'file|max:10240|mimes:jpeg,jpg,png,gif,webp,pdf',
+        ]);
+
+        $files = $request->file('attachments', []) ?: [];
+
+        app(AssetLifecycleRecorder::class)->recordManualNote(
+            $asset,
+            $request->input('summary'),
+            $request->input('notes'),
+            is_array($files) ? $files : []
+        );
+
+        return redirect()
+            ->route('admin.assets.show', $asset)
+            ->with('success', 'تمت إضافة الملاحظة إلى السجل الزمني.');
     }
 }

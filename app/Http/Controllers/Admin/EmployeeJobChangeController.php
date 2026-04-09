@@ -8,11 +8,25 @@ use App\Models\Employee;
 use App\Models\Department;
 use App\Models\Position;
 use App\Models\Branch;
+use App\Models\WorkflowInstance;
+use App\Services\ApprovalService;
+use App\Services\WorkflowService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class EmployeeJobChangeController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('permission:employee-job-change-list')->only('index');
+        $this->middleware('permission:employee-job-change-create')->only(['create', 'store']);
+        $this->middleware('permission:employee-job-change-edit')->only(['edit', 'update']);
+        $this->middleware('permission:employee-job-change-show')->only('show');
+        $this->middleware('permission:employee-job-change-approve')->only('approve');
+        $this->middleware('permission:employee-job-change-reject')->only('reject');
+    }
+
     /**
      * عرض قائمة طلبات التغيير الوظيفي
      */
@@ -108,6 +122,13 @@ class EmployeeJobChangeController extends Controller
                 'new_salary' => $validated['new_salary'] ?? null,
             ]);
 
+            app(WorkflowService::class)->startWorkflow(
+                'employee_job_change',
+                $employee,
+                'EmployeeJobChange',
+                $jobChange->id
+            );
+
             DB::commit();
             return redirect()->route('admin.employee-job-changes.index')
                 ->with('success', 'تم إنشاء طلب التغيير الوظيفي بنجاح');
@@ -196,38 +217,67 @@ class EmployeeJobChangeController extends Controller
                 ->with('error', 'لا يمكن الموافقة على هذا الطلب');
         }
 
+        $workflowService = app(WorkflowService::class);
+        $approvalService = app(ApprovalService::class);
+        $employee = $employeeJobChange->employee;
+
+        $instance = WorkflowInstance::where('entity_type', 'EmployeeJobChange')
+            ->where('entity_id', $employeeJobChange->id)
+            ->whereNotIn('status', ['approved', 'rejected'])
+            ->first();
+
+        if ($instance && $employee) {
+            $currentStep = $instance->currentStep;
+            if ($currentStep) {
+                if (! $approvalService->canUserApprove(
+                    auth()->user(),
+                    'employee_job_change',
+                    $employee,
+                    $currentStep->step_order
+                )) {
+                    return redirect()->route('admin.employee-job-changes.show', $employeeJobChange)
+                        ->with('error', 'ليس لديك صلاحية الموافقة على هذه المرحلة من الطلب');
+                }
+
+                $ok = $workflowService->processApproval(
+                    $instance,
+                    auth()->user(),
+                    true,
+                    $request->comments ?? null
+                );
+
+                if ($ok) {
+                    $instance->refresh();
+                    if ($instance->status === 'approved') {
+                        DB::beginTransaction();
+                        try {
+                            $this->applyApprovedJobChangeToEmployee($employeeJobChange->fresh());
+                            DB::commit();
+                        } catch (\Exception $e) {
+                            DB::rollBack();
+                            return redirect()->route('admin.employee-job-changes.show', $employeeJobChange)
+                                ->with('error', 'تم اعتماد سير العمل لكن فشل تطبيق التغييرات: '.$e->getMessage());
+                        }
+                    }
+
+                    return redirect()->route('admin.employee-job-changes.show', $employeeJobChange)
+                        ->with('success', 'تم تسجيل الموافقة بنجاح');
+                }
+
+                return redirect()->route('admin.employee-job-changes.show', $employeeJobChange)
+                    ->with('error', 'حدث خطأ أثناء معالجة الموافقة');
+            }
+        }
+
         DB::beginTransaction();
         try {
-            // تحديث حالة الطلب
             $employeeJobChange->update([
                 'status' => EmployeeJobChange::STATUS_APPROVED,
                 'approved_by' => auth()->id(),
                 'approved_at' => now(),
             ]);
 
-            // تطبيق التغيير على الموظف
-            $employee = $employeeJobChange->employee;
-            $updateData = [];
-
-            if ($employeeJobChange->new_department_id) {
-                $updateData['department_id'] = $employeeJobChange->new_department_id;
-            }
-            if ($employeeJobChange->new_position_id) {
-                $updateData['position_id'] = $employeeJobChange->new_position_id;
-            }
-            if ($employeeJobChange->new_branch_id) {
-                $updateData['branch_id'] = $employeeJobChange->new_branch_id;
-            }
-            if ($employeeJobChange->new_manager_id) {
-                $updateData['manager_id'] = $employeeJobChange->new_manager_id;
-            }
-            if ($employeeJobChange->new_salary !== null) {
-                $updateData['salary'] = $employeeJobChange->new_salary;
-            }
-
-            if (!empty($updateData)) {
-                $employee->update($updateData);
-            }
+            $this->applyApprovedJobChangeToEmployee($employeeJobChange->fresh());
 
             DB::commit();
             return redirect()->route('admin.employee-job-changes.show', $employeeJobChange)
@@ -253,6 +303,45 @@ class EmployeeJobChangeController extends Controller
             'rejection_reason' => 'required|string',
         ]);
 
+        $workflowService = app(WorkflowService::class);
+        $approvalService = app(ApprovalService::class);
+        $employee = $employeeJobChange->employee;
+
+        $instance = WorkflowInstance::where('entity_type', 'EmployeeJobChange')
+            ->where('entity_id', $employeeJobChange->id)
+            ->whereNotIn('status', ['approved', 'rejected'])
+            ->first();
+
+        if ($instance && $employee) {
+            $currentStep = $instance->currentStep;
+            if ($currentStep) {
+                if (! $approvalService->canUserApprove(
+                    auth()->user(),
+                    'employee_job_change',
+                    $employee,
+                    $currentStep->step_order
+                )) {
+                    return redirect()->route('admin.employee-job-changes.show', $employeeJobChange)
+                        ->with('error', 'ليس لديك صلاحية رفض هذه المرحلة من الطلب');
+                }
+
+                $ok = $workflowService->processApproval(
+                    $instance,
+                    auth()->user(),
+                    false,
+                    $validated['rejection_reason']
+                );
+
+                if ($ok) {
+                    return redirect()->route('admin.employee-job-changes.show', $employeeJobChange)
+                        ->with('success', 'تم رفض الطلب بنجاح');
+                }
+
+                return redirect()->route('admin.employee-job-changes.show', $employeeJobChange)
+                    ->with('error', 'حدث خطأ أثناء رفض الطلب عبر سير العمل');
+            }
+        }
+
         $employeeJobChange->update([
             'status' => EmployeeJobChange::STATUS_REJECTED,
             'rejection_reason' => $validated['rejection_reason'],
@@ -260,5 +349,34 @@ class EmployeeJobChangeController extends Controller
 
         return redirect()->route('admin.employee-job-changes.show', $employeeJobChange)
             ->with('success', 'تم رفض الطلب بنجاح');
+    }
+
+    /**
+     * بعد اعتماد الطلب نهائياً: تطبيق الحقول الجديدة على سجل الموظف.
+     */
+    private function applyApprovedJobChangeToEmployee(EmployeeJobChange $employeeJobChange): void
+    {
+        $employee = $employeeJobChange->employee;
+        $updateData = [];
+
+        if ($employeeJobChange->new_department_id) {
+            $updateData['department_id'] = $employeeJobChange->new_department_id;
+        }
+        if ($employeeJobChange->new_position_id) {
+            $updateData['position_id'] = $employeeJobChange->new_position_id;
+        }
+        if ($employeeJobChange->new_branch_id) {
+            $updateData['branch_id'] = $employeeJobChange->new_branch_id;
+        }
+        if ($employeeJobChange->new_manager_id) {
+            $updateData['manager_id'] = $employeeJobChange->new_manager_id;
+        }
+        if ($employeeJobChange->new_salary !== null) {
+            $updateData['salary'] = $employeeJobChange->new_salary;
+        }
+
+        if ($updateData !== []) {
+            $employee->update($updateData);
+        }
     }
 }

@@ -13,6 +13,11 @@ class AnnouncementController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+        $this->middleware('permission:announcement-list')->only('index');
+        $this->middleware('permission:announcement-create')->only(['create', 'store']);
+        $this->middleware('permission:announcement-edit')->only(['edit', 'update']);
+        $this->middleware('permission:announcement-delete')->only('destroy');
+        $this->middleware('permission:announcement-show')->only('show');
     }
 
     public function index(Request $request)

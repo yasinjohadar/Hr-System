@@ -90,6 +90,11 @@ class Asset extends Model
         return $this->hasMany(AssetMaintenance::class);
     }
 
+    public function lifecycleEvents(): HasMany
+    {
+        return $this->hasMany(AssetLifecycleEvent::class)->orderByDesc('occurred_at')->orderByDesc('id');
+    }
+
     /**
      * Accessor للحالة بالعربية
      */

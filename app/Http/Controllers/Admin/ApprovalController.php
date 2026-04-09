@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Employee;
 use App\Models\LeaveRequest;
 use App\Models\ExpenseRequest;
 use App\Models\WorkflowInstance;
@@ -18,6 +19,8 @@ class ApprovalController extends Controller
     public function __construct(WorkflowService $workflowService, ApprovalService $approvalService)
     {
         $this->middleware('auth');
+        $this->middleware('permission:approval-list')->only('index');
+        $this->middleware('permission:approval-show')->only('show');
         $this->workflowService = $workflowService;
         $this->approvalService = $approvalService;
     }
@@ -42,7 +45,7 @@ class ApprovalController extends Controller
 
                 $instance = WorkflowInstance::where('entity_type', 'LeaveRequest')
                     ->where('entity_id', $leaveRequest->id)
-                    ->where('status', 'in_progress')
+                    ->whereIn('status', ['pending', 'in_progress'])
                     ->first();
 
                 if ($instance) {
@@ -72,7 +75,7 @@ class ApprovalController extends Controller
 
                 $instance = WorkflowInstance::where('entity_type', 'ExpenseRequest')
                     ->where('entity_id', $expenseRequest->id)
-                    ->where('status', 'in_progress')
+                    ->whereIn('status', ['pending', 'in_progress'])
                     ->first();
 
                 if ($instance) {

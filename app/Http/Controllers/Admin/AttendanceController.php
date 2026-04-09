@@ -16,7 +16,7 @@ class AttendanceController extends Controller
         $this->middleware('auth');
         $this->middleware('permission:attendance-list')->only('index');
         $this->middleware('permission:attendance-create')->only(['create', 'store']);
-        $this->middleware('permission:attendance-edit')->only(['edit', 'update']);
+        $this->middleware('permission:attendance-edit')->only(['edit', 'update', 'checkIn', 'checkOut']);
         $this->middleware('permission:attendance-delete')->only('destroy');
         $this->middleware('permission:attendance-show')->only('show');
     }
@@ -71,6 +71,14 @@ class AttendanceController extends Controller
         }
         $currentStartDate = $request->input('start_date', Carbon::now()->subDays(30)->format('Y-m-d'));
         $currentEndDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
+
+        if ($request->ajax() || $request->boolean('ajax')) {
+            return response()->json([
+                'html_rows' => view('admin.pages.attendances._index_rows', compact('attendances'))->render(),
+                'html_pagination' => view('admin.pages.attendances._index_pagination', compact('attendances'))->render(),
+                'total' => $attendances->total(),
+            ]);
+        }
 
         return view("admin.pages.attendances.index", compact("attendances", "employees", "currentStartDate", "currentEndDate"));
     }

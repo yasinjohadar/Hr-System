@@ -3,12 +3,32 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class Salary extends Model
 {
     use SoftDeletes;
+
+    protected static function booted(): void
+    {
+        static::deleting(function (Salary $salary) {
+            if ($salary->isForceDeleting()) {
+                return;
+            }
+            DB::transaction(function () use ($salary) {
+                foreach ($salary->ledgerLines()->where('line_type', 'advance_recovery')->whereNotNull('employee_advance_id')->get() as $line) {
+                    $advance = EmployeeAdvance::whereKey($line->employee_advance_id)->lockForUpdate()->first();
+                    if ($advance) {
+                        $advance->increment('remaining_balance', $line->amount);
+                    }
+                }
+                $salary->ledgerLines()->delete();
+            });
+        });
+    }
 
     protected $fillable = [
         'employee_id',
@@ -59,6 +79,11 @@ class Salary extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function ledgerLines(): HasMany
+    {
+        return $this->hasMany(SalaryLedgerLine::class)->orderBy('sort_order')->orderBy('id');
     }
 
     /**

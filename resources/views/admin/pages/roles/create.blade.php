@@ -55,7 +55,7 @@
                         </div>
                         <div class="card-body">
 
-                            <form method="POST" action="{{ route('roles.store', 'test') }}">
+                            <form id="role-create-form" method="POST" action="{{ route('roles.store') }}">
                                 @csrf
 
                                 <div class="row mb-3">
@@ -63,6 +63,12 @@
                                         <label class="form-label fw-bold">اسم الدور</label>
                                         <input type="text" class="form-control" name="name" placeholder="مثال: مشرف عام">
                                     </div>
+                                </div>
+
+                                <div class="sticky-top py-2 mb-3 border-bottom d-flex justify-content-end gap-2 align-items-center bg-body"
+                                    style="z-index: 1020;">
+                                    <a href="{{ route('roles.index') }}" class="btn btn-secondary">إلغاء</a>
+                                    <button type="submit" class="btn btn-primary">حفظ الدور</button>
                                 </div>
 
                                 <div class="mb-4">
@@ -84,8 +90,9 @@
                                                                                 name="permissions[{{ $permission->name }}]"
                                                                                 value="{{ $permission->name }}"
                                                                                 id="perm_create_{{ $permission->id }}">
-                                                                            <label class="form-check-label small" for="perm_create_{{ $permission->id }}">
-                                                                                {{ $permission->name }}
+                                                                            <label class="form-check-label small" for="perm_create_{{ $permission->id }}"
+                                                                                title="{{ $permission->name }}">
+                                                                                {{ permission_label($permission->name) }}
                                                                             </label>
                                                                         </div>
                                                                     </li>
@@ -99,8 +106,8 @@
                                     @endforeach
                                 </div>
 
-                                <div class="d-flex justify-content-end">
-                                    <a href="{{ route('roles.index') }}" class="btn btn-secondary me-2">إلغاء</a>
+                                <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                                    <a href="{{ route('roles.index') }}" class="btn btn-secondary">إلغاء</a>
                                     <button type="submit" class="btn btn-primary">حفظ الدور</button>
                                 </div>
 

@@ -214,6 +214,8 @@
                             </div>
                         </div>
 
+                        @include('admin.pages.salaries._ledger_form', ['activeAdvances' => $activeAdvances])
+
                         <div class="text-end mt-4">
                             <a href="{{ route('admin.salaries.index') }}" class="btn btn-secondary px-4 me-2">إلغاء</a>
                             <button type="submit" class="btn btn-primary px-4">
@@ -227,39 +229,105 @@
     </div>
 @stop
 
-@section('script')
+@section('js')
 <script>
-    // حساب الراتب الإجمالي تلقائياً
+(function () {
+    const deductionSideTypes = { deduction: 1, advance_recovery: 1, loan_installment: 1 };
+
     function calculateTotal() {
         const baseSalary = parseFloat(document.getElementById('base_salary').value) || 0;
         const allowances = parseFloat(document.getElementById('allowances').value) || 0;
         const bonuses = parseFloat(document.getElementById('bonuses').value) || 0;
         const overtime = parseFloat(document.getElementById('overtime').value) || 0;
         const deductions = parseFloat(document.getElementById('deductions').value) || 0;
-        
         const total = baseSalary + allowances + bonuses + overtime - deductions;
         document.getElementById('total_salary').value = total.toFixed(2);
     }
 
-    // إضافة مستمعين للأحداث
+    function syncDeductionsFromLedger() {
+        const dedInput = document.getElementById('deductions');
+        let sum = 0;
+        document.querySelectorAll('#ledger-rows .ledger-row').forEach(function (tr) {
+            const type = tr.querySelector('.ledger-line-type') && tr.querySelector('.ledger-line-type').value;
+            const amt = parseFloat(tr.querySelector('.ledger-amount') && tr.querySelector('.ledger-amount').value) || 0;
+            if (deductionSideTypes[type]) {
+                sum += amt;
+            }
+        });
+        if (sum > 0) {
+            dedInput.value = sum.toFixed(2);
+            dedInput.readOnly = true;
+        } else {
+            dedInput.readOnly = false;
+        }
+        calculateTotal();
+    }
+
+    function filterAdvanceOptions(employeeId) {
+        const emp = String(employeeId || '');
+        document.querySelectorAll('.ledger-advance-select').forEach(function (sel) {
+            sel.querySelectorAll('option[data-employee-id]').forEach(function (opt) {
+                opt.hidden = !!(opt.value && opt.getAttribute('data-employee-id') !== emp);
+            });
+        });
+    }
+
+    function bindLedgerRow(tr) {
+        tr.querySelectorAll('.ledger-line-type, .ledger-amount').forEach(function (el) {
+            el.addEventListener('input', syncDeductionsFromLedger);
+            el.addEventListener('change', syncDeductionsFromLedger);
+        });
+        tr.querySelector('.ledger-remove-row') && tr.querySelector('.ledger-remove-row').addEventListener('click', function () {
+            if (document.querySelectorAll('#ledger-rows .ledger-row').length <= 1) {
+                tr.querySelectorAll('input').forEach(function (i) { i.value = ''; });
+                tr.querySelectorAll('select').forEach(function (s) { s.selectedIndex = 0; });
+            } else {
+                tr.remove();
+            }
+            syncDeductionsFromLedger();
+        });
+    }
+
     document.getElementById('base_salary').addEventListener('input', calculateTotal);
     document.getElementById('allowances').addEventListener('input', calculateTotal);
     document.getElementById('bonuses').addEventListener('input', calculateTotal);
     document.getElementById('overtime').addEventListener('input', calculateTotal);
     document.getElementById('deductions').addEventListener('input', calculateTotal);
 
-    // تعبئة الراتب الأساسي من بيانات الموظف
-    document.getElementById('employee_id').addEventListener('change', function() {
+    document.getElementById('employee_id').addEventListener('change', function () {
         const selectedOption = this.options[this.selectedIndex];
         const employeeSalary = selectedOption.getAttribute('data-salary');
         if (employeeSalary && employeeSalary > 0) {
             document.getElementById('base_salary').value = employeeSalary;
             calculateTotal();
         }
+        filterAdvanceOptions(this.value);
     });
 
-    // حساب أولي عند تحميل الصفحة
+    document.querySelectorAll('#ledger-rows .ledger-row').forEach(bindLedgerRow);
+
+    const addBtn = document.getElementById('ledger-add-row');
+    const tpl = document.querySelector('#ledger-row-template tr');
+    if (addBtn && tpl) {
+        addBtn.addEventListener('click', function () {
+            const row = tpl.cloneNode(true);
+            document.getElementById('ledger-rows').appendChild(row);
+            bindLedgerRow(row);
+            filterAdvanceOptions(document.getElementById('employee_id').value);
+            syncDeductionsFromLedger();
+        });
+    }
+
+    document.getElementById('ledger-rows').addEventListener('change', function (e) {
+        if (e.target.classList.contains('ledger-line-type')) {
+            syncDeductionsFromLedger();
+        }
+    });
+
+    filterAdvanceOptions(document.getElementById('employee_id').value);
+    syncDeductionsFromLedger();
     calculateTotal();
+})();
 </script>
 @stop
 

@@ -32,7 +32,19 @@ class ReportController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->middleware('permission:report-view')->only(['index', 'show', 'turnoverReport', 'trainingEffectivenessReport', 'kpisReport']);
+        $this->middleware('permission:report-view')->only('index');
+        $this->middleware('permission:report-employees')->only('employeesReport');
+        $this->middleware('permission:report-attendance')->only('attendanceReport');
+        $this->middleware('permission:report-salaries')->only('salariesReport');
+        $this->middleware('permission:report-leaves')->only('leavesReport');
+        $this->middleware('permission:report-performance')->only('performanceReport');
+        $this->middleware('permission:report-training')->only('trainingReport');
+        $this->middleware('permission:report-recruitment')->only('recruitmentReport');
+        $this->middleware('permission:report-benefits')->only('benefitsReport');
+        $this->middleware('permission:report-dashboard')->only('dashboardReport');
+        $this->middleware('permission:report-turnover')->only('turnoverReport');
+        $this->middleware('permission:report-training-effectiveness')->only('trainingEffectivenessReport');
+        $this->middleware('permission:report-kpis')->only('kpisReport');
     }
 
     /**

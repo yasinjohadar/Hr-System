@@ -22,7 +22,7 @@
                     </div>
                     <ul class="main-menu">
                         <!-- Start::slide has-sub - مركز الإدارة -->
-                        @canAny(['dashboard-view', 'role-list', 'user-list'])
+                        @canAny(['dashboard-view', 'role-list', 'user-list', 'announcement-list'])
                         <li class="slide has-sub">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24" ><path d="M0 0h24v24H0V0z" fill="none"/><path d="M5 5h4v6H5zm10 8h4v6h-4zM5 17h4v2H5zM15 5h4v2h-4z" opacity=".3"/><path d="M3 13h8V3H3v10zm2-8h4v6H5V5zm8 16h8V11h-8v10zm2-8h4v6h-4v-6zM13 3v6h8V3h-8zm6 4h-4V5h4v2zM3 21h8v-6H3v6zm2-4h4v2H5v-2z"/></svg>
@@ -32,7 +32,7 @@
                             <ul class="slide-menu child1">
                                 @can('dashboard-view')
                                 <li class="slide">
-                                    <a href="/" class="side-menu__item">
+                                    <a href="{{ route('admin.dashboard') }}" class="side-menu__item">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24" ><path d="M0 0h24v24H0V0z" fill="none"/><path d="M5 5h4v6H5zm10 8h4v6h-4zM5 17h4v2H5zM15 5h4v2h-4z" opacity=".3"/><path d="M3 13h8V3H3v10zm2-8h4v6H5V5zm8 16h8V11h-8v10zm2-8h4v6h-4v-6zM13 3v6h8V3h-8zm6 4h-4V5h4v2zM3 21h8v-6H3v6zm2-4h4v2H5v-2z"/></svg>
                                         <span class="side-menu__label">الصفحة الرئيسية</span>
                                         <span class="badge bg-success ms-auto menu-badge">1</span>
@@ -49,7 +49,7 @@
                                     <a href="{{route("users.index")}}" class="side-menu__item">المستخدمون</a>
                                 </li>
                                 @endcan
-                                @can('dashboard-view')
+                                @can('announcement-list')
                                 <li class="slide">
                                     <a href="{{route("admin.announcements.index")}}" class="side-menu__item">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
@@ -63,7 +63,7 @@
                         <!-- End::slide has-sub -->
                         
                         <!-- Start::slide has-sub - إدارة الموارد البشرية -->
-                        @canAny(['employee-list', 'dashboard-view', 'salary-list', 'payroll-list', 'salary-component-list', 'tax-setting-list', 'bank-account-list', 'payroll-payment-list', 'payroll-approval-list'])
+                        @canAny(['employee-list', 'dashboard-view', 'salary-list', 'payroll-list', 'salary-component-list', 'tax-setting-list', 'bank-account-list', 'payroll-payment-list', 'payroll-approval-list', 'announcement-list', 'contract-list', 'employee-job-change-list', 'policy-list'])
                         <li class="slide has-sub">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 5.9c1.16 0 2.1.94 2.1 2.1s-.94 2.1-2.1 2.1S9.9 9.16 9.9 8s.94-2.1 2.1-2.1m0 9c2.97 0 6.1 1.46 6.1 2.1v1.1H5.9V17c0-.64 3.13-2.1 6.1-2.1M12 4C9.79 4 8 5.79 8 8s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 9c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4z"/></svg>
@@ -79,7 +79,7 @@
                                     </a>
                                 </li>
                                 @endcan
-                                @can('dashboard-view')
+                                @can('contract-list')
                                 <li class="slide">
                                     <a href="{{route("admin.contracts.index")}}" class="side-menu__item">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
@@ -87,7 +87,7 @@
                                     </a>
                                 </li>
                                 @endcan
-                                @can('dashboard-view')
+                                @can('employee-job-change-list')
                                 <li class="slide">
                                     <a href="{{route("admin.employee-job-changes.index")}}" class="side-menu__item">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
@@ -95,7 +95,7 @@
                                     </a>
                                 </li>
                                 @endcan
-                                @can('dashboard-view')
+                                @can('policy-list')
                                 <li class="slide">
                                     <a href="{{route("admin.policies.index")}}" class="side-menu__item">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
@@ -108,6 +108,14 @@
                                     <a href="{{route("admin.salaries.index")}}" class="side-menu__item">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
                                         <span class="side-menu__label">الرواتب</span>
+                                    </a>
+                                </li>
+                                @endcan
+                                @can('employee-advance-list')
+                                <li class="slide">
+                                    <a href="{{ route('admin.employee-advances.index') }}" class="side-menu__item">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+                                        <span class="side-menu__label">سلف الموظفين</span>
                                     </a>
                                 </li>
                                 @endcan
@@ -389,7 +397,7 @@
                         <!-- End::slide has-sub -->
                         
                         <!-- Start::slide has-sub - التقارير -->
-                        @can('report-view')
+                        @canAny(['report-view', 'report-dashboard', 'report-employees', 'report-attendance', 'report-salaries', 'report-leaves', 'report-performance', 'report-training', 'report-recruitment', 'report-benefits', 'report-turnover', 'report-training-effectiveness', 'report-kpis'])
                         <li class="slide has-sub">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
@@ -397,21 +405,25 @@
                                 <i class="fe fe-chevron-right side-menu__angle"></i>
                             </a>
                             <ul class="slide-menu child1">
+                                @can('report-view')
                                 <li class="slide">
                                     <a href="{{route("admin.reports.index")}}" class="side-menu__item">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
                                         <span class="side-menu__label">التقارير الشاملة</span>
                                     </a>
                                 </li>
+                                @endcan
+                                @can('report-dashboard')
                                 <li class="slide">
                                     <a href="{{route("admin.reports.dashboard")}}" class="side-menu__item">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
                                         <span class="side-menu__label">لوحة المعلومات</span>
                                     </a>
                                 </li>
+                                @endcan
                             </ul>
                         </li>
-                        @endcan
+                        @endcanAny
                         <!-- End::slide has-sub -->
                         
                         <!-- Start::slide has-sub - الإعدادات -->

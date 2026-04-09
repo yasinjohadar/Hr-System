@@ -18,6 +18,7 @@ class NotificationController extends Controller
         $this->middleware('permission:notification-list')->only(['index', 'show']);
         $this->middleware('permission:notification-create')->only(['create', 'store']);
         $this->middleware('permission:notification-delete')->only('destroy');
+        $this->middleware('permission:notification-mark-read')->only(['markAsRead', 'markAllAsRead', 'getUnreadCount', 'getLatest']);
     }
 
     /**

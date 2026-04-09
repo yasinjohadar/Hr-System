@@ -1,0 +1,1 @@
+{!! $leaveRequests->withQueryString()->links() !!}

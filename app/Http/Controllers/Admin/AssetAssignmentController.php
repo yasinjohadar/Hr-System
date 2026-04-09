@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Asset;
 use App\Models\AssetAssignment;
 use App\Models\Employee;
+use App\Services\AssetLifecycleRecorder;
 use Illuminate\Http\Request;
 
 class AssetAssignmentController extends Controller
@@ -15,7 +16,7 @@ class AssetAssignmentController extends Controller
         $this->middleware('auth');
         $this->middleware('permission:asset-assignment-list')->only('index');
         $this->middleware('permission:asset-assignment-create')->only(['create', 'store']);
-        $this->middleware('permission:asset-assignment-edit')->only(['edit', 'update']);
+        $this->middleware('permission:asset-assignment-edit')->only(['edit', 'update', 'showReturnForm', 'return']);
         $this->middleware('permission:asset-assignment-delete')->only('destroy');
         $this->middleware('permission:asset-assignment-show')->only('show');
     }
@@ -95,10 +96,12 @@ class AssetAssignmentController extends Controller
         $data['created_by'] = auth()->id();
         $data['assignment_status'] = 'active';
 
-        AssetAssignment::create($data);
+        $assignment = AssetAssignment::create($data);
 
         // تحديث حالة الأصل
         $asset->update(['status' => 'assigned']);
+
+        app(AssetLifecycleRecorder::class)->recordAssignmentStarted($assignment);
 
         return redirect()->route('admin.asset-assignments.index')->with('success', 'تم توزيع الأصل بنجاح.');
     }
@@ -206,6 +209,10 @@ class AssetAssignmentController extends Controller
             'assignment_status' => 'returned',
             'returned_by' => auth()->id(),
         ]);
+
+        $assignment->refresh();
+
+        app(AssetLifecycleRecorder::class)->recordAssignmentReturned($assignment);
 
         // تحديث حالة الأصل
         $asset = $assignment->asset;

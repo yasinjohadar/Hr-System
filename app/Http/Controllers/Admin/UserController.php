@@ -40,6 +40,8 @@ class UserController extends Controller
     $this->middleware('permission:user-edit')->only(['edit', 'update']);
     $this->middleware('permission:user-delete')->only('destroy');
     $this->middleware('permission:user-show')->only('show');
+    $this->middleware('permission:user-change-password')->only('updatePassword');
+    $this->middleware('permission:user-toggle-status')->only('toggleStatus');
 }
 
     /**

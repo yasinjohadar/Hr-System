@@ -49,8 +49,11 @@ Route::middleware(['auth', 'check.user.active', 'ensure.employee'])->prefix('emp
     // المهام
     Route::get('/tasks', [SelfServiceController::class, 'tasks'])->name('tasks');
     
-    // المشاريع
+    // المشاريع وسجلات الوقت
     Route::get('/projects', [SelfServiceController::class, 'projects'])->name('projects');
+    Route::get('/project-time', [SelfServiceController::class, 'projectTimeIndex'])->name('project-time.index');
+    Route::get('/projects/{project}', [SelfServiceController::class, 'showProject'])->name('projects.show');
+    Route::post('/projects/{project}/time', [SelfServiceController::class, 'storeProjectTime'])->name('projects.time.store');
     
     // التذاكر
     Route::get('/tickets', [SelfServiceController::class, 'tickets'])->name('tickets');

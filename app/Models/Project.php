@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
 
 class Project extends Model
@@ -82,6 +83,51 @@ class Project extends Model
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
+    }
+
+    public function members(): HasMany
+    {
+        return $this->hasMany(ProjectMember::class);
+    }
+
+    public function memberEmployees(): BelongsToMany
+    {
+        return $this->belongsToMany(Employee::class, 'project_members')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(ProjectDocument::class);
+    }
+
+    public function timeEntries(): HasMany
+    {
+        return $this->hasMany(ProjectTimeEntry::class);
+    }
+
+    /**
+     * هل يمكن للموظف عرض المشروع أو تسجيل وقت عليه؟
+     */
+    public function employeeCanParticipate(Employee $employee): bool
+    {
+        if ($this->manager_id === $employee->id) {
+            return true;
+        }
+
+        if ($this->members()->where('employee_id', $employee->id)->exists()) {
+            return true;
+        }
+
+        return $this->tasks()
+            ->whereHas('assignments', fn ($q) => $q->where('employee_id', $employee->id))
+            ->exists();
+    }
+
+    public function allowsTimeLogging(): bool
+    {
+        return in_array($this->status, ['planning', 'active', 'on_hold'], true);
     }
 
     /**

@@ -1,0 +1,1 @@
+{!! $salaries->withQueryString()->links() !!}

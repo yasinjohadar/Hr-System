@@ -29,6 +29,7 @@
                                     <th>تاريخ الانتهاء</th>
                                     <th>التقدم</th>
                                     <th>الحالة</th>
+                                    <th>إجراءات</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -47,14 +48,17 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <span class="badge bg-{{ $project->status == 'completed' ? 'success' : ($project->status == 'in_progress' ? 'primary' : 'secondary') }}">
+                                            <span class="badge bg-{{ $project->status == 'completed' ? 'success' : ($project->status == 'active' ? 'primary' : ($project->status == 'cancelled' ? 'danger' : 'secondary')) }}">
                                                 {{ $project->status_name_ar }}
                                             </span>
+                                        </td>
+                                        <td>
+                                            <a href="{{ route('employee.projects.show', $project) }}" class="btn btn-sm btn-outline-primary">تفاصيل</a>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center">لا توجد مشاريع</td>
+                                        <td colspan="8" class="text-center">لا توجد مشاريع</td>
                                     </tr>
                                 @endforelse
                             </tbody>

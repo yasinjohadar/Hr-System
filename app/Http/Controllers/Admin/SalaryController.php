@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Salary;
-use App\Models\Employee;
 use App\Models\Currency;
+use App\Models\Employee;
+use App\Models\EmployeeAdvance;
+use App\Models\Payroll;
+use App\Models\Salary;
+use App\Services\SalaryLedgerService;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 class SalaryController extends Controller
 {
@@ -19,6 +23,22 @@ class SalaryController extends Controller
         $this->middleware('permission:salary-edit')->only(['edit', 'update']);
         $this->middleware('permission:salary-delete')->only('destroy');
         $this->middleware('permission:salary-show')->only('show');
+    }
+
+    /**
+     * @return array{0: array, 1: float}
+     */
+    protected function prepareLedgerAndDeductions(Request $request, SalaryLedgerService $ledgerService): array
+    {
+        $lines = $ledgerService->normalizeInput($request->input('ledger_lines'));
+        $sumDed = $ledgerService->sumDeductionSide($lines);
+        if ($sumDed > 0) {
+            $deductions = $sumDed;
+        } else {
+            $deductions = round((float) ($request->input('deductions', 0)), 2);
+        }
+
+        return [$lines, $deductions];
     }
 
     /**
@@ -55,10 +75,16 @@ class SalaryController extends Controller
 
         $employees = Employee::where('is_active', true)->with('user')->get();
         $years = Salary::select('salary_year')->distinct()->orderBy('salary_year', 'desc')->pluck('salary_year');
-        $currentYear = $request->input('salary_year', date('Y'));
-        $currentMonth = $request->input('salary_month', date('n'));
 
-        return view("admin.pages.salaries.index", compact("salaries", "employees", "years", "currentYear", "currentMonth"));
+        if ($request->ajax() || $request->boolean('ajax')) {
+            return response()->json([
+                'html_rows' => view('admin.pages.salaries._index_rows', compact('salaries'))->render(),
+                'html_pagination' => view('admin.pages.salaries._index_pagination', compact('salaries'))->render(),
+                'total' => $salaries->total(),
+            ]);
+        }
+
+        return view('admin.pages.salaries.index', compact('salaries', 'employees', 'years'));
     }
 
     /**
@@ -69,8 +95,9 @@ class SalaryController extends Controller
         $employees = Employee::where('is_active', true)->with('user')->get();
         $currencies = Currency::where('is_active', true)->get();
         $baseCurrency = Currency::where('is_base_currency', true)->first();
-        
-        return view("admin.pages.salaries.create", compact("employees", "currencies", "baseCurrency"));
+        $activeAdvances = EmployeeAdvance::active()->with('employee')->orderBy('employee_id')->orderByDesc('id')->get();
+
+        return view('admin.pages.salaries.create', compact('employees', 'currencies', 'baseCurrency', 'activeAdvances'));
     }
 
     /**
@@ -78,6 +105,9 @@ class SalaryController extends Controller
      */
     public function store(Request $request)
     {
+        $ledgerService = app(SalaryLedgerService::class);
+        [$lines, $deductions] = $this->prepareLedgerAndDeductions($request, $ledgerService);
+
         $request->validate([
             'employee_id' => 'required|exists:employees,id',
             'salary_month' => 'required|integer|between:1,12',
@@ -91,6 +121,11 @@ class SalaryController extends Controller
             'payment_date' => 'nullable|date',
             'payment_status' => 'required|in:pending,paid,cancelled',
             'notes' => 'nullable|string',
+            'ledger_lines' => 'nullable|array',
+            'ledger_lines.*.line_type' => 'nullable|string|max:32',
+            'ledger_lines.*.label_ar' => 'nullable|string|max:255',
+            'ledger_lines.*.amount' => 'nullable|numeric|min:0',
+            'ledger_lines.*.employee_advance_id' => 'nullable|exists:employee_advances,id',
         ], [
             'employee_id.required' => 'الموظف مطلوب',
             'salary_month.required' => 'الشهر مطلوب',
@@ -99,7 +134,6 @@ class SalaryController extends Controller
             'payment_status.required' => 'حالة الدفع مطلوبة',
         ]);
 
-        // التحقق من عدم وجود راتب لنفس الموظف في نفس الشهر والسنة
         $existingSalary = Salary::where('employee_id', $request->employee_id)
             ->where('salary_month', $request->salary_month)
             ->where('salary_year', $request->salary_year)
@@ -109,31 +143,37 @@ class SalaryController extends Controller
             return back()->withInput()->withErrors(['error' => 'يوجد راتب مسجل بالفعل لهذا الموظف في نفس الشهر والسنة']);
         }
 
-        // حساب الراتب الإجمالي
-        $totalSalary = $request->base_salary 
-            + ($request->allowances ?? 0) 
-            + ($request->bonuses ?? 0) 
-            + ($request->overtime ?? 0) 
-            - ($request->deductions ?? 0);
+        $totalSalary = $request->base_salary
+            + ($request->allowances ?? 0)
+            + ($request->bonuses ?? 0)
+            + ($request->overtime ?? 0)
+            - $deductions;
 
-        $salary = Salary::create([
-            'employee_id' => $request->employee_id,
-            'salary_month' => $request->salary_month,
-            'salary_year' => $request->salary_year,
-            'base_salary' => $request->base_salary,
-            'allowances' => $request->allowances ?? 0,
-            'bonuses' => $request->bonuses ?? 0,
-            'deductions' => $request->deductions ?? 0,
-            'overtime' => $request->overtime ?? 0,
-            'total_salary' => $totalSalary,
-            'currency_id' => $request->currency_id,
-            'payment_date' => $request->payment_date,
-            'payment_status' => $request->payment_status,
-            'notes' => $request->notes,
-            'created_by' => auth()->id(),
-        ]);
+        try {
+            DB::transaction(function () use ($request, $lines, $deductions, $totalSalary, $ledgerService) {
+                $salary = Salary::create([
+                    'employee_id' => $request->employee_id,
+                    'salary_month' => $request->salary_month,
+                    'salary_year' => $request->salary_year,
+                    'base_salary' => $request->base_salary,
+                    'allowances' => $request->allowances ?? 0,
+                    'bonuses' => $request->bonuses ?? 0,
+                    'deductions' => $deductions,
+                    'overtime' => $request->overtime ?? 0,
+                    'total_salary' => $totalSalary,
+                    'currency_id' => $request->currency_id,
+                    'payment_date' => $request->payment_date,
+                    'payment_status' => $request->payment_status,
+                    'notes' => $request->notes,
+                    'created_by' => auth()->id(),
+                ]);
+                $ledgerService->syncAfterCreate($salary, $lines, (int) $request->employee_id);
+            });
+        } catch (InvalidArgumentException $e) {
+            return back()->withInput()->withErrors(['ledger' => $e->getMessage()]);
+        }
 
-        return redirect()->route("admin.salaries.index")->with("success", "تم إضافة الراتب بنجاح");
+        return redirect()->route('admin.salaries.index')->with('success', 'تم إضافة الراتب بنجاح');
     }
 
     /**
@@ -141,8 +181,51 @@ class SalaryController extends Controller
      */
     public function show(string $id)
     {
-        $salary = Salary::with(['employee.user', 'currency', 'creator'])->findOrFail($id);
-        return view("admin.pages.salaries.show", compact("salary"));
+        $salary = Salary::with([
+            'employee.user',
+            'currency',
+            'creator',
+            'ledgerLines.employeeAdvance',
+        ])->findOrFail($id);
+
+        $employeeSalaries = Salary::where('employee_id', $salary->employee_id)
+            ->orderByDesc('salary_year')
+            ->orderByDesc('salary_month')
+            ->get();
+
+        $employeePayrolls = Payroll::where('employee_id', $salary->employee_id)
+            ->orderByDesc('payroll_year')
+            ->orderByDesc('payroll_month')
+            ->get();
+
+        $timeline = collect();
+        foreach ($employeeSalaries as $s) {
+            $timeline->push([
+                'source' => 'salary',
+                'sort_key' => $s->salary_year * 100 + $s->salary_month,
+                'period_label' => $s->month_name.' '.$s->salary_year,
+                'total' => $s->total_salary,
+                'status' => $s->payment_status_ar,
+                'status_raw' => $s->payment_status,
+                'url' => route('admin.salaries.show', $s->id),
+                'is_current' => (int) $s->id === (int) $salary->id,
+            ]);
+        }
+        foreach ($employeePayrolls as $p) {
+            $timeline->push([
+                'source' => 'payroll',
+                'sort_key' => $p->payroll_year * 100 + $p->payroll_month,
+                'period_label' => $p->month_name.' '.$p->payroll_year,
+                'total' => $p->net_salary,
+                'status' => $p->status_name_ar,
+                'status_raw' => $p->status,
+                'url' => route('admin.payrolls.show', $p->id),
+                'is_current' => false,
+            ]);
+        }
+        $financialTimeline = $timeline->sortByDesc('sort_key')->values();
+
+        return view('admin.pages.salaries.show', compact('salary', 'financialTimeline'));
     }
 
     /**
@@ -150,11 +233,25 @@ class SalaryController extends Controller
      */
     public function edit(string $id)
     {
-        $salary = Salary::findOrFail($id);
+        $salary = Salary::with('ledgerLines')->findOrFail($id);
         $employees = Employee::where('is_active', true)->with('user')->get();
         $currencies = Currency::where('is_active', true)->get();
-        
-        return view("admin.pages.salaries.edit", compact("salary", "employees", "currencies"));
+
+        $advanceIds = $salary->ledgerLines->pluck('employee_advance_id')->filter()->unique()->all();
+        $activeAdvances = EmployeeAdvance::with('employee')
+            ->where(function ($q) use ($salary, $advanceIds) {
+                $q->where(function ($q2) use ($salary) {
+                    $q2->where('status', 'active')->where('employee_id', $salary->employee_id);
+                });
+                if ($advanceIds !== []) {
+                    $q->orWhereIn('id', $advanceIds);
+                }
+            })
+            ->orderBy('employee_id')
+            ->orderByDesc('id')
+            ->get();
+
+        return view('admin.pages.salaries.edit', compact('salary', 'employees', 'currencies', 'activeAdvances'));
     }
 
     /**
@@ -162,7 +259,9 @@ class SalaryController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $salary = Salary::findOrFail($id);
+        $salary = Salary::with('ledgerLines')->findOrFail($id);
+        $ledgerService = app(SalaryLedgerService::class);
+        [$lines, $deductions] = $this->prepareLedgerAndDeductions($request, $ledgerService);
 
         $request->validate([
             'employee_id' => 'required|exists:employees,id',
@@ -177,6 +276,11 @@ class SalaryController extends Controller
             'payment_date' => 'nullable|date',
             'payment_status' => 'required|in:pending,paid,cancelled',
             'notes' => 'nullable|string',
+            'ledger_lines' => 'nullable|array',
+            'ledger_lines.*.line_type' => 'nullable|string|max:32',
+            'ledger_lines.*.label_ar' => 'nullable|string|max:255',
+            'ledger_lines.*.amount' => 'nullable|numeric|min:0',
+            'ledger_lines.*.employee_advance_id' => 'nullable|exists:employee_advances,id',
         ], [
             'employee_id.required' => 'الموظف مطلوب',
             'salary_month.required' => 'الشهر مطلوب',
@@ -185,7 +289,6 @@ class SalaryController extends Controller
             'payment_status.required' => 'حالة الدفع مطلوبة',
         ]);
 
-        // التحقق من عدم وجود راتب آخر لنفس الموظف في نفس الشهر والسنة (عدا السجل الحالي)
         $existingSalary = Salary::where('employee_id', $request->employee_id)
             ->where('salary_month', $request->salary_month)
             ->where('salary_year', $request->salary_year)
@@ -196,28 +299,39 @@ class SalaryController extends Controller
             return back()->withInput()->withErrors(['error' => 'يوجد راتب مسجل بالفعل لهذا الموظف في نفس الشهر والسنة']);
         }
 
-        // حساب الراتب الإجمالي
-        $totalSalary = $request->base_salary 
-            + ($request->allowances ?? 0) 
-            + ($request->bonuses ?? 0) 
-            + ($request->overtime ?? 0) 
-            - ($request->deductions ?? 0);
+        $totalSalary = $request->base_salary
+            + ($request->allowances ?? 0)
+            + ($request->bonuses ?? 0)
+            + ($request->overtime ?? 0)
+            - $deductions;
 
-        $salary->update([
-            'employee_id' => $request->employee_id,
-            'salary_month' => $request->salary_month,
-            'salary_year' => $request->salary_year,
-            'base_salary' => $request->base_salary,
-            'allowances' => $request->allowances ?? 0,
-            'bonuses' => $request->bonuses ?? 0,
-            'deductions' => $request->deductions ?? 0,
-            'overtime' => $request->overtime ?? 0,
-            'total_salary' => $totalSalary,
-            'currency_id' => $request->currency_id,
-            'payment_date' => $request->payment_date,
-            'payment_status' => $request->payment_status,
-            'notes' => $request->notes,
-        ]);
+        try {
+            DB::transaction(function () use ($request, $salary, $lines, $deductions, $totalSalary, $ledgerService) {
+                $ledgerService->revertAdvanceRecoveries($salary);
+                $ledgerService->deleteLines($salary);
+                $salary->update([
+                    'employee_id' => $request->employee_id,
+                    'salary_month' => $request->salary_month,
+                    'salary_year' => $request->salary_year,
+                    'base_salary' => $request->base_salary,
+                    'allowances' => $request->allowances ?? 0,
+                    'bonuses' => $request->bonuses ?? 0,
+                    'deductions' => $deductions,
+                    'overtime' => $request->overtime ?? 0,
+                    'total_salary' => $totalSalary,
+                    'currency_id' => $request->currency_id,
+                    'payment_date' => $request->payment_date,
+                    'payment_status' => $request->payment_status,
+                    'notes' => $request->notes,
+                ]);
+                if ($lines !== []) {
+                    $ledgerService->validateLinesForEmployee($lines, (int) $request->employee_id);
+                    $ledgerService->persistLines($salary, $lines);
+                }
+            });
+        } catch (InvalidArgumentException $e) {
+            return back()->withInput()->withErrors(['ledger' => $e->getMessage()]);
+        }
 
         return redirect()->route('admin.salaries.index')->with('success', 'تم تحديث بيانات الراتب بنجاح');
     }
@@ -230,6 +344,6 @@ class SalaryController extends Controller
         $salary = Salary::findOrFail($request->id);
         $salary->delete();
 
-        return redirect()->route("admin.salaries.index")->with("success", "تم حذف الراتب بنجاح");
+        return redirect()->route('admin.salaries.index')->with('success', 'تم حذف الراتب بنجاح');
     }
 }
