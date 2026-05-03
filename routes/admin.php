@@ -80,6 +80,7 @@ use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Admin\ContractController;
 use App\Http\Controllers\Admin\EmployeeJobChangeController;
 use App\Http\Controllers\Admin\PolicyController;
+use App\Http\Controllers\Admin\UserController;
 
 Route::middleware(['auth', 'check.user.active', 'ensure.admin'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard
@@ -96,6 +97,10 @@ Route::middleware(['auth', 'check.user.active', 'ensure.admin'])->prefix('admin'
     Route::post('employees/{employee}/login-code', [EmployeeController::class, 'generateLoginCode'])->name('employees.login-code');
     Route::post('employees/{employee}/login-as', [EmployeeController::class, 'loginAs'])->name('employees.login-as');
     Route::resource('employees', EmployeeController::class);
+
+    // Routes للمستخدمين
+    Route::get('users/search', [UserController::class, 'search'])->name('users.search');
+    Route::post('users/{user}/login-code', [UserController::class, 'generateLoginCode'])->name('users.login-code');
 
     // Routes للتغييرات الوظيفية (النقل والترقية)
     Route::post('employee-job-changes/{employee_job_change}/approve', [EmployeeJobChangeController::class, 'approve'])->name('employee-job-changes.approve');

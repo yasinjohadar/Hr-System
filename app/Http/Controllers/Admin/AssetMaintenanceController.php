@@ -102,7 +102,7 @@ class AssetMaintenanceController extends Controller
      */
     public function show(string $id)
     {
-        $maintenance = AssetMaintenance::with(['asset', 'creator', 'performer'])->findOrFail($id);
+        $maintenance = AssetMaintenance::with(['asset', 'creator'])->findOrFail($id);
 
         return view('admin.pages.asset-maintenances.show', compact('maintenance'));
     }

@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -39,7 +41,7 @@ class UserController extends Controller
     $this->middleware('permission:user-create')->only(['create', 'store']);
     $this->middleware('permission:user-edit')->only(['edit', 'update']);
     $this->middleware('permission:user-delete')->only('destroy');
-    $this->middleware('permission:user-show')->only('show');
+    $this->middleware('permission:user-show')->only(['show', 'generateLoginCode']);
     $this->middleware('permission:user-change-password')->only('updatePassword');
     $this->middleware('permission:user-toggle-status')->only('toggleStatus');
 }
@@ -368,5 +370,58 @@ public function toggleStatus(Request $request, $id)
     }
 }
 
+/**
+ * توليد كود دخول مؤقت لمستخدم (يستخدم لمرة واحدة، صالح 15 دقيقة).
+ */
+    public function generateLoginCode(User $user)
+    {
+        if (!$user->is_active) {
+            return response()->json(['error' => 'حساب المستخدم غير نشط.'], 422);
+        }
 
+        $code = Str::random(12);
+        $cacheKey = 'user_login_code:' . $code;
+        Cache::put($cacheKey, ['user_id' => $user->id], now()->addMinutes(15));
+
+        $url = route('employee.login-by-code', ['code' => $code]);
+
+        return response()->json([
+            'code' => $code,
+            'url' => $url,
+        ]);
+    }
+
+    /**
+     * بحث حي (AJAX) عن المستخدمين.
+     */
+    public function search(Request $request)
+    {
+        $usersQuery = User::query();
+
+        if ($request->filled('q')) {
+            $q = $request->input('q');
+            $usersQuery->where(function ($query) use ($q) {
+                $query->where('name', 'like', "%{$q}%")
+                      ->orWhere('email', 'like', "%{$q}%")
+                      ->orWhere('phone', 'like', "%{$q}%");
+            });
+        }
+
+        if ($request->filled('is_active')) {
+            $usersQuery->where('is_active', $request->input('is_active'));
+        }
+
+        if ($request->filled('status')) {
+            $usersQuery->where('status', $request->input('status'));
+        }
+
+        $users = $usersQuery->paginate(10);
+
+        $sessions = DB::table('sessions')
+            ->orderByDesc('last_activity')
+            ->get()
+            ->groupBy('user_id');
+
+        return view('admin.pages.users._table', compact('users', 'sessions'));
+    }
 }
