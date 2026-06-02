@@ -9,12 +9,15 @@ use App\Models\Payroll;
 use App\Models\Salary;
 use App\Services\SalaryLedgerService;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Admin\Concerns\ScopesByDepartment;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
 class SalaryController extends Controller
 {
+    use ScopesByDepartment;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -67,6 +70,8 @@ class SalaryController extends Controller
         if ($request->filled('payment_status')) {
             $salariesQuery->where('payment_status', $request->input('payment_status'));
         }
+
+        $this->scopeByEmployeeQuery($salariesQuery);
 
         $salaries = $salariesQuery->orderBy('salary_year', 'desc')
             ->orderBy('salary_month', 'desc')

@@ -1,290 +1,179 @@
 @extends('admin.layouts.master')
 
 @section('page-title')
-    تفاصيل الموظف
+    تفاصيل الموظف — {{ $employee->full_name }}
 @stop
 
-@section('css')
-    <style>
-        .employee-show-hero {
-            background: linear-gradient(145deg, var(--bs-primary) 0%, rgba(var(--bs-primary-rgb), 0.88) 55%, rgb(15, 76, 129) 100%);
-            color: #fff;
-            border: none;
-        }
-        .employee-show-hero .text-white-75 { color: rgba(255,255,255,.85) !important; }
-    </style>
-@stop
+@php
+    $employmentStatusLabels = [
+        'active' => ['label' => 'نشط وظيفياً', 'class' => 'success'],
+        'on_leave' => ['label' => 'في إجازة', 'class' => 'warning'],
+        'terminated' => ['label' => 'منتهي', 'class' => 'danger'],
+        'resigned' => ['label' => 'استقال', 'class' => 'secondary'],
+    ];
+    $employmentTypeLabels = [
+        'full_time' => 'دوام كامل',
+        'part_time' => 'دوام جزئي',
+        'contract' => 'عقد',
+        'intern' => 'متدرب',
+    ];
+    $maritalLabels = [
+        'single' => 'أعزب',
+        'married' => 'متزوج',
+        'divorced' => 'مطلق',
+        'widowed' => 'أرمل',
+    ];
+    $empStatus = $employmentStatusLabels[$employee->employment_status] ?? ['label' => $employee->employment_status ?? '—', 'class' => 'secondary'];
+    $empStatusBadge = '<span class="badge bg-' . $empStatus['class'] . '-transparent">' . e($empStatus['label']) . '</span>';
+@endphp
 
 @section('content')
-    <div class="main-content app-content">
+    <div class="main-content app-content admin-employees admin-employees-show">
         <div class="container-fluid">
-            <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
-                <div class="my-auto">
-                    <h5 class="page-title fs-21 mb-1">تفاصيل الموظف</h5>
-                    <p class="text-muted small mb-0">{{ $employee->full_name }} — {{ $employee->employee_code }}</p>
-                </div>
-                <div class="d-flex flex-wrap gap-2 mt-2 mt-md-0">
-                    <a href="{{ route('admin.employees.index') }}" class="btn btn-secondary btn-sm">
-                        <i class="fas fa-arrow-right me-1"></i>العودة للقائمة
-                    </a>
-                    @can('employee-edit')
-                        <a href="{{ route('admin.employees.edit', $employee->id) }}" class="btn btn-warning btn-sm">
-                            <i class="fas fa-edit me-1"></i>تعديل
-                        </a>
-                    @endcan
+            @include('admin.pages.employees.partials.alerts')
+
+            <div class="card custom-card profile-hero-card bg-primary-gradient mb-4">
+                <div class="card-body py-4">
+                    <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-4">
+                        <div class="text-center text-lg-start flex-shrink-0">
+                            @if ($employee->photo)
+                                <img src="{{ asset('storage/' . $employee->photo) }}" alt="" class="profile-avatar-lg">
+                            @else
+                                <span class="profile-avatar-lg-placeholder">{{ mb_substr($employee->full_name, 0, 1) }}</span>
+                            @endif
+                        </div>
+                        <div class="flex-grow-1 text-white text-center text-lg-start">
+                            <h3 class="text-white mb-1">{{ $employee->full_name }}</h3>
+                            <p class="mb-2 op-8 font-monospace">{{ $employee->employee_code }}</p>
+                            <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-lg-start mb-3">
+                                {!! $empStatusBadge !!}
+                                @if ($employee->department)
+                                    <span class="badge bg-light text-dark">{{ $employee->department->name }}</span>
+                                @endif
+                                @if ($employee->position)
+                                    <span class="badge bg-light text-dark">{{ $employee->position->title }}</span>
+                                @endif
+                            </div>
+                            <div class="employee-hero-status d-inline-flex align-items-center gap-2 bg-white bg-opacity-10 rounded px-3 py-2">
+                                <span class="small op-8">تفعيل السجل:</span>
+                                @can('employee-edit')
+                                    <div class="form-check form-switch employee-status-switch-wrap mb-0">
+                                        <input type="checkbox"
+                                            class="form-check-input employee-status-switch employee-status-switch-light"
+                                            role="switch"
+                                            id="employee-show-status"
+                                            data-employee-id="{{ $employee->id }}"
+                                            {{ $employee->is_active ? 'checked' : '' }}>
+                                        <label class="form-check-label small text-white employee-status-label mb-0" for="employee-show-status">
+                                            {{ $employee->is_active ? 'مفعّل' : 'معطّل' }}
+                                        </label>
+                                    </div>
+                                @else
+                                    <span class="badge bg-{{ $employee->is_active ? 'success' : 'secondary' }}">
+                                        {{ $employee->is_active ? 'مفعّل' : 'معطّل' }}
+                                    </span>
+                                @endcan
+                            </div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2 justify-content-center">
+                            @can('employee-edit')
+                                <a href="{{ route('admin.employees.edit', $employee->id) }}" class="btn btn-light btn-sm">
+                                    <i class="ri-edit-line me-1"></i>تعديل
+                                </a>
+                            @endcan
+                            @if ($employee->user_id && $employee->user && $employee->user->is_active)
+                                @can('employee-show')
+                                    <form action="{{ route('admin.employees.login-as', $employee) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-outline-light btn-sm">
+                                            <i class="ri-login-box-line me-1"></i>الدخول كموظف
+                                        </button>
+                                    </form>
+                                    <button type="button" class="btn btn-outline-light btn-sm employee-login-code-btn"
+                                        data-employee-id="{{ $employee->id }}"
+                                        data-employee-name="{{ $employee->full_name }}">
+                                        <i class="ri-link me-1"></i>كود دخول
+                                    </button>
+                                @endcan
+                            @endif
+                            <a href="{{ route('admin.employees.index') }}" class="btn btn-outline-light btn-sm">
+                                <i class="ri-arrow-right-line me-1"></i>القائمة
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div class="row g-3">
-                <div class="col-lg-4">
-                    <div class="card employee-show-hero shadow-sm h-100">
-                        <div class="card-body d-flex flex-column text-center">
-                            <div class="mb-3">
-                                @if($employee->photo)
-                                    <img src="{{ asset('storage/' . $employee->photo) }}" alt="صورة الموظف" class="rounded-circle border border-white border-3" style="width:100px;height:100px;object-fit:cover;">
-                                @else
-                                    <span class="avatar bg-white bg-opacity-25 rounded-circle d-inline-flex align-items-center justify-content-center" style="width:100px;height:100px;">
-                                        <i class="fas fa-user fs-1"></i>
-                                    </span>
-                                @endif
-                            </div>
-                            <div class="fw-bold fs-5">{{ $employee->full_name }}</div>
-                            <div class="small text-white-75 font-monospace mb-3">{{ $employee->employee_code }}</div>
-                            <div class="mb-3">
-                                <span class="badge bg-{{ $employee->is_active ? 'success' : 'danger' }} fs-14 px-3 py-2">
-                                    {{ $employee->is_active ? 'نشط' : 'غير نشط' }}
-                                </span>
-                            </div>
-                            <div class="mb-3 pb-3 border-bottom border-white border-opacity-25">
-                                <div class="text-white-75 small mb-1"><i class="fas fa-building me-1"></i>القسم</div>
-                                <div class="fw-semibold">{{ $employee->department->name ?? '—' }}</div>
-                            </div>
-                            <div class="mb-3">
-                                <div class="text-white-75 small mb-1"><i class="fas fa-briefcase me-1"></i>المنصب</div>
-                                <div class="fw-semibold">{{ $employee->position->title ?? '—' }}</div>
-                            </div>
-
-                            @if($employee->user_id && $employee->user && $employee->user->is_active)
-                            <div class="mt-auto pt-3 border-top border-white border-opacity-25">
-                                @can('employee-show')
-                                <div class="d-flex flex-column gap-2">
-                                    <form action="{{ route('admin.employees.login-as', $employee) }}" method="POST">
-                                        @csrf
-                                        <button type="submit" class="btn btn-light btn-sm w-100">
-                                            <i class="fas fa-user-secret me-1"></i>الدخول كموظف
-                                        </button>
-                                    </form>
-                                    <button type="button" class="btn btn-outline-light btn-sm w-100" id="btnLoginCode"
-                                            data-url="{{ route('admin.employees.login-code', $employee) }}">
-                                        <i class="fas fa-link me-1"></i>كود دخول لمتصفح آخر
-                                    </button>
-                                </div>
-                                @endcan
-                            </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-
                 <div class="col-lg-8">
-                    <div class="card shadow-sm border-0 h-100">
-                        <div class="card-header bg-light py-3 border-bottom">
-                            <h6 class="mb-0 fw-semibold">
-                                <i class="fas fa-circle-info text-primary me-2"></i>معلومات الوظيفة
-                            </h6>
-                            <small class="text-muted">القسم، المنصب، الفرع، والراتب</small>
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0">
-                                    <tbody>
-                                        <tr>
-                                            <th scope="row" class="ps-4 py-3 align-middle" style="width:40%">
-                                                <i class="fas fa-building text-muted me-2"></i>القسم
-                                            </th>
-                                            <td class="pe-4 py-3 align-middle fw-semibold">{{ $employee->department->name ?? '—' }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row" class="ps-4 py-3 align-middle">
-                                                <i class="fas fa-briefcase text-muted me-2"></i>المنصب
-                                            </th>
-                                            <td class="pe-4 py-3 align-middle fw-semibold">{{ $employee->position->title ?? '—' }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row" class="ps-4 py-3 align-middle">
-                                                <i class="fas fa-code-branch text-muted me-2"></i>الفرع
-                                            </th>
-                                            <td class="pe-4 py-3 align-middle fw-semibold">{{ $employee->branch->name ?? '—' }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row" class="ps-4 py-3 align-middle">
-                                                <i class="fas fa-user-tie text-muted me-2"></i>المدير المباشر
-                                            </th>
-                                            <td class="pe-4 py-3 align-middle fw-semibold">{{ $employee->manager->full_name ?? '—' }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row" class="ps-4 py-3 align-middle">
-                                                <i class="far fa-calendar-check text-muted me-2"></i>تاريخ التوظيف
-                                            </th>
-                                            <td class="pe-4 py-3 align-middle fw-semibold">{{ $employee->hire_date ? $employee->hire_date->format('Y-m-d') : '—' }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row" class="ps-4 py-3 align-middle">
-                                                <i class="fas fa-clock text-muted me-2"></i>نوع التوظيف
-                                            </th>
-                                            <td class="pe-4 py-3 align-middle">
-                                                <span class="badge bg-info-subtle text-dark border fs-14">{{ $employee->employment_type_name_ar ?? $employee->employment_type ?? '—' }}</span>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row" class="ps-4 py-3 align-middle">
-                                                <i class="fas fa-money-bill-wave text-muted me-2"></i>الراتب الأساسي
-                                            </th>
-                                            <td class="pe-4 py-3 align-middle fw-semibold">{{ $employee->base_salary ? number_format($employee->base_salary, 2) . ' ر.س' : '—' }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row" class="ps-4 py-3 align-middle">
-                                                <i class="fas fa-flag text-muted me-2"></i>الحالة الوظيفية
-                                            </th>
-                                            <td class="pe-4 py-3 align-middle fw-semibold">{{ $employee->employment_status_name_ar ?? $employee->employment_status ?? '—' }}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                    @include('admin.pages.employees.partials.show-info-card', [
+                        'icon' => 'ri-briefcase-line',
+                        'title' => 'معلومات الوظيفة',
+                        'subtitle' => 'القسم، المنصب، الفرع، والراتب',
+                        'rows' => [
+                            ['icon' => 'ri-building-line', 'label' => 'القسم', 'value' => e($employee->department->name ?? '—')],
+                            ['icon' => 'ri-user-star-line', 'label' => 'المنصب', 'value' => e($employee->position->title ?? '—')],
+                            ['icon' => 'ri-git-branch-line', 'label' => 'الفرع', 'value' => e($employee->branch->name ?? '—')],
+                            ['icon' => 'ri-user-follow-line', 'label' => 'المدير المباشر', 'value' => e($employee->manager->full_name ?? '—')],
+                            ['icon' => 'ri-calendar-check-line', 'label' => 'تاريخ التوظيف', 'value' => e($employee->hire_date ? $employee->hire_date->format('Y-m-d') : '—')],
+                            ['icon' => 'ri-time-line', 'label' => 'نوع التوظيف', 'value' => e($employmentTypeLabels[$employee->employment_type] ?? $employee->employment_type ?? '—')],
+                            ['icon' => 'ri-money-dollar-circle-line', 'label' => 'الراتب الأساسي', 'value' => $employee->salary ? number_format($employee->salary, 2) . ' ر.س' : '—'],
+                            ['icon' => 'ri-flag-line', 'label' => 'الحالة الوظيفية', 'value' => $empStatusBadge],
+                            ['icon' => 'ri-map-pin-line', 'label' => 'مكان العمل', 'value' => e($employee->work_location ?? '—')],
+                            ['icon' => 'ri-shield-user-line', 'label' => 'حساب الدخول', 'value' => $employee->user ? '<a href="' . route('users.show', $employee->user_id) . '" class="text-primary">' . e($employee->user->email) . '</a>' : '—'],
+                        ],
+                    ])
+                </div>
+                <div class="col-lg-4">
+                    @include('admin.pages.employees.partials.show-info-card', [
+                        'icon' => 'ri-contacts-line',
+                        'title' => 'معلومات الاتصال',
+                        'rows' => [
+                            ['icon' => 'ri-mail-line', 'label' => 'البريد الشخصي', 'value' => $employee->personal_email ? '<a href="mailto:' . e($employee->personal_email) . '">' . e($employee->personal_email) . '</a>' : '—'],
+                            ['icon' => 'ri-mail-send-line', 'label' => 'بريد العمل', 'value' => e($employee->work_email ?? ($employee->user->email ?? '—'))],
+                            ['icon' => 'ri-phone-line', 'label' => 'الهاتف الشخصي', 'value' => e($employee->personal_phone ?? '—')],
+                            ['icon' => 'ri-phone-fill', 'label' => 'هاتف العمل', 'value' => e($employee->work_phone ?? '—')],
+                            ['icon' => 'ri-map-pin-2-line', 'label' => 'العنوان', 'value' => e(trim(($employee->address ?? '') . ($employee->city ? '، ' . $employee->city : '')) ?: '—')],
+                        ],
+                    ])
                 </div>
             </div>
 
             <div class="row g-3 mt-1">
                 <div class="col-md-6">
-                    <div class="card shadow-sm border-0 h-100">
-                        <div class="card-header bg-light py-3 border-bottom">
-                            <h6 class="mb-0 fw-semibold">
-                                <i class="fas fa-address-book text-primary me-2"></i>معلومات الاتصال
-                            </h6>
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0">
-                                    <tbody>
-                                        <tr>
-                                            <th scope="row" class="ps-4 py-3 align-middle" style="width:40%">
-                                                <i class="fas fa-envelope text-muted me-2"></i>البريد الإلكتروني
-                                            </th>
-                                            <td class="pe-4 py-3 align-middle font-monospace small">{{ $employee->user->email ?? $employee->personal_email ?? '—' }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row" class="ps-4 py-3 align-middle">
-                                                <i class="fas fa-phone text-muted me-2"></i>الهاتف
-                                            </th>
-                                            <td class="pe-4 py-3 align-middle fw-semibold">{{ $employee->phone ?? $employee->personal_phone ?? '—' }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row" class="ps-4 py-3 align-middle">
-                                                <i class="fas fa-map-marker-alt text-muted me-2"></i>العنوان
-                                            </th>
-                                            <td class="pe-4 py-3 align-middle">{{ $employee->address ?? '—' }}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                    @include('admin.pages.employees.partials.show-info-card', [
+                        'icon' => 'ri-id-card-line',
+                        'title' => 'المعلومات الشخصية',
+                        'rows' => [
+                            ['icon' => 'ri-cake-2-line', 'label' => 'تاريخ الميلاد', 'value' => e($employee->date_of_birth ? $employee->date_of_birth->format('Y-m-d') : '—')],
+                            ['icon' => 'ri-men-line', 'label' => 'الجنس', 'value' => e($employee->gender === 'male' ? 'ذكر' : ($employee->gender === 'female' ? 'أنثى' : '—'))],
+                            ['icon' => 'ri-heart-line', 'label' => 'الحالة الاجتماعية', 'value' => e($maritalLabels[$employee->marital_status] ?? $employee->marital_status ?? '—')],
+                            ['icon' => 'ri-fingerprint-line', 'label' => 'رقم الهوية', 'value' => '<span class="font-monospace">' . e($employee->national_id ?? '—') . '</span>'],
+                        ],
+                    ])
                 </div>
-
-                <div class="col-md-6">
-                    <div class="card shadow-sm border-0 h-100">
-                        <div class="card-header bg-light py-3 border-bottom">
-                            <h6 class="mb-0 fw-semibold">
-                                <i class="fas fa-id-card text-primary me-2"></i>المعلومات الشخصية
-                            </h6>
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0">
-                                    <tbody>
-                                        <tr>
-                                            <th scope="row" class="ps-4 py-3 align-middle" style="width:40%">
-                                                <i class="fas fa-cake-candles text-muted me-2"></i>تاريخ الميلاد
-                                            </th>
-                                            <td class="pe-4 py-3 align-middle fw-semibold">{{ $employee->date_of_birth ? $employee->date_of_birth->format('Y-m-d') : '—' }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row" class="ps-4 py-3 align-middle">
-                                                <i class="fas fa-venus-mars text-muted me-2"></i>الجنس
-                                            </th>
-                                            <td class="pe-4 py-3 align-middle fw-semibold">{{ $employee->gender == 'male' ? 'ذكر' : ($employee->gender == 'female' ? 'أنثى' : '—') }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row" class="ps-4 py-3 align-middle">
-                                                <i class="fas fa-globe text-muted me-2"></i>الجنسية
-                                            </th>
-                                            <td class="pe-4 py-3 align-middle fw-semibold">{{ $employee->nationality ?? '—' }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row" class="ps-4 py-3 align-middle">
-                                                <i class="fas fa-ring text-muted me-2"></i>الحالة الاجتماعية
-                                            </th>
-                                            <td class="pe-4 py-3 align-middle fw-semibold">{{ $employee->marital_status_name_ar ?? $employee->marital_status ?? '—' }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row" class="ps-4 py-3 align-middle">
-                                                <i class="fas fa-fingerprint text-muted me-2"></i>رقم الهوية
-                                            </th>
-                                            <td class="pe-4 py-3 align-middle font-monospace small">{{ $employee->national_id ?? '—' }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row" class="ps-4 py-3 align-middle">
-                                                <i class="fas fa-passport text-muted me-2"></i>رقم الجواز
-                                            </th>
-                                            <td class="pe-4 py-3 align-middle font-monospace small">{{ $employee->passport_number ?? '—' }}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                @if ($employee->emergency_contact_name)
+                    <div class="col-md-6">
+                        @include('admin.pages.employees.partials.show-info-card', [
+                            'icon' => 'ri-alarm-warning-line',
+                            'title' => 'جهة الاتصال في حالات الطوارئ',
+                            'rows' => [
+                                ['icon' => 'ri-user-line', 'label' => 'الاسم', 'value' => e($employee->emergency_contact_name)],
+                                ['icon' => 'ri-phone-line', 'label' => 'الهاتف', 'value' => e($employee->emergency_contact_phone ?? '—')],
+                                ['icon' => 'ri-group-line', 'label' => 'العلاقة', 'value' => e($employee->emergency_contact_relation ?? '—')],
+                            ],
+                        ])
                     </div>
-                </div>
+                @endif
             </div>
-
-            @if($employee->emergency_contact_name)
-            <div class="row g-3 mt-1">
-                <div class="col-12">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-header bg-light py-3 border-bottom">
-                            <h6 class="mb-0 fw-semibold">
-                                <i class="fas fa-phone-volume text-danger me-2"></i>جهة الاتصال في حالات الطوارئ
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row row-cols-1 row-cols-md-3 g-0">
-                                <div class="col border-bottom border-end-md p-3">
-                                    <div class="small text-muted mb-1"><i class="fas fa-user me-1"></i>الاسم</div>
-                                    <div class="fw-semibold">{{ $employee->emergency_contact_name }}</div>
-                                </div>
-                                <div class="col border-bottom border-end-md p-3">
-                                    <div class="small text-muted mb-1"><i class="fas fa-phone me-1"></i>الهاتف</div>
-                                    <div class="fw-semibold">{{ $employee->emergency_contact_phone ?? '—' }}</div>
-                                </div>
-                                <div class="col border-bottom p-3">
-                                    <div class="small text-muted mb-1"><i class="fas fa-users-between-lines me-1"></i>العلاقة</div>
-                                    <div class="fw-semibold">{{ $employee->emergency_contact_relation ?? '—' }}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            @endif
 
             <div class="row g-3 mt-1">
                 <div class="col-12">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-header bg-light py-3 border-bottom d-flex align-items-center justify-content-between">
+                    <div class="card custom-card employee-detail-card">
+                        <div class="card-header border-bottom py-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
                             <div>
                                 <h6 class="mb-0 fw-semibold">
-                                    <i class="fas fa-arrow-right-arrow-left text-primary me-2"></i>سجل التغييرات الوظيفية
+                                    <i class="ri-arrow-left-right-line text-primary me-2"></i>سجل التغييرات الوظيفية
                                 </h6>
                                 <small class="text-muted">آخر التغييرات الوظيفية المعتمدة</small>
                             </div>
@@ -293,47 +182,46 @@
                             </a>
                         </div>
                         <div class="card-body p-0">
-                            @if(isset($jobChangeHistory) && $jobChangeHistory->isNotEmpty())
+                            @if (isset($jobChangeHistory) && $jobChangeHistory->isNotEmpty())
                                 <div class="table-responsive">
-                                    <table class="table table-hover mb-0">
-                                        <thead class="table-light">
+                                    <table class="table table-hover align-middle mb-0 employees-table">
+                                        <thead>
                                             <tr>
                                                 <th class="ps-4">التاريخ الفعال</th>
                                                 <th>نوع التغيير</th>
                                                 <th>ملخص التغيير</th>
-                                                <th class="pe-4"></th>
+                                                <th class="pe-4 text-end"></th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach($jobChangeHistory as $change)
+                                            @foreach ($jobChangeHistory as $change)
                                                 <tr>
-                                                    <td class="ps-4 align-middle font-monospace small">{{ $change->effective_date->format('Y-m-d') }}</td>
-                                                    <td class="align-middle">
-                                                        <span class="badge bg-info-subtle text-dark border">{{ $change->change_type_label }}</span>
-                                                    </td>
-                                                    <td class="align-middle">
+                                                    <td class="ps-4 small text-muted">{{ $change->effective_date->format('Y-m-d') }}</td>
+                                                    <td><span class="badge bg-info-transparent">{{ $change->change_type_label }}</span></td>
+                                                    <td class="small">
                                                         @php
                                                             $parts = [];
-                                                            if ($change->new_department_id && ($change->old_department_id != $change->new_department_id))
+                                                            if ($change->new_department_id && $change->old_department_id != $change->new_department_id) {
                                                                 $parts[] = 'القسم: ' . ($change->oldDepartment->name ?? '-') . ' → ' . ($change->newDepartment->name ?? '-');
-                                                            if ($change->new_position_id && ($change->old_position_id != $change->new_position_id))
+                                                            }
+                                                            if ($change->new_position_id && $change->old_position_id != $change->new_position_id) {
                                                                 $parts[] = 'المنصب: ' . ($change->oldPosition->title ?? '-') . ' → ' . ($change->newPosition->title ?? '-');
-                                                            if ($change->new_branch_id && ($change->old_branch_id != $change->new_branch_id))
+                                                            }
+                                                            if ($change->new_branch_id && $change->old_branch_id != $change->new_branch_id) {
                                                                 $parts[] = 'الفرع: ' . ($change->oldBranch->name ?? '-') . ' → ' . ($change->newBranch->name ?? '-');
-                                                            if ($change->new_manager_id && ($change->old_manager_id != $change->new_manager_id))
+                                                            }
+                                                            if ($change->new_manager_id && $change->old_manager_id != $change->new_manager_id) {
                                                                 $parts[] = 'المدير: ' . ($change->oldManager->full_name ?? '-') . ' → ' . ($change->newManager->full_name ?? '-');
-                                                            if ($change->new_salary !== null && (string)$change->old_salary !== (string)$change->new_salary)
+                                                            }
+                                                            if ($change->new_salary !== null && (string) $change->old_salary !== (string) $change->new_salary) {
                                                                 $parts[] = 'الراتب: ' . number_format($change->old_salary ?? 0, 2) . ' → ' . number_format($change->new_salary, 2) . ' ر.س';
+                                                            }
                                                         @endphp
-                                                        @if(count($parts) > 0)
-                                                            <span class="small">{{ implode(' | ', $parts) }}</span>
-                                                        @else
-                                                            <span class="text-muted">—</span>
-                                                        @endif
+                                                        {{ count($parts) > 0 ? implode(' | ', $parts) : '—' }}
                                                     </td>
-                                                    <td class="pe-4 align-middle text-end">
-                                                        <a href="{{ route('admin.employee-job-changes.show', $change) }}" class="btn btn-sm btn-light">
-                                                            <i class="fas fa-eye"></i>
+                                                    <td class="pe-4 text-end">
+                                                        <a href="{{ route('admin.employee-job-changes.show', $change) }}" class="btn btn-sm btn-light" title="عرض">
+                                                            <i class="ri-eye-line"></i>
                                                         </a>
                                                     </td>
                                                 </tr>
@@ -342,7 +230,7 @@
                                     </table>
                                 </div>
                             @else
-                                <div class="text-center text-muted py-4">لا يوجد سجل تغييرات وظيفية.</div>
+                                <p class="text-muted text-center py-4 mb-0">لا يوجد سجل تغييرات وظيفية.</p>
                             @endif
                         </div>
                     </div>
@@ -351,113 +239,33 @@
 
             <div class="row g-3 mt-1 mb-4">
                 <div class="col-12">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-header bg-light py-3">
-                            <h6 class="mb-0 fw-semibold"><i class="fas fa-clock-rotate-left text-primary me-2"></i>بيانات السجل</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row row-cols-1 row-cols-md-3 g-0">
-                                <div class="col border-bottom border-end-md p-3">
-                                    <div class="small text-muted mb-1"><i class="fas fa-user-pen me-1"></i>أنشأ بواسطة</div>
-                                    <div class="fw-semibold">{{ $employee->creator->name ?? '—' }}</div>
-                                </div>
-                                <div class="col border-bottom border-end-md p-3">
-                                    <div class="small text-muted mb-1"><i class="far fa-clock me-1"></i>تاريخ الإنشاء</div>
-                                    <div class="fw-semibold font-monospace small">{{ $employee->created_at->format('Y-m-d H:i') }}</div>
-                                </div>
-                                <div class="col border-bottom p-3">
-                                    <div class="small text-muted mb-1"><i class="fas fa-pen-to-square me-1"></i>آخر تحديث</div>
-                                    <div class="fw-semibold font-monospace small">{{ $employee->updated_at->format('Y-m-d H:i') }}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    @include('admin.pages.employees.partials.show-info-card', [
+                        'icon' => 'ri-history-line',
+                        'title' => 'بيانات السجل',
+                        'rows' => [
+                            ['icon' => 'ri-user-settings-line', 'label' => 'أنشأ بواسطة', 'value' => e($employee->creator->name ?? '—')],
+                            ['icon' => 'ri-calendar-line', 'label' => 'تاريخ الإنشاء', 'value' => '<span class="font-monospace small">' . e($employee->created_at->format('Y-m-d H:i')) . '</span>'],
+                            ['icon' => 'ri-edit-line', 'label' => 'آخر تحديث', 'value' => '<span class="font-monospace small">' . e($employee->updated_at->format('Y-m-d H:i')) . '</span>'],
+                        ],
+                    ])
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="loginCodeModal" tabindex="-1" aria-labelledby="loginCodeModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="loginCodeModalLabel">كود دخول لمتصفح آخر</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="text-muted small mb-3">صالح لمدة 15 دقيقة ولا يعمل إلا مرة واحدة. انسخ الرابط وافتحه في المتصفح الآخر.</p>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">الكود</label>
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="loginCodeValue" readonly>
-                            <button class="btn btn-outline-secondary" type="button" id="copyCodeBtn" title="نسخ الكود">
-                                <i class="fas fa-copy"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="mb-0">
-                        <label class="form-label fw-bold">الرابط</label>
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="loginCodeUrl" readonly>
-                            <button class="btn btn-outline-secondary" type="button" id="copyUrlBtn" title="نسخ الرابط">
-                                <i class="fas fa-copy"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    @include('admin.pages.employees.partials.modals')
 @stop
 
-@section('js')
-<script>
-(function() {
-    const btn = document.getElementById('btnLoginCode');
-    if (!btn) return;
-    const modal = new bootstrap.Modal(document.getElementById('loginCodeModal'));
-    const codeInput = document.getElementById('loginCodeValue');
-    const urlInput = document.getElementById('loginCodeUrl');
-    const copyCodeBtn = document.getElementById('copyCodeBtn');
-    const copyUrlBtn = document.getElementById('copyUrlBtn');
-    const url = btn.getAttribute('data-url');
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('assets/css/admin-employees.css') }}">
+@endpush
 
-    btn.addEventListener('click', function() {
-        btn.disabled = true;
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({})
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            if (data.error) {
-                alert(data.error);
-                btn.disabled = false;
-                return;
-            }
-            codeInput.value = data.code || '';
-            urlInput.value = data.url || '';
-            modal.show();
-            btn.disabled = false;
-        })
-        .catch(function() {
-            alert('حدث خطأ أثناء إنشاء الكود.');
-            btn.disabled = false;
-        });
-    });
-
-    function copyToClipboard(el) {
-        el.select();
-        document.execCommand('copy');
-    }
-    copyCodeBtn.addEventListener('click', function() { copyToClipboard(codeInput); });
-    copyUrlBtn.addEventListener('click', function() { copyToClipboard(urlInput); });
-})();
-</script>
-@endsection
+@push('scripts')
+    <script>
+        window.adminEmployeesConfig = {
+            toggleUrlTemplate: @json(route('admin.employees.toggle-active', ['employee' => '__ID__'])),
+            loginCodeUrlTemplate: @json(route('admin.employees.login-code', ['employee' => '__ID__'])),
+        };
+    </script>
+    <script src="{{ asset('assets/js/admin-employees.js') }}"></script>
+@endpush

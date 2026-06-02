@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Admin;
 
-use HashContext;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -51,41 +50,13 @@ class UserController extends Controller
      */
 public function index(Request $request)
     {
-        $roles = Role::all();
+        $users = $this->filteredUsersQuery($request, useQueryParam: true)->paginate(10);
 
-        // جلب آخر جلسات المستخدمين
-        $sessions = DB::table('sessions')
-            ->orderByDesc('last_activity')
-            ->get()
-            ->groupBy('user_id');
-
-        // بدء استعلام المستخدمين
-        $usersQuery = User::query();
-
-        // فلترة حسب البحث (name, email, phone)
-        if ($request->filled('query')) {
-            $search = $request->input('query');
-            $usersQuery->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%$search%")
-                  ->orWhere('email', 'like', "%$search%")
-                  ->orWhere('phone', 'like', "%$search%");
-            });
-        }
-
-        // فلترة حسب الحالة
-        if ($request->filled('status')) {
-            $usersQuery->where('status', $request->input('status'));
-        }
-
-        // فلترة حسب الحالة النشطة
-        if ($request->filled('is_active')) {
-            $usersQuery->where('is_active', $request->input('is_active'));
-        }
-
-        // تنفيذ الاستعلام
-        $users = $usersQuery->paginate(10);
-
-        return view("admin.pages.users.index", compact("users", "roles", "sessions"));
+        return view('admin.pages.users.index', [
+            'users' => $users,
+            'sessions' => $this->latestSessionsMap(),
+            'userStats' => $this->userStats(),
+        ]);
     }
 
 
@@ -167,8 +138,13 @@ public function index(Request $request)
      */
     public function show(string $id)
     {
-        $user = User::findOrFail($id);
-        return view("admin.pages.users.profile" , compact("user"));
+        $user = User::with(['roles', 'employee'])->findOrFail($id);
+        $lastSession = DB::table('sessions')
+            ->where('user_id', $user->id)
+            ->orderByDesc('last_activity')
+            ->first();
+
+        return view('admin.pages.users.profile', compact('user', 'lastSession'));
     }
 
     /**
@@ -396,32 +372,72 @@ public function toggleStatus(Request $request, $id)
      */
     public function search(Request $request)
     {
-        $usersQuery = User::query();
+        $users = $this->filteredUsersQuery($request, useQueryParam: false)->paginate(10);
 
-        if ($request->filled('q')) {
-            $q = $request->input('q');
-            $usersQuery->where(function ($query) use ($q) {
-                $query->where('name', 'like', "%{$q}%")
-                      ->orWhere('email', 'like', "%{$q}%")
-                      ->orWhere('phone', 'like', "%{$q}%");
+        return view('admin.pages.users._table', [
+            'users' => $users,
+            'sessions' => $this->latestSessionsMap(),
+        ]);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Builder<User>
+     */
+    private function filteredUsersQuery(Request $request, bool $useQueryParam = false)
+    {
+        $usersQuery = User::query()->with('roles');
+
+        $searchKey = $useQueryParam ? 'query' : 'q';
+        if ($request->filled($searchKey)) {
+            $search = $request->input($searchKey);
+            $usersQuery->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%");
             });
-        }
-
-        if ($request->filled('is_active')) {
-            $usersQuery->where('is_active', $request->input('is_active'));
         }
 
         if ($request->filled('status')) {
             $usersQuery->where('status', $request->input('status'));
         }
 
-        $users = $usersQuery->paginate(10);
+        if ($request->filled('is_active')) {
+            $usersQuery->where('is_active', $request->input('is_active'));
+        }
 
-        $sessions = DB::table('sessions')
-            ->orderByDesc('last_activity')
+        return $usersQuery;
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, object{user_id: int, last_activity: int}>
+     */
+    private function latestSessionsMap()
+    {
+        return DB::table('sessions')
+            ->whereNotNull('user_id')
+            ->select('user_id', DB::raw('MAX(last_activity) as last_activity'))
+            ->groupBy('user_id')
             ->get()
-            ->groupBy('user_id');
+            ->keyBy('user_id');
+    }
 
-        return view('admin.pages.users._table', compact('users', 'sessions'));
+    /**
+     * @return array<string, int>
+     */
+    private function userStats(): array
+    {
+        $row = User::query()->selectRaw('
+            COUNT(*) as total,
+            SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active_login,
+            SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as inactive_status,
+            SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as banned
+        ', ['inactive', 'banned'])->first();
+
+        return [
+            'total' => (int) ($row->total ?? 0),
+            'active_login' => (int) ($row->active_login ?? 0),
+            'inactive_status' => (int) ($row->inactive_status ?? 0),
+            'banned' => (int) ($row->banned ?? 0),
+        ];
     }
 }

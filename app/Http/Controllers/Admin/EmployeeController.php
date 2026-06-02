@@ -9,6 +9,7 @@ use App\Models\Position;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Admin\Concerns\ScopesByDepartment;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
@@ -16,12 +17,14 @@ use Illuminate\Support\Str;
 
 class EmployeeController extends Controller
 {
+    use ScopesByDepartment;
+
     public function __construct()
     {
         $this->middleware('auth');
         $this->middleware('permission:employee-list')->only('index');
         $this->middleware('permission:employee-create')->only(['create', 'store']);
-        $this->middleware('permission:employee-edit')->only(['edit', 'update']);
+        $this->middleware('permission:employee-edit')->only(['edit', 'update', 'toggleActive']);
         $this->middleware('permission:employee-delete')->only('destroy');
         $this->middleware('permission:employee-show')->only(['show', 'loginAs', 'generateLoginCode']);
     }
@@ -36,16 +39,7 @@ class EmployeeController extends Controller
 
         // بدء استعلام الموظفين
         $employeesQuery = Employee::with(['user', 'department', 'position', 'manager']);
-
-        // تقييد رئيس القسم بموظفي أقسامه فقط
-        if (Auth::user()->isDepartmentHead()) {
-            $departmentIds = Auth::user()->getManagedDepartmentIds();
-            if (!empty($departmentIds)) {
-                $employeesQuery->whereIn('department_id', $departmentIds);
-            } else {
-                $employeesQuery->whereRaw('1 = 0'); // لا أقسام يديرها = لا موظفين
-            }
-        }
+        $this->scopeEmployeesQuery($employeesQuery);
 
         // فلترة حسب البحث
         if ($request->filled('query')) {
@@ -92,7 +86,50 @@ class EmployeeController extends Controller
             ]);
         }
 
-        return view('admin.pages.employees.index', compact('employees', 'departments', 'positions'));
+        $employeeStats = $this->employeeStats();
+
+        return view('admin.pages.employees.index', compact('employees', 'departments', 'positions', 'employeeStats'));
+    }
+
+    /**
+     * تبديل حالة تفعيل الموظف (is_active).
+     */
+    public function toggleActive(Employee $employee)
+    {
+        $newStatus = !$employee->is_active;
+        $employee->update(['is_active' => $newStatus]);
+        $employee->refresh();
+
+        $label = $employee->is_active ? 'مفعّل' : 'معطّل';
+
+        return response()->json([
+            'success' => true,
+            'message' => "تم تحديث حالة الموظف إلى: {$label}",
+            'is_active' => (bool) $employee->is_active,
+        ]);
+    }
+
+    /**
+     * إحصائيات سريعة لصفحة الموظفين.
+     */
+    private function employeeStats(): array
+    {
+        $base = $this->employeesBaseQuery();
+
+        return [
+            'total' => (clone $base)->count(),
+            'active' => (clone $base)->where('is_active', true)->count(),
+            'inactive' => (clone $base)->where('is_active', false)->count(),
+            'on_leave' => (clone $base)->where('employment_status', 'on_leave')->count(),
+        ];
+    }
+
+    /**
+     * استعلام أساسي مع تقييد رئيس القسم.
+     */
+    private function employeesBaseQuery()
+    {
+        return $this->scopeEmployeesQuery(Employee::query());
     }
 
     /**
@@ -199,15 +236,8 @@ class EmployeeController extends Controller
      */
     public function show(string $id)
     {
-        $employee = Employee::with(['user', 'department', 'position', 'manager', 'creator'])->findOrFail($id);
-
-        // رئيس القسم يرى فقط موظفي أقسامه
-        if (Auth::user()->isDepartmentHead()) {
-            $departmentIds = Auth::user()->getManagedDepartmentIds();
-            if (empty($departmentIds) || !in_array($employee->department_id, $departmentIds)) {
-                abort(403, 'غير مصرح لك بعرض هذا الموظف.');
-            }
-        }
+        $employee = Employee::with(['user', 'department', 'position', 'manager', 'creator', 'branch'])->findOrFail($id);
+        $this->authorizeManagedEmployee($employee);
 
         // جلب سجل التغييرات الوظيفية المعتمدة مع العلاقات للعرض
         $jobChangeHistory = EmployeeJobChange::where('employee_id', $employee->id)

@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 
 class AttendanceController extends Controller
 {
+    use Concerns\ScopesByDepartment;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -28,14 +30,7 @@ class AttendanceController extends Controller
     {
         $attendancesQuery = Attendance::with(['employee.user']);
 
-        if (Auth::user()->isDepartmentHead()) {
-            $employeeIds = Auth::user()->getManagedEmployeeIds();
-            if (!empty($employeeIds)) {
-                $attendancesQuery->whereIn('employee_id', $employeeIds);
-            } else {
-                $attendancesQuery->whereRaw('1 = 0');
-            }
-        }
+        $this->scopeByEmployeeQuery($attendancesQuery);
 
         // فلترة حسب الموظف
         if ($request->filled('employee_id')) {
@@ -65,10 +60,7 @@ class AttendanceController extends Controller
             ->paginate(50);
 
         $employees = Employee::where('is_active', true)->with('user')->get();
-        if (Auth::user()->isDepartmentHead()) {
-            $managedIds = Auth::user()->getManagedEmployeeIds();
-            $employees = $employees->whereIn('id', $managedIds)->values();
-        }
+        $employees = collect($this->departmentScope()->filterEmployeeCollection($employees));
         $currentStartDate = $request->input('start_date', Carbon::now()->subDays(30)->format('Y-m-d'));
         $currentEndDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
 
@@ -150,12 +142,7 @@ class AttendanceController extends Controller
     {
         $attendance = Attendance::with(['employee.user', 'creator'])->findOrFail($id);
 
-        if (Auth::user()->isDepartmentHead()) {
-            $employeeIds = Auth::user()->getManagedEmployeeIds();
-            if (!in_array($attendance->employee_id, $employeeIds)) {
-                abort(403, 'غير مصرح لك بعرض هذا السجل.');
-            }
-        }
+        $this->authorizeManagedEmployeeId((int) $attendance->employee_id, 'غير مصرح لك بعرض هذا السجل.');
 
         return view("admin.pages.attendances.show", compact("attendance"));
     }

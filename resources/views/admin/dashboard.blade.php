@@ -5,382 +5,115 @@
 @stop
 
 @section('content')
-    <div class="main-content app-content">
+    <div class="main-content app-content admin-dashboard">
         <div class="container-fluid">
-            <!-- Page Header -->
-            <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
-                <div>
-                    <h4 class="mb-0">مرحباً بك، {{ auth()->user()->name }}!</h4>
-                    <p class="mb-0 text-muted">لوحة تحكم شاملة لإدارة الموارد البشرية</p>
-                </div>
-                <div>
-                    <button class="btn btn-primary" onclick="refreshDashboard()">
-                        <i class="fas fa-sync-alt me-2"></i>تحديث
+            @include('admin.dashboard.partials.hero')
+
+            <ul class="nav nav-tabs nav-tabs-dashboard mb-4" id="adminDashboardTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="tab-overview-btn" data-bs-toggle="tab" data-bs-target="#tab-overview" type="button" role="tab" data-tab-key="overview">
+                        <i class="ri-dashboard-line me-1"></i>نظرة عامة
                     </button>
-                </div>
-            </div>
-            <!-- End Page Header -->
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-followup-btn" data-bs-toggle="tab" data-bs-target="#tab-followup" type="button" role="tab" data-tab-key="followup">
+                        <i class="ri-alarm-line me-1"></i>المتابعة والتنبيهات
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-analytics-btn" data-bs-toggle="tab" data-bs-target="#tab-analytics" type="button" role="tab" data-tab-key="analytics">
+                        <i class="ri-bar-chart-grouped-line me-1"></i>التحليلات والنشاط
+                    </button>
+                </li>
+            </ul>
 
-            <!-- إحصائيات عامة -->
-            <div class="row mb-4">
-                <div class="col-xl-3 col-lg-6 col-md-6">
-                    <div class="card overflow-hidden bg-primary-gradient">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-2 text-white">إجمالي الموظفين</h6>
-                                    <h2 class="mb-0 text-white">{{ $stats['total_employees'] ?? 0 }}</h2>
-                                    <small class="text-white-50">+{{ $stats['new_employees_this_month'] ?? 0 }} هذا الشهر</small>
-                                </div>
-                                <div class="fs-40 text-white op-7">
-                                    <i class="fas fa-users"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <div class="tab-content">
+                {{-- نظرة عامة --}}
+                <div class="tab-pane fade show active" id="tab-overview" role="tabpanel">
+                    @include('admin.dashboard.partials.kpi-primary')
+                    @include('admin.dashboard.partials.kpi-secondary')
+                    @include('admin.dashboard.partials.quick-actions')
                 </div>
-                <div class="col-xl-3 col-lg-6 col-md-6">
-                    <div class="card overflow-hidden bg-success-gradient">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-2 text-white">حضور اليوم</h6>
-                                    <h2 class="mb-0 text-white">{{ $attendanceStats['today_present'] ?? 0 }}</h2>
-                                    <small class="text-white-50">غائب: {{ $attendanceStats['today_absent'] ?? 0 }}</small>
-                                </div>
-                                <div class="fs-40 text-white op-7">
-                                    <i class="fas fa-calendar-check"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-3 col-lg-6 col-md-6">
-                    <div class="card overflow-hidden bg-warning-gradient">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-2 text-white">طلبات إجازة قيد الانتظار</h6>
-                                    <h2 class="mb-0 text-white">{{ $leaveStats['pending_requests'] ?? 0 }}</h2>
-                                    <small class="text-white-50">في إجازة: {{ $leaveStats['approved_today'] ?? 0 }}</small>
-                                </div>
-                                <div class="fs-40 text-white op-7">
-                                    <i class="fas fa-calendar-times"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-3 col-lg-6 col-md-6">
-                    <div class="card overflow-hidden bg-info-gradient">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-2 text-white">إجمالي الرواتب (هذا الشهر)</h6>
-                                    <h2 class="mb-0 text-white">{{ number_format($salaryStats['total_this_month'] ?? 0, 0) }} ر.س</h2>
-                                    <small class="text-white-50">مدفوعة: {{ $salaryStats['paid_count'] ?? 0 }}</small>
-                                </div>
-                                <div class="fs-40 text-white op-7">
-                                    <i class="fas fa-money-bill-wave"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- إحصائيات إضافية -->
-            <div class="row mb-4">
-                <div class="col-xl-3 col-lg-6 col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <div>
-                                    <h6 class="mb-1">الأقسام</h6>
-                                    <h3 class="mb-0 text-primary">{{ $stats['total_departments'] ?? 0 }}</h3>
-                                </div>
-                                <div class="fs-30 text-primary">
-                                    <i class="fas fa-building"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-3 col-lg-6 col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <div>
-                                    <h6 class="mb-1">المناصب</h6>
-                                    <h3 class="mb-0 text-success">{{ $stats['total_positions'] ?? 0 }}</h3>
-                                </div>
-                                <div class="fs-30 text-success">
-                                    <i class="fas fa-briefcase"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-3 col-lg-6 col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <div>
-                                    <h6 class="mb-1">الفروع</h6>
-                                    <h3 class="mb-0 text-info">{{ $stats['total_branches'] ?? 0 }}</h3>
-                                </div>
-                                <div class="fs-30 text-info">
-                                    <i class="fas fa-map-marker-alt"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-3 col-lg-6 col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <div>
-                                    <h6 class="mb-1">معدل الحضور الشهري</h6>
-                                    <h3 class="mb-0 text-warning">{{ $attendanceStats['monthly_attendance_rate'] ?? 0 }}%</h3>
-                                </div>
-                                <div class="fs-30 text-warning">
-                                    <i class="fas fa-chart-line"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                {{-- المتابعة --}}
+                <div class="tab-pane fade" id="tab-followup" role="tabpanel">
+                    @include('admin.dashboard.partials.mena-kpis')
+                    @include('admin.dashboard.partials.urgent-tasks')
+                    @include('admin.dashboard.partials.alerts')
 
-            <!-- المهام العاجلة -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">
-                                <i class="fas fa-exclamation-triangle text-warning me-2"></i>
-                                المهام العاجلة
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-2">
-                                    <a href="{{ route('admin.leave-requests.index', ['status' => 'pending']) }}" class="text-decoration-none">
-                                        <div class="alert alert-warning mb-0">
-                                            <h6 class="mb-1">طلبات إجازة</h6>
-                                            <h4 class="mb-0">{{ $urgentTasks['pending_leaves'] ?? 0 }}</h4>
-                                        </div>
-                                    </a>
-                                </div>
-                                <div class="col-md-2">
-                                    <a href="{{ route('admin.expense-requests.index', ['status' => 'pending']) }}" class="text-decoration-none">
-                                        <div class="alert alert-info mb-0">
-                                            <h6 class="mb-1">طلبات مصروفات</h6>
-                                            <h4 class="mb-0">{{ $urgentTasks['pending_expenses'] ?? 0 }}</h4>
-                                        </div>
-                                    </a>
-                                </div>
-                                <div class="col-md-2">
-                                    <a href="{{ route('admin.tickets.index', ['status' => 'open']) }}" class="text-decoration-none">
-                                        <div class="alert alert-danger mb-0">
-                                            <h6 class="mb-1">تذاكر مفتوحة</h6>
-                                            <h4 class="mb-0">{{ $urgentTasks['open_tickets'] ?? 0 }}</h4>
-                                        </div>
-                                    </a>
-                                </div>
-                                <div class="col-md-2">
-                                    <a href="{{ route('admin.employee-violations.index', ['status' => 'pending']) }}" class="text-decoration-none">
-                                        <div class="alert alert-secondary mb-0">
-                                            <h6 class="mb-1">مخالفات قيد المراجعة</h6>
-                                            <h4 class="mb-0">{{ $urgentTasks['pending_violations'] ?? 0 }}</h4>
-                                        </div>
-                                    </a>
-                                </div>
-                                <div class="col-md-2">
-                                    <a href="{{ route('admin.meetings.index', ['status' => 'scheduled']) }}" class="text-decoration-none">
-                                        <div class="alert alert-primary mb-0">
-                                            <h6 class="mb-1">اجتماعات قادمة</h6>
-                                            <h4 class="mb-0">{{ $urgentTasks['upcoming_meetings'] ?? 0 }}</h4>
-                                        </div>
-                                    </a>
-                                </div>
-                                <div class="col-md-2">
-                                    <a href="{{ route('admin.tasks.index', ['status' => 'overdue']) }}" class="text-decoration-none">
-                                        <div class="alert alert-dark mb-0">
-                                            <h6 class="mb-1">مهام متأخرة</h6>
-                                            <h4 class="mb-0">{{ $urgentTasks['overdue_tasks'] ?? 0 }}</h4>
-                                        </div>
-                                    </a>
-                                </div>
+                    @if(isset($announcements) && $announcements->isNotEmpty())
+                        <div class="card custom-card">
+                            <div class="card-header d-flex justify-content-between align-items-center card-header-accent">
+                                <h6 class="card-title fw-semibold mb-0">
+                                    <i class="ri-megaphone-line me-1 text-primary"></i>إعلانات الشركة
+                                </h6>
+                                <a href="{{ route('admin.announcements.index') }}" class="btn btn-sm btn-outline-primary">عرض الكل</a>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- الإشعارات المهمة -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">
-                                <i class="fas fa-bell text-danger me-2"></i>
-                                تنبيهات مهمة
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="alert alert-warning">
-                                        <i class="fas fa-file-alt me-2"></i>
-                                        <strong>مستندات تنتهي قريباً:</strong> {{ $importantNotifications['expiring_documents'] ?? 0 }}
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="alert alert-info">
-                                        <i class="fas fa-certificate me-2"></i>
-                                        <strong>شهادات تنتهي قريباً:</strong> {{ $importantNotifications['expiring_certificates'] ?? 0 }}
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="alert alert-danger">
-                                        <i class="fas fa-file-contract me-2"></i>
-                                        <strong>عقود تنتهي قريباً:</strong>
-                                        <a href="{{ route('admin.contracts.index', ['expiring' => 90]) }}" class="alert-link">{{ $importantNotifications['contracts_expiring'] ?? 0 }}</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- إعلانات الشركة -->
-            @if(isset($announcements) && $announcements->isNotEmpty())
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="card-title mb-0">
-                                <i class="fas fa-bullhorn text-primary me-2"></i>
-                                إعلانات الشركة
-                            </h5>
-                            <a href="{{ route('admin.announcements.index') }}" class="btn btn-sm btn-outline-primary">عرض الكل</a>
-                        </div>
-                        <div class="card-body">
-                            <div class="list-group list-group-flush">
+                            <div class="card-body">
                                 @foreach($announcements as $announcement)
-                                    <div class="list-group-item border-0 border-bottom px-0">
-                                        <h6 class="mb-1">{{ $announcement->title }}</h6>
+                                    <div class="announcement-item">
+                                        <h6 class="mb-1 fw-semibold">{{ $announcement->title }}</h6>
                                         @if($announcement->content)
-                                            <p class="mb-1 text-muted small">{{ Str::limit(strip_tags($announcement->content), 120) }}</p>
+                                            <p class="mb-1 text-muted fs-13">{{ Str::limit(strip_tags($announcement->content), 120) }}</p>
                                         @endif
                                         <small class="text-muted">
-                                            {{ $announcement->publish_date?->format('Y-m-d') ?? $announcement->created_at->format('Y-m-d') }}
+                                            {{ $announcement->publish_date?->format('Y/m/d') ?? $announcement->created_at->format('Y/m/d') }}
                                             @if($announcement->expiry_date)
-                                                — حتى {{ $announcement->expiry_date->format('Y-m-d') }}
+                                                — حتى {{ $announcement->expiry_date->format('Y/m/d') }}
                                             @endif
                                         </small>
                                     </div>
                                 @endforeach
                             </div>
                         </div>
-                    </div>
+                    @endif
                 </div>
-            </div>
-            @endif
 
-            <!-- آخر الأنشطة -->
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">
-                                <i class="fas fa-chart-line me-2"></i>
-                                إحصائيات الحضور (آخر 6 أشهر)
-                            </h5>
+                {{-- التحليلات --}}
+                <div class="tab-pane fade" id="tab-analytics" role="tabpanel">
+                    <div class="row g-4">
+                        <div class="col-lg-8">
+                            <div class="card custom-card h-100">
+                                <div class="card-header">
+                                    <h6 class="card-title fw-semibold mb-0">
+                                        <i class="ri-line-chart-line me-1"></i>إحصائيات الحضور (آخر 6 أشهر)
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="admin-attendance-chart"></div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <canvas id="attendanceChart" height="100"></canvas>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">
-                                <i class="fas fa-history me-2"></i>
-                                آخر الأنشطة
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="list-group list-group-flush">
-                                @forelse($recentActivities as $activity)
-                                    <div class="list-group-item border-0 px-0">
-                                        <div class="d-flex align-items-start">
-                                            <div class="me-3">
-                                                <span class="badge bg-{{ $activity['color'] ?? 'primary' }} rounded-circle p-2">
-                                                    <i class="{{ $activity['icon'] ?? 'fas fa-circle' }}"></i>
-                                                </span>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-1">{{ $activity['title'] ?? '' }}</h6>
-                                                <p class="mb-1 text-muted small">{{ $activity['description'] ?? '' }}</p>
+                        <div class="col-lg-4">
+                            <div class="card custom-card h-100">
+                                <div class="card-header">
+                                    <h6 class="card-title fw-semibold mb-0">
+                                        <i class="ri-history-line me-1"></i>آخر الأنشطة
+                                    </h6>
+                                </div>
+                                <div class="card-body pt-0">
+                                    @forelse($recentActivities as $activity)
+                                        <div class="activity-timeline-item d-flex gap-3">
+                                            <span class="activity-icon bg-{{ $activity['color'] ?? 'primary' }}-transparent text-{{ $activity['color'] ?? 'primary' }}">
+                                                @php
+                                                    $riMap = [
+                                                        'fas fa-user-plus' => 'ri-user-add-line',
+                                                        'fas fa-calendar' => 'ri-calendar-line',
+                                                        'fas fa-ticket-alt' => 'ri-coupon-line',
+                                                    ];
+                                                    $icon = $riMap[$activity['icon'] ?? ''] ?? 'ri-record-circle-line';
+                                                @endphp
+                                                <i class="{{ $icon }}"></i>
+                                            </span>
+                                            <div class="flex-grow-1 min-w-0">
+                                                <h6 class="mb-1 fs-14 fw-semibold">{{ $activity['title'] ?? '' }}</h6>
+                                                <p class="mb-1 text-muted fs-12 text-truncate">{{ $activity['description'] ?? '' }}</p>
                                                 <small class="text-muted">{{ $activity['time']->diffForHumans() ?? '' }}</small>
                                             </div>
                                         </div>
-                                    </div>
-                                @empty
-                                    <p class="text-muted text-center">لا توجد أنشطة حديثة</p>
-                                @endforelse
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quick Actions -->
-            <div class="row mt-4">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">
-                                <i class="fas fa-bolt me-2"></i>
-                                إجراءات سريعة
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-2 mb-2">
-                                    <a href="{{ route('admin.employees.create') }}" class="btn btn-primary w-100">
-                                        <i class="fas fa-user-plus me-2"></i>إضافة موظف
-                                    </a>
-                                </div>
-                                <div class="col-md-2 mb-2">
-                                    <a href="{{ route('admin.leave-requests.create') }}" class="btn btn-info w-100">
-                                        <i class="fas fa-calendar-plus me-2"></i>طلب إجازة
-                                    </a>
-                                </div>
-                                <div class="col-md-2 mb-2">
-                                    <a href="{{ route('admin.salaries.create') }}" class="btn btn-success w-100">
-                                        <i class="fas fa-money-bill-wave me-2"></i>إضافة راتب
-                                    </a>
-                                </div>
-                                <div class="col-md-2 mb-2">
-                                    <a href="{{ route('admin.tickets.create') }}" class="btn btn-warning w-100">
-                                        <i class="fas fa-ticket-alt me-2"></i>تذكرة جديدة
-                                    </a>
-                                </div>
-                                <div class="col-md-2 mb-2">
-                                    <a href="{{ route('admin.meetings.create') }}" class="btn btn-danger w-100">
-                                        <i class="fas fa-calendar me-2"></i>اجتماع جديد
-                                    </a>
-                                </div>
-                                <div class="col-md-2 mb-2">
-                                    <a href="{{ route('admin.reports.index') }}" class="btn btn-secondary w-100">
-                                        <i class="fas fa-chart-bar me-2"></i>التقارير
-                                    </a>
+                                    @empty
+                                        <p class="text-muted text-center py-4 mb-0">لا توجد أنشطة حديثة</p>
+                                    @endforelse
                                 </div>
                             </div>
                         </div>
@@ -391,88 +124,16 @@
     </div>
 @stop
 
-@section('js')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    // رسم بياني للحضور
-    const attendanceCtx = document.getElementById('attendanceChart');
-    if (attendanceCtx) {
-        const attendanceData = @json($chartData['attendance'] ?? []);
-        
-        new Chart(attendanceCtx, {
-            type: 'line',
-            data: {
-                labels: attendanceData.map(item => item.month),
-                datasets: [{
-                    label: 'حضور',
-                    data: attendanceData.map(item => item.present),
-                    borderColor: 'rgb(75, 192, 192)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    tension: 0.1
-                }, {
-                    label: 'غياب',
-                    data: attendanceData.map(item => item.absent),
-                    borderColor: 'rgb(255, 99, 132)',
-                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                    tension: 0.1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    },
-                    title: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-    }
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('assets/css/admin-dashboard.css') }}">
+@endpush
 
-    // تحديث Dashboard
-    function refreshDashboard() {
-        location.reload();
-    }
-
-    // تحديث تلقائي كل 5 دقائق
-    setInterval(function() {
-        fetch('{{ route("admin.dashboard.stats") }}')
-            .then(response => response.json())
-            .then(data => {
-                // تحديث الإحصائيات
-                console.log('Dashboard updated');
-            });
-    }, 300000); // 5 دقائق
-</script>
-@stop
-
-@section('css')
-<style>
-    .bg-primary-gradient {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    .bg-success-gradient {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    }
-    .bg-warning-gradient {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    }
-    .bg-info-gradient {
-        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-    }
-    .text-fixed-white {
-        color: #fff !important;
-    }
-    .op-7 {
-        opacity: 0.7;
-    }
-</style>
-@stop
+@push('scripts')
+    <script>
+        window.adminDashboardConfig = {
+            attendanceChart: @json($chartData['attendance'] ?? []),
+            refreshUrl: @json(route('admin.dashboard', ['refresh' => 1])),
+        };
+    </script>
+    <script src="{{ asset('assets/js/admin-dashboard.js') }}"></script>
+@endpush

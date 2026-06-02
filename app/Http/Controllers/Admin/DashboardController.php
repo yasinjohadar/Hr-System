@@ -3,31 +3,34 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Employee;
-use App\Models\Department;
-use App\Models\Branch;
-use App\Models\Position;
-use App\Models\Attendance;
-use App\Models\LeaveRequest;
-use App\Models\Salary;
-use App\Models\PerformanceReview;
-use App\Models\Training;
-use App\Models\JobVacancy;
-use App\Models\JobApplication;
-use App\Models\Ticket;
-use App\Models\Meeting;
-use App\Models\ExpenseRequest;
-use App\Models\EmployeeViolation;
-use App\Models\Project;
-use App\Models\Task;
 use App\Models\Announcement;
+use App\Models\Attendance;
+use App\Models\Branch;
 use App\Models\Contract;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Models\Department;
+use App\Models\Employee;
+use App\Models\EmployeeViolation;
+use App\Models\ExpenseRequest;
+use App\Models\LeaveRequest;
+use App\Models\Meeting;
+use App\Models\Position;
+use App\Models\Salary;
+use App\Models\Task;
+use App\Models\EmployeeCertificate;
+use App\Models\EmployeeDocument;
+use App\Models\PublicHoliday;
+use App\Models\Ticket;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
+    private const CACHE_KEY = 'admin.dashboard.payload';
+
+    private const CACHE_TTL_SECONDS = 300;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -37,367 +40,15 @@ class DashboardController extends Controller
     /**
      * عرض لوحة التحكم الرئيسية
      */
-    public function index()
+    public function index(Request $request)
     {
-        $user = auth()->user();
-        
-        // إحصائيات عامة
-        $stats = $this->getGeneralStats();
-        
-        // إحصائيات الحضور
-        $attendanceStats = $this->getAttendanceStats();
-        
-        // إحصائيات الإجازات
-        $leaveStats = $this->getLeaveStats();
-        
-        // إحصائيات الرواتب
-        $salaryStats = $this->getSalaryStats();
-        
-        // إحصائيات التوظيف
-        $recruitmentStats = $this->getRecruitmentStats();
-        
-        // إحصائيات التدريب
-        $trainingStats = $this->getTrainingStats();
-        
-        // إحصائيات الأداء
-        $performanceStats = $this->getPerformanceStats();
-        
-        // آخر الأنشطة
-        $recentActivities = $this->getRecentActivities();
-        
-        // المهام العاجلة
-        $urgentTasks = $this->getUrgentTasks();
-        
-        // الإشعارات المهمة
-        $importantNotifications = $this->getImportantNotifications();
-        
-        // بيانات الرسوم البيانية
-        $chartData = $this->getChartData();
-        
-        // إعلانات الشركة الظاهرة حالياً
-        $announcements = Announcement::visible()->orderByDesc('publish_date')->orderByDesc('created_at')->limit(5)->get();
-        
-        return view('admin.dashboard', compact(
-            'stats',
-            'attendanceStats',
-            'leaveStats',
-            'salaryStats',
-            'recruitmentStats',
-            'trainingStats',
-            'performanceStats',
-            'recentActivities',
-            'urgentTasks',
-            'importantNotifications',
-            'chartData',
-            'announcements'
-        ));
-    }
-
-    /**
-     * الحصول على إحصائيات عامة
-     */
-    private function getGeneralStats()
-    {
-        return [
-            'total_employees' => Employee::where('is_active', true)->count(),
-            'new_employees_this_month' => Employee::where('is_active', true)
-                ->whereMonth('hire_date', Carbon::now()->month)
-                ->whereYear('hire_date', Carbon::now()->year)
-                ->count(),
-            'total_departments' => Department::where('is_active', true)->count(),
-            'total_positions' => Position::where('is_active', true)->count(),
-            'total_branches' => Branch::where('is_active', true)->count(),
-        ];
-    }
-
-    /**
-     * الحصول على إحصائيات الحضور
-     */
-    private function getAttendanceStats()
-    {
-        $today = Carbon::today();
-        $thisMonth = Carbon::now()->startOfMonth();
-        
-        return [
-            'today_present' => Attendance::whereDate('attendance_date', $today)
-                ->where('status', 'present')->count(),
-            'today_absent' => Attendance::whereDate('attendance_date', $today)
-                ->where('status', 'absent')->count(),
-            'today_late' => Attendance::whereDate('attendance_date', $today)
-                ->where('status', 'late')->count(),
-            'monthly_attendance_rate' => $this->calculateMonthlyAttendanceRate(),
-            'total_hours_this_month' => Attendance::where('attendance_date', '>=', $thisMonth)
-                ->sum('hours_worked') / 60,
-            'total_overtime_this_month' => Attendance::where('attendance_date', '>=', $thisMonth)
-                ->sum('overtime_minutes') / 60,
-        ];
-    }
-
-    /**
-     * حساب معدل الحضور الشهري
-     */
-    private function calculateMonthlyAttendanceRate()
-    {
-        $thisMonth = Carbon::now()->startOfMonth();
-        $totalDays = Attendance::where('attendance_date', '>=', $thisMonth)->count();
-        $presentDays = Attendance::where('attendance_date', '>=', $thisMonth)
-            ->where('status', 'present')->count();
-        
-        return $totalDays > 0 ? round(($presentDays / $totalDays) * 100, 2) : 0;
-    }
-
-    /**
-     * الحصول على إحصائيات الإجازات
-     */
-    private function getLeaveStats()
-    {
-        return [
-            'pending_requests' => LeaveRequest::where('status', 'pending')->count(),
-            'approved_today' => LeaveRequest::where('status', 'approved')
-                ->where('start_date', '<=', Carbon::today())
-                ->where('end_date', '>=', Carbon::today())
-                ->count(),
-            'total_this_month' => LeaveRequest::whereMonth('start_date', Carbon::now()->month)
-                ->whereYear('start_date', Carbon::now()->year)
-                ->count(),
-            'approved_this_month' => LeaveRequest::where('status', 'approved')
-                ->whereMonth('start_date', Carbon::now()->month)
-                ->whereYear('start_date', Carbon::now()->year)
-                ->count(),
-        ];
-    }
-
-    /**
-     * الحصول على إحصائيات الرواتب
-     */
-    private function getSalaryStats()
-    {
-        $thisMonth = Carbon::now()->month;
-        $thisYear = Carbon::now()->year;
-        
-        $monthlySalaries = Salary::where('salary_month', $thisMonth)
-            ->where('salary_year', $thisYear)
-            ->get();
-        
-        return [
-            'total_this_month' => $monthlySalaries->sum('gross_salary'),
-            'paid_count' => $monthlySalaries->where('payment_status', 'paid')->count(),
-            'pending_count' => $monthlySalaries->where('payment_status', 'pending')->count(),
-            'total_employees' => $monthlySalaries->count(),
-        ];
-    }
-
-    /**
-     * الحصول على إحصائيات التوظيف
-     */
-    private function getRecruitmentStats()
-    {
-        return [
-            'active_vacancies' => JobVacancy::where('status', 'published')->count(),
-            'pending_applications' => JobApplication::where('status', 'pending')->count(),
-            'total_applications' => JobApplication::count(),
-            'hired_this_month' => Employee::whereMonth('hire_date', Carbon::now()->month)
-                ->whereYear('hire_date', Carbon::now()->year)
-                ->count(),
-        ];
-    }
-
-    /**
-     * الحصول على إحصائيات التدريب
-     */
-    private function getTrainingStats()
-    {
-        return [
-            'ongoing_trainings' => Training::where('status', 'ongoing')->count(),
-            'scheduled_trainings' => Training::where('status', 'scheduled')->count(),
-            'total_participants' => DB::table('training_records')
-                ->where('status', 'attending')
-                ->count(),
-            'completed_this_month' => Training::where('status', 'completed')
-                ->whereMonth('end_date', Carbon::now()->month)
-                ->whereYear('end_date', Carbon::now()->year)
-                ->count(),
-        ];
-    }
-
-    /**
-     * الحصول على إحصائيات الأداء
-     */
-    private function getPerformanceStats()
-    {
-        $thisYear = Carbon::now()->year;
-        
-        $reviews = PerformanceReview::whereYear('review_date', $thisYear)->get();
-        
-        return [
-            'total_reviews' => $reviews->count(),
-            'average_rating' => $reviews->avg('overall_rating'),
-            'pending_reviews' => PerformanceReview::where('status', 'pending')->count(),
-            'completed_reviews' => PerformanceReview::where('status', 'approved')->count(),
-        ];
-    }
-
-    /**
-     * الحصول على آخر الأنشطة
-     */
-    private function getRecentActivities()
-    {
-        $activities = collect();
-        
-        // آخر الموظفين المضافة
-        $activities = $activities->merge(
-            Employee::latest()->take(5)->get()->map(function ($employee) {
-                return [
-                    'type' => 'employee_added',
-                    'title' => 'تم إضافة موظف جديد',
-                    'description' => $employee->full_name,
-                    'time' => $employee->created_at,
-                    'icon' => 'fas fa-user-plus',
-                    'color' => 'primary',
-                ];
-            })
-        );
-        
-        // آخر طلبات الإجازات
-        $activities = $activities->merge(
-            LeaveRequest::latest()->take(5)->get()->map(function ($leave) {
-                return [
-                    'type' => 'leave_request',
-                    'title' => 'طلب إجازة جديد',
-                    'description' => $leave->employee->full_name ?? 'موظف',
-                    'time' => $leave->created_at,
-                    'icon' => 'fas fa-calendar',
-                    'color' => 'info',
-                ];
-            })
-        );
-        
-        // آخر التذاكر
-        $activities = $activities->merge(
-            Ticket::latest()->take(5)->get()->map(function ($ticket) {
-                return [
-                    'type' => 'ticket',
-                    'title' => 'تذكرة جديدة',
-                    'description' => $ticket->title,
-                    'time' => $ticket->created_at,
-                    'icon' => 'fas fa-ticket-alt',
-                    'color' => 'warning',
-                ];
-            })
-        );
-        
-        return $activities->sortByDesc('time')->take(10)->values();
-    }
-
-    /**
-     * الحصول على المهام العاجلة
-     */
-    private function getUrgentTasks()
-    {
-        return [
-            'pending_leaves' => LeaveRequest::where('status', 'pending')->count(),
-            'pending_expenses' => ExpenseRequest::where('status', 'pending')->count(),
-            'open_tickets' => Ticket::where('status', 'open')->count(),
-            'pending_violations' => EmployeeViolation::where('status', 'pending')->count(),
-            'upcoming_meetings' => Meeting::where('status', 'scheduled')
-                ->where('start_time', '>=', Carbon::now())
-                ->where('start_time', '<=', Carbon::now()->addDays(7))
-                ->count(),
-            'overdue_tasks' => Task::where('status', '!=', 'completed')
-                ->where('due_date', '<', Carbon::today())
-                ->count(),
-        ];
-    }
-
-    /**
-     * الحصول على الإشعارات المهمة
-     */
-    private function getImportantNotifications()
-    {
-        return [
-            'expiring_documents' => DB::table('employee_documents')
-                ->where('expiry_date', '>=', Carbon::today())
-                ->where('expiry_date', '<=', Carbon::today()->addDays(30))
-                ->where('status', 'active')
-                ->count(),
-            'expiring_certificates' => DB::table('employee_certificates')
-                ->where('expiry_date', '>=', Carbon::today())
-                ->where('expiry_date', '<=', Carbon::today()->addDays(30))
-                ->count(),
-            'contracts_expiring' => Contract::active()
-                ->whereDate('end_date', '>=', Carbon::today())
-                ->whereDate('end_date', '<=', Carbon::today()->addDays(90))
-                ->count(),
-        ];
-    }
-
-    /**
-     * الحصول على بيانات الرسوم البيانية
-     */
-    private function getChartData()
-    {
-        // بيانات الحضور الشهرية (آخر 6 أشهر)
-        $attendanceData = [];
-        for ($i = 5; $i >= 0; $i--) {
-            $date = Carbon::now()->subMonths($i);
-            $attendanceData[] = [
-                'month' => $date->format('M Y'),
-                'present' => Attendance::whereMonth('attendance_date', $date->month)
-                    ->whereYear('attendance_date', $date->year)
-                    ->where('status', 'present')
-                    ->count(),
-                'absent' => Attendance::whereMonth('attendance_date', $date->month)
-                    ->whereYear('attendance_date', $date->year)
-                    ->where('status', 'absent')
-                    ->count(),
-            ];
+        if ($request->boolean('refresh')) {
+            self::clearCache();
         }
-        
-        // بيانات الإجازات الشهرية
-        $leaveData = [];
-        for ($i = 5; $i >= 0; $i--) {
-            $date = Carbon::now()->subMonths($i);
-            $leaveData[] = [
-                'month' => $date->format('M Y'),
-                'approved' => LeaveRequest::whereMonth('start_date', $date->month)
-                    ->whereYear('start_date', $date->year)
-                    ->where('status', 'approved')
-                    ->count(),
-                'pending' => LeaveRequest::whereMonth('start_date', $date->month)
-                    ->whereYear('start_date', $date->year)
-                    ->where('status', 'pending')
-                    ->count(),
-            ];
-        }
-        
-        // بيانات الموظفين حسب القسم
-        $employeesByDepartment = Department::withCount('employees')
-            ->where('is_active', true)
-            ->get()
-            ->map(function ($dept) {
-                return [
-                    'name' => $dept->name_ar ?? $dept->name,
-                    'count' => $dept->employees_count,
-                ];
-            });
-        
-        // بيانات الموظفين حسب الفرع
-        $employeesByBranch = Branch::withCount('employees')
-            ->where('is_active', true)
-            ->get()
-            ->map(function ($branch) {
-                return [
-                    'name' => $branch->name,
-                    'count' => $branch->employees_count,
-                ];
-            });
-        
-        return [
-            'attendance' => $attendanceData,
-            'leaves' => $leaveData,
-            'employees_by_department' => $employeesByDepartment,
-            'employees_by_branch' => $employeesByBranch,
-        ];
+
+        $data = Cache::remember(self::CACHE_KEY, self::CACHE_TTL_SECONDS, fn () => $this->buildDashboardPayload());
+
+        return view('admin.dashboard', $data);
     }
 
     /**
@@ -406,25 +57,284 @@ class DashboardController extends Controller
     public function getStats(Request $request)
     {
         $type = $request->input('type', 'all');
-        
-        $data = [];
-        
-        if ($type === 'all' || $type === 'general') {
-            $data['general'] = $this->getGeneralStats();
+        $payload = Cache::remember(self::CACHE_KEY, self::CACHE_TTL_SECONDS, fn () => $this->buildDashboardPayload());
+
+        if ($type === 'all') {
+            return response()->json([
+                'general' => $payload['stats'],
+                'attendance' => $payload['attendanceStats'],
+                'leaves' => $payload['leaveStats'],
+                'salaries' => $payload['salaryStats'],
+            ]);
         }
-        
-        if ($type === 'all' || $type === 'attendance') {
-            $data['attendance'] = $this->getAttendanceStats();
-        }
-        
-        if ($type === 'all' || $type === 'leaves') {
-            $data['leaves'] = $this->getLeaveStats();
-        }
-        
-        if ($type === 'all' || $type === 'salaries') {
-            $data['salaries'] = $this->getSalaryStats();
-        }
-        
+
+        $data = match ($type) {
+            'general' => ['general' => $payload['stats']],
+            'attendance' => ['attendance' => $payload['attendanceStats']],
+            'leaves' => ['leaves' => $payload['leaveStats']],
+            'salaries' => ['salaries' => $payload['salaryStats']],
+            default => [],
+        };
+
         return response()->json($data);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildDashboardPayload(): array
+    {
+        return [
+            'stats' => $this->getGeneralStats(),
+            'attendanceStats' => $this->getAttendanceStats(),
+            'leaveStats' => $this->getLeaveStats(),
+            'salaryStats' => $this->getSalaryStats(),
+            'recentActivities' => $this->getRecentActivities(),
+            'urgentTasks' => $this->getUrgentTasks(),
+            'importantNotifications' => $this->getImportantNotifications(),
+            'chartData' => ['attendance' => $this->getAttendanceChartData()],
+            'menaKpis' => $this->getMenaKpis(),
+            'announcements' => Announcement::visible()
+                ->orderByDesc('publish_date')
+                ->orderByDesc('created_at')
+                ->limit(5)
+                ->get(['id', 'title', 'content', 'publish_date', 'expiry_date', 'created_at']),
+        ];
+    }
+
+    public static function clearCache(): void
+    {
+        Cache::forget(self::CACHE_KEY);
+    }
+
+    private function getMenaKpis(): array
+    {
+        $today = Carbon::today();
+
+        return [
+            'public_holidays_this_year' => PublicHoliday::where('is_active', true)->whereYear('holiday_date', $today->year)->count(),
+            'documents_expiring_30d' => EmployeeDocument::whereNotNull('expiry_date')
+                ->whereBetween('expiry_date', [$today, $today->copy()->addDays(30)])->count(),
+            'certificates_expiring_30d' => EmployeeCertificate::whereNotNull('expiry_date')
+                ->whereBetween('expiry_date', [$today, $today->copy()->addDays(30)])->count(),
+            'pending_leave_requests' => LeaveRequest::where('status', 'pending')->count(),
+        ];
+    }
+
+    private function getGeneralStats(): array
+    {
+        $now = Carbon::now();
+
+        return [
+            'total_employees' => Employee::where('is_active', true)->count(),
+            'new_employees_this_month' => Employee::where('is_active', true)
+                ->whereMonth('hire_date', $now->month)
+                ->whereYear('hire_date', $now->year)
+                ->count(),
+            'total_departments' => Department::where('is_active', true)->count(),
+            'total_positions' => Position::where('is_active', true)->count(),
+            'total_branches' => Branch::where('is_active', true)->count(),
+        ];
+    }
+
+    private function getAttendanceStats(): array
+    {
+        $today = Carbon::today();
+        $thisMonth = Carbon::now()->startOfMonth();
+
+        $todayByStatus = Attendance::query()
+            ->whereDate('attendance_date', $today)
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $monthAgg = Attendance::query()
+            ->where('attendance_date', '>=', $thisMonth)
+            ->selectRaw('
+                COUNT(*) as total_days,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as present_days,
+                COALESCE(SUM(hours_worked), 0) as total_hours_worked,
+                COALESCE(SUM(overtime_minutes), 0) as total_overtime_minutes
+            ', ['present'])
+            ->first();
+
+        $totalDays = (int) ($monthAgg->total_days ?? 0);
+        $presentDays = (int) ($monthAgg->present_days ?? 0);
+
+        return [
+            'today_present' => (int) ($todayByStatus['present'] ?? 0),
+            'today_absent' => (int) ($todayByStatus['absent'] ?? 0),
+            'today_late' => (int) ($todayByStatus['late'] ?? 0),
+            'monthly_attendance_rate' => $totalDays > 0 ? round(($presentDays / $totalDays) * 100, 2) : 0,
+            'total_hours_this_month' => ((int) ($monthAgg->total_hours_worked ?? 0)) / 60,
+            'total_overtime_this_month' => ((int) ($monthAgg->total_overtime_minutes ?? 0)) / 60,
+        ];
+    }
+
+    private function getLeaveStats(): array
+    {
+        $today = Carbon::today();
+        $now = Carbon::now();
+
+        return [
+            'pending_requests' => LeaveRequest::where('status', 'pending')->count(),
+            'approved_today' => LeaveRequest::where('status', 'approved')
+                ->where('start_date', '<=', $today)
+                ->where('end_date', '>=', $today)
+                ->count(),
+            'total_this_month' => LeaveRequest::whereMonth('start_date', $now->month)
+                ->whereYear('start_date', $now->year)
+                ->count(),
+            'approved_this_month' => LeaveRequest::where('status', 'approved')
+                ->whereMonth('start_date', $now->month)
+                ->whereYear('start_date', $now->year)
+                ->count(),
+        ];
+    }
+
+    private function getSalaryStats(): array
+    {
+        $thisMonth = Carbon::now()->month;
+        $thisYear = Carbon::now()->year;
+
+        $row = Salary::query()
+            ->where('salary_month', $thisMonth)
+            ->where('salary_year', $thisYear)
+            ->selectRaw('
+                COALESCE(SUM(total_salary), 0) as total_this_month,
+                SUM(CASE WHEN payment_status = ? THEN 1 ELSE 0 END) as paid_count,
+                SUM(CASE WHEN payment_status = ? THEN 1 ELSE 0 END) as pending_count,
+                COUNT(*) as total_employees
+            ', ['paid', 'pending'])
+            ->first();
+
+        return [
+            'total_this_month' => (float) ($row->total_this_month ?? 0),
+            'paid_count' => (int) ($row->paid_count ?? 0),
+            'pending_count' => (int) ($row->pending_count ?? 0),
+            'total_employees' => (int) ($row->total_employees ?? 0),
+        ];
+    }
+
+    private function getRecentActivities()
+    {
+        $activities = collect();
+
+        $activities = $activities->merge(
+            Employee::query()
+                ->latest('created_at')
+                ->limit(5)
+                ->get(['id', 'first_name', 'last_name', 'created_at'])
+                ->map(fn ($employee) => [
+                    'type' => 'employee_added',
+                    'title' => 'تم إضافة موظف جديد',
+                    'description' => $employee->full_name,
+                    'time' => $employee->created_at,
+                    'icon' => 'fas fa-user-plus',
+                    'color' => 'primary',
+                ])
+        );
+
+        $activities = $activities->merge(
+            LeaveRequest::query()
+                ->with(['employee:id,first_name,last_name'])
+                ->latest('created_at')
+                ->limit(5)
+                ->get(['id', 'employee_id', 'created_at'])
+                ->map(fn ($leave) => [
+                    'type' => 'leave_request',
+                    'title' => 'طلب إجازة جديد',
+                    'description' => $leave->employee?->full_name ?? 'موظف',
+                    'time' => $leave->created_at,
+                    'icon' => 'fas fa-calendar',
+                    'color' => 'info',
+                ])
+        );
+
+        $activities = $activities->merge(
+            Ticket::query()
+                ->latest('created_at')
+                ->limit(5)
+                ->get(['id', 'title', 'created_at'])
+                ->map(fn ($ticket) => [
+                    'type' => 'ticket',
+                    'title' => 'تذكرة جديدة',
+                    'description' => $ticket->title,
+                    'time' => $ticket->created_at,
+                    'icon' => 'fas fa-ticket-alt',
+                    'color' => 'warning',
+                ])
+        );
+
+        return $activities->sortByDesc('time')->take(10)->values();
+    }
+
+    private function getUrgentTasks(): array
+    {
+        $now = Carbon::now();
+
+        return [
+            'pending_leaves' => LeaveRequest::where('status', 'pending')->count(),
+            'pending_expenses' => ExpenseRequest::where('status', 'pending')->count(),
+            'open_tickets' => Ticket::where('status', 'open')->count(),
+            'pending_violations' => EmployeeViolation::where('status', 'pending')->count(),
+            'upcoming_meetings' => Meeting::where('status', 'scheduled')
+                ->whereBetween('start_time', [$now, $now->copy()->addDays(7)])
+                ->count(),
+            'overdue_tasks' => Task::where('status', '!=', 'completed')
+                ->where('due_date', '<', Carbon::today())
+                ->count(),
+        ];
+    }
+
+    private function getImportantNotifications(): array
+    {
+        $today = Carbon::today();
+
+        return [
+            'expiring_documents' => DB::table('employee_documents')
+                ->whereBetween('expiry_date', [$today, $today->copy()->addDays(30)])
+                ->where('status', 'active')
+                ->count(),
+            'expiring_certificates' => DB::table('employee_certificates')
+                ->whereBetween('expiry_date', [$today, $today->copy()->addDays(30)])
+                ->count(),
+            'contracts_expiring' => Contract::active()
+                ->whereBetween('end_date', [$today, $today->copy()->addDays(90)])
+                ->count(),
+        ];
+    }
+
+    /**
+     * بيانات رسم الحضور — استعلامان مجمّعان بدل 12+ استعلام في حلقة
+     */
+    private function getAttendanceChartData(): array
+    {
+        $start = Carbon::now()->subMonths(5)->startOfMonth();
+
+        $rows = Attendance::query()
+            ->where('attendance_date', '>=', $start)
+            ->selectRaw('YEAR(attendance_date) as year, MONTH(attendance_date) as month, status, COUNT(*) as total')
+            ->groupByRaw('YEAR(attendance_date), MONTH(attendance_date), status')
+            ->get();
+
+        $indexed = [];
+        foreach ($rows as $row) {
+            $key = $row->year . '-' . str_pad((string) $row->month, 2, '0', STR_PAD_LEFT);
+            $indexed[$key][$row->status] = (int) $row->total;
+        }
+
+        $attendanceData = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $date = Carbon::now()->subMonths($i);
+            $key = $date->format('Y-m');
+            $attendanceData[] = [
+                'month' => $date->format('M Y'),
+                'present' => $indexed[$key]['present'] ?? 0,
+                'absent' => $indexed[$key]['absent'] ?? 0,
+            ];
+        }
+
+        return $attendanceData;
     }
 }

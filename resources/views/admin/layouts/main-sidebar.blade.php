@@ -61,6 +61,33 @@
                         </li>
                         @endcanAny
                         <!-- End::slide has-sub -->
+
+                        @if(auth()->check() && (auth()->user()->hasRole('department_head') || auth()->user()->hasRole('admin')))
+                        <li class="slide has-sub">
+                            <a href="javascript:void(0);" class="side-menu__item">
+                                <i class="ri-team-line side-menu__icon"></i>
+                                <span class="side-menu__label">إدارة الفريق</span>
+                                <i class="fe fe-chevron-right side-menu__angle"></i>
+                            </a>
+                            <ul class="slide-menu child1">
+                                <li class="slide">
+                                    <a href="{{ route('admin.team.dashboard') }}" class="side-menu__item">لوحة الفريق</a>
+                                </li>
+                                <li class="slide">
+                                    <a href="{{ route('admin.team.members') }}" class="side-menu__item">أعضاء الفريق</a>
+                                </li>
+                                <li class="slide">
+                                    <a href="{{ route('admin.team.approvals') }}" class="side-menu__item">موافقات الفريق</a>
+                                </li>
+                                <li class="slide">
+                                    <a href="{{ route('admin.team.structure') }}" class="side-menu__item">هيكل الأقسام</a>
+                                </li>
+                                <li class="slide">
+                                    <a href="{{ route('admin.team.delegations.index') }}" class="side-menu__item">التفويض</a>
+                                </li>
+                            </ul>
+                        </li>
+                        @endif
                         
                         <!-- Start::slide has-sub - إدارة الموارد البشرية -->
                         @canAny(['employee-list', 'dashboard-view', 'salary-list', 'payroll-list', 'salary-component-list', 'tax-setting-list', 'bank-account-list', 'payroll-payment-list', 'payroll-approval-list', 'announcement-list', 'contract-list', 'employee-job-change-list', 'policy-list'])

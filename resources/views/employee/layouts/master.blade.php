@@ -15,6 +15,7 @@
     <meta name="keywords" content=" نظام إدارة الموارد البشرية ">
 
     @include('employee.layouts.head')
+    @stack('styles')
 </head>
 
 <body>
@@ -62,7 +63,7 @@
 
     </div>
     @include('employee.layouts.footer-scripts')
-
+    @stack('scripts')
 
 </body>
 

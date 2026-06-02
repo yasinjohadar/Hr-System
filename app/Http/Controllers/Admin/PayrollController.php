@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesByDepartment;
 use App\Http\Controllers\Controller;
+use App\Support\AuditableAction;
 use App\Models\Payroll;
 use App\Models\PayrollItem;
 use App\Models\Employee;
@@ -19,6 +21,8 @@ use Carbon\Carbon;
 
 class PayrollController extends Controller
 {
+    use ScopesByDepartment;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -60,11 +64,13 @@ class PayrollController extends Controller
             $query->where('employee_id', $request->input('employee_id'));
         }
 
+        $this->scopeByEmployeeQuery($query);
+
         $payrolls = $query->latest('payroll_year', 'desc')
             ->latest('payroll_month', 'desc')
             ->paginate(20);
 
-        $employees = Employee::where('is_active', true)->get();
+        $employees = $this->scopeEmployeesQuery(Employee::where('is_active', true))->get();
         $currencies = Currency::where('is_active', true)->get();
 
         return view('admin.pages.payrolls.index', compact('payrolls', 'employees', 'currencies'));
@@ -72,7 +78,7 @@ class PayrollController extends Controller
 
     public function create()
     {
-        $employees = Employee::where('is_active', true)->get();
+        $employees = $this->scopeEmployeesQuery(Employee::where('is_active', true))->get();
         $currencies = Currency::where('is_active', true)->get();
         $components = SalaryComponent::where('is_active', true)->get();
 
@@ -130,12 +136,15 @@ class PayrollController extends Controller
             'creator'
         ])->findOrFail($id);
 
+        $this->authorizeManagedEmployeeId((int) $payroll->employee_id);
+
         return view('admin.pages.payrolls.show', compact('payroll'));
     }
 
     public function edit(string $id)
     {
         $payroll = Payroll::with(['items', 'employee'])->findOrFail($id);
+        $this->authorizeManagedEmployeeId((int) $payroll->employee_id);
         
         if ($payroll->status === 'paid') {
             return redirect()->route('admin.payrolls.show', $id)
@@ -551,6 +560,7 @@ class PayrollController extends Controller
     public function approve(Request $request, string $id)
     {
         $payroll = Payroll::findOrFail($id);
+        $this->authorizeManagedEmployeeId((int) $payroll->employee_id);
 
         if ($payroll->status !== 'calculated') {
             return redirect()->back()->with('error', 'يجب حساب الراتب أولاً قبل الموافقة.');
@@ -560,6 +570,11 @@ class PayrollController extends Controller
         $payroll->approved_by = auth()->id();
         $payroll->approved_at = now();
         $payroll->save();
+
+        AuditableAction::log('payroll_approved', $payroll, 'موافقة على كشف راتب', [
+            'employee_id' => $payroll->employee_id,
+            'payroll_code' => $payroll->payroll_code,
+        ]);
 
         return redirect()->back()->with('success', 'تم الموافقة على كشف الراتب بنجاح.');
     }

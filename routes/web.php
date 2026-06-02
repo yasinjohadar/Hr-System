@@ -8,6 +8,14 @@ use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 
+use App\Http\Controllers\Public\CareersController;
+
+Route::prefix('careers')->name('careers.')->group(function () {
+    Route::get('/', [CareersController::class, 'index'])->name('index');
+    Route::get('/{id}', [CareersController::class, 'show'])->name('show');
+    Route::post('/{id}/apply', [CareersController::class, 'apply'])->name('apply');
+});
+
 Route::get('/', function () {
     return Auth::user()->hasRole('employee')
         ? redirect()->route('employee.dashboard')
@@ -27,6 +35,7 @@ Route::middleware(['auth', 'check.user.active'])->group(function () {
     // Admin routes
     Route::resource('users', UserController::class);
     Route::resource('roles', RoleController::class);
+    Route::post('roles/{id}/apply-template', [RoleController::class, 'applyTemplate'])->name('roles.apply-template');
     Route::put('users/{user}/change-password', [UserController::class, 'updatePassword'])->name('users.update-password');
 });
 

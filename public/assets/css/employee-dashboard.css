@@ -1,0 +1,145 @@
+/* Employee dashboard — theme-safe (Valex light/dark) */
+
+.employee-dashboard {
+    --dashboard-hero-radius: 0.75rem;
+}
+
+.employee-dashboard .dashboard-hero {
+    border-radius: var(--dashboard-hero-radius);
+    overflow: hidden;
+}
+
+.employee-dashboard .dashboard-hero .hero-avatar {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border: 3px solid rgba(255, 255, 255, 0.35);
+}
+
+.employee-dashboard .dashboard-hero .hero-avatar-placeholder {
+    width: 72px;
+    height: 72px;
+    font-size: 28px;
+    border: 3px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+.employee-dashboard .kpi-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.employee-dashboard .kpi-card-link:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.12);
+}
+
+[data-theme-mode="dark"] .employee-dashboard .kpi-card-link:hover {
+    box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.35);
+}
+
+.employee-dashboard .dashboard-table thead th {
+    background: var(--default-background);
+    color: var(--default-text-color);
+    border-color: var(--default-border);
+}
+
+.employee-dashboard .dashboard-table tbody td {
+    border-color: var(--default-border);
+    color: var(--default-text-color);
+}
+
+.employee-dashboard .dashboard-list-item {
+    border-bottom: 1px solid var(--default-border);
+}
+
+.employee-dashboard .dashboard-list-item:last-child {
+    border-bottom: none;
+}
+
+.employee-dashboard .card-header-accent-primary {
+    border-bottom: 3px solid var(--primary-color);
+    background: transparent;
+}
+
+.employee-dashboard .card-header-accent-danger {
+    border-bottom: 3px solid rgb(var(--danger-rgb));
+    background: transparent;
+}
+
+.employee-dashboard .hover-card {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+
+.employee-dashboard .hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow, 0 0.5rem 1rem rgba(0, 0, 0, 0.1));
+}
+
+.employee-dashboard .nav-tabs-dashboard {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    border-bottom-color: var(--default-border);
+}
+
+.employee-dashboard .nav-tabs-dashboard .nav-link {
+    white-space: nowrap;
+    color: var(--text-muted);
+    border-color: transparent;
+}
+
+.employee-dashboard .nav-tabs-dashboard .nav-link.active {
+    color: var(--primary-color);
+    border-color: var(--default-border) var(--default-border) var(--custom-white, #fff);
+    background: var(--custom-white, #fff);
+}
+
+[data-theme-mode="dark"] .employee-dashboard .nav-tabs-dashboard .nav-link.active {
+    background: var(--custom-white);
+    border-bottom-color: var(--custom-white);
+}
+
+.employee-dashboard .dashboard-refreshing {
+    opacity: 0.55;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.employee-dashboard #attendance-chart {
+    min-height: 280px;
+}
+
+.employee-dashboard .chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.25rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.employee-dashboard .chart-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.employee-dashboard .chart-legend .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    display: inline-block;
+}
+
+.employee-dashboard .dot-present { background: #22c55e; }
+.employee-dashboard .dot-late { background: #f59e0b; }
+.employee-dashboard .dot-absent { background: #ef4444; }
+.employee-dashboard .dot-none { background: var(--default-border); }

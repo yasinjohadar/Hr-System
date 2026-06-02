@@ -6,6 +6,7 @@ use App\Models\Employee;
 use App\Models\Department;
 use App\Models\User;
 use App\Models\WorkflowStep;
+use App\Models\ApprovalDelegation;
 use Illuminate\Support\Facades\Log;
 
 class ApprovalService
@@ -167,8 +168,13 @@ class ApprovalService
      * @param int $approvalLevel مستوى الموافقة المطلوب
      * @return bool
      */
-    public function canUserApprove(User $user, string $workflowType, Employee $employee, int $approvalLevel = 1): bool
+    public function canUserApprove(User $user, string $workflowType, Employee $employee, int $approvalLevel = 1, $entity = null): bool
     {
+        // التحقق من تعارض المصالح
+        if ($this->hasConflictOfInterest($user, $employee)) {
+            return false;
+        }
+
         $workflow = \App\Models\Workflow::where('type', $workflowType)
             ->where('is_active', true)
             ->first();
@@ -185,6 +191,11 @@ class ApprovalService
             return false;
         }
 
+        // تقييم الشروط الديناميكية
+        if ($entity && !$this->evaluateStepConditions($step, $entity)) {
+            return false;
+        }
+
         $requiredApprover = $this->getApproverForStep($step, $employee);
 
         if (!$requiredApprover) {
@@ -193,6 +204,12 @@ class ApprovalService
 
         // التحقق من أن المستخدم هو الموافق المطلوب
         if ($requiredApprover->id === $user->id) {
+            return true;
+        }
+
+        // التحقق من التفويض
+        $delegation = ApprovalDelegation::getActiveDelegationForUser($requiredApprover, $workflowType);
+        if ($delegation && $delegation->delegate_id === $user->id) {
             return true;
         }
 
@@ -334,5 +351,162 @@ class ApprovalService
         }
 
         return $hierarchy;
+    }
+
+    /**
+     * تقييم الشروط الديناميكية للخطوة
+     * 
+     * @param WorkflowStep $step
+     * @param mixed $entity
+     * @return bool
+     */
+    public function evaluateStepConditions(WorkflowStep $step, $entity): bool
+    {
+        if (!$step->conditions || !is_array($step->conditions)) {
+            return true; // لا شروط = مطلوب دائماً
+        }
+
+        $conditions = $step->conditions;
+
+        // شروط طلب الإجازة
+        if ($entity instanceof \App\Models\LeaveRequest) {
+            return $this->evaluateLeaveConditions($conditions, $entity);
+        }
+
+        // شروط طلب المصروفات
+        if ($entity instanceof \App\Models\ExpenseRequest) {
+            return $this->evaluateExpenseConditions($conditions, $entity);
+        }
+
+        // شروط تغيير الوظيفة
+        if ($entity instanceof \App\Models\EmployeeJobChange) {
+            return $this->evaluateJobChangeConditions($conditions, $entity);
+        }
+
+        return true;
+    }
+
+    /**
+     * تقييم شروط الإجازة
+     */
+    private function evaluateLeaveConditions(array $conditions, \App\Models\LeaveRequest $leave): bool
+    {
+        // شرط الحد الأدنى للأيام
+        if (isset($conditions['min_days']) && $leave->days_count < $conditions['min_days']) {
+            return false;
+        }
+
+        // شرط الحد الأقصى للأيام
+        if (isset($conditions['max_days']) && $leave->days_count > $conditions['max_days']) {
+            return false;
+        }
+
+        // شرط نوع الإجازة
+        if (isset($conditions['leave_type_ids']) && is_array($conditions['leave_type_ids'])) {
+            if (!in_array($leave->leave_type_id, $conditions['leave_type_ids'])) {
+                return false;
+            }
+        }
+
+        // شرط أنواع الإجازات (بالنص)
+        if (isset($conditions['leave_types']) && is_array($conditions['leave_types'])) {
+            $leaveTypeName = $leave->leaveType->name ?? '';
+            $found = false;
+            foreach ($conditions['leave_types'] as $type) {
+                if (stripos($leaveTypeName, $type) !== false) {
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * تقييم شروط المصروفات
+     */
+    private function evaluateExpenseConditions(array $conditions, \App\Models\ExpenseRequest $expense): bool
+    {
+        // شرط الحد الأدنى للمبلغ
+        if (isset($conditions['min_amount']) && $expense->amount < $conditions['min_amount']) {
+            return false;
+        }
+
+        // شرط الحد الأقصى للمبلغ
+        if (isset($conditions['max_amount']) && $expense->amount > $conditions['max_amount']) {
+            return false;
+        }
+
+        // شرط فئة المصروف
+        if (isset($conditions['category_ids']) && is_array($conditions['category_ids'])) {
+            if (!in_array($expense->expense_category_id, $conditions['category_ids'])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * تقييم شروط تغيير الوظيفة
+     */
+    private function evaluateJobChangeConditions(array $conditions, \App\Models\EmployeeJobChange $change): bool
+    {
+        // شرط نوع التغيير
+        if (isset($conditions['change_types']) && is_array($conditions['change_types'])) {
+            if (!in_array($change->change_type, $conditions['change_types'])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * الحصول على الخطوات المطلوبة بناءً على الشروط الديناميكية
+     */
+    public function getRequiredStepsForEntity(string $workflowType, Employee $employee, $entity): array
+    {
+        $workflow = \App\Models\Workflow::where('type', $workflowType)
+            ->where('is_active', true)
+            ->with('steps')
+            ->first();
+
+        if (!$workflow) {
+            return [];
+        }
+
+        $requiredSteps = [];
+
+        foreach ($workflow->steps as $step) {
+            if (!$step->is_required) {
+                continue;
+            }
+
+            // تقييم الشروط
+            if ($this->evaluateStepConditions($step, $entity)) {
+                $approver = $this->getApproverForStep($step, $employee, $entity);
+                if ($approver) {
+                    $requiredSteps[] = [
+                        'step' => $step,
+                        'approver' => $approver,
+                    ];
+                }
+            }
+        }
+
+        return $requiredSteps;
+    }
+
+    /**
+     * التحقق من تعارض المصالح
+     */
+    public function hasConflictOfInterest(User $user, Employee $employee): bool
+    {
+        return $employee->user_id === $user->id;
     }
 }

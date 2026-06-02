@@ -7,6 +7,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         channels: __DIR__.'/../routes/channels.php',
         health: '/up',
@@ -20,6 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.user.active' => \App\Http\Middleware\CheckUserActive::class,
             'ensure.admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
             'ensure.employee' => \App\Http\Middleware\EnsureUserIsEmployee::class,
+            'ensure.department.head.or.admin' => \App\Http\Middleware\EnsureDepartmentHeadOrAdmin::class,
+            'two.factor' => \App\Http\Middleware\EnsureTwoFactorVerified::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

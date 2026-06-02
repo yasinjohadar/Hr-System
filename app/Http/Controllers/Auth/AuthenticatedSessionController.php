@@ -39,8 +39,13 @@ class AuthenticatedSessionController extends Controller
         }
 
         $request->session()->regenerate();
+        $request->session()->forget('two_factor_passed');
 
         $user = Auth::user();
+        if ($user->requiresTwoFactor()) {
+            return redirect()->route('two-factor.challenge');
+        }
+
         if ($user->hasRole('employee')) {
             return redirect()->intended(route('employee.dashboard', absolute: false));
         }

@@ -29,6 +29,8 @@ use Illuminate\Support\Facades\Auth;
 
 class ReportController extends Controller
 {
+    use Concerns\ScopesByDepartment;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -62,14 +64,7 @@ class ReportController extends Controller
     {
         $query = Employee::with(['department', 'position', 'branch', 'manager']);
 
-        if (Auth::user()->isDepartmentHead()) {
-            $departmentIds = Auth::user()->getManagedDepartmentIds();
-            if (!empty($departmentIds)) {
-                $query->whereIn('department_id', $departmentIds);
-            } else {
-                $query->whereRaw('1 = 0');
-            }
-        }
+        $this->scopeEmployeesQuery($query);
 
         // فلترة حسب القسم
         if ($request->filled('department_id')) {
@@ -121,16 +116,7 @@ class ReportController extends Controller
             'by_type' => $employees->groupBy('employment_type')->map->count(),
         ];
 
-        $departments = Department::where('is_active', true)
-            ->when(Auth::user()->isDepartmentHead(), function ($q) {
-                $ids = Auth::user()->getManagedDepartmentIds();
-                if (!empty($ids)) {
-                    $q->whereIn('id', $ids);
-                } else {
-                    $q->whereRaw('1 = 0');
-                }
-            })
-            ->get();
+        $departments = $this->scopeDepartmentsQuery(Department::where('is_active', true))->get();
         $positions = Position::where('is_active', true)->get();
         $branches = Branch::where('is_active', true)->get();
 
@@ -144,14 +130,7 @@ class ReportController extends Controller
     {
         $query = Attendance::with(['employee.department', 'employee.position']);
 
-        if (Auth::user()->isDepartmentHead()) {
-            $employeeIds = Auth::user()->getManagedEmployeeIds();
-            if (!empty($employeeIds)) {
-                $query->whereIn('employee_id', $employeeIds);
-            } else {
-                $query->whereRaw('1 = 0');
-            }
-        }
+        $this->scopeByEmployeeQuery($query);
 
         // فلترة حسب الموظف
         if ($request->filled('employee_id')) {
@@ -188,16 +167,7 @@ class ReportController extends Controller
             }),
         ];
 
-        $employees = Employee::where('is_active', true)
-            ->when(Auth::user()->isDepartmentHead(), function ($q) {
-                $ids = Auth::user()->getManagedEmployeeIds();
-                if (!empty($ids)) {
-                    $q->whereIn('id', $ids);
-                } else {
-                    $q->whereRaw('1 = 0');
-                }
-            })
-            ->get();
+        $employees = $this->scopeEmployeesQuery(Employee::where('is_active', true))->get();
 
         return view('admin.pages.reports.attendance', compact('attendances', 'stats', 'employees', 'dateFrom', 'dateTo'));
     }
@@ -209,14 +179,7 @@ class ReportController extends Controller
     {
         $query = Salary::with(['employee', 'currency']);
 
-        if (Auth::user()->isDepartmentHead()) {
-            $employeeIds = Auth::user()->getManagedEmployeeIds();
-            if (!empty($employeeIds)) {
-                $query->whereIn('employee_id', $employeeIds);
-            } else {
-                $query->whereRaw('1 = 0');
-            }
-        }
+        $this->scopeByEmployeeQuery($query);
 
         // فلترة حسب الموظف
         if ($request->filled('employee_id')) {
@@ -259,16 +222,7 @@ class ReportController extends Controller
             }),
         ];
 
-        $employees = Employee::where('is_active', true)
-            ->when(Auth::user()->isDepartmentHead(), function ($q) {
-                $ids = Auth::user()->getManagedEmployeeIds();
-                if (!empty($ids)) {
-                    $q->whereIn('id', $ids);
-                } else {
-                    $q->whereRaw('1 = 0');
-                }
-            })
-            ->get();
+        $employees = $this->scopeEmployeesQuery(Employee::where('is_active', true))->get();
 
         return view('admin.pages.reports.salaries', compact('salaries', 'stats', 'employees'));
     }
@@ -280,14 +234,7 @@ class ReportController extends Controller
     {
         $query = LeaveRequest::with(['employee', 'leaveType']);
 
-        if (Auth::user()->isDepartmentHead()) {
-            $employeeIds = Auth::user()->getManagedEmployeeIds();
-            if (!empty($employeeIds)) {
-                $query->whereIn('employee_id', $employeeIds);
-            } else {
-                $query->whereRaw('1 = 0');
-            }
-        }
+        $this->scopeByEmployeeQuery($query);
 
         // فلترة حسب الموظف
         if ($request->filled('employee_id')) {
@@ -332,16 +279,7 @@ class ReportController extends Controller
             })->map->count(),
         ];
 
-        $employees = Employee::where('is_active', true)
-            ->when(Auth::user()->isDepartmentHead(), function ($q) {
-                $ids = Auth::user()->getManagedEmployeeIds();
-                if (!empty($ids)) {
-                    $q->whereIn('id', $ids);
-                } else {
-                    $q->whereRaw('1 = 0');
-                }
-            })
-            ->get();
+        $employees = $this->scopeEmployeesQuery(Employee::where('is_active', true))->get();
         $leaveTypes = LeaveType::where('is_active', true)->get();
 
         return view('admin.pages.reports.leaves', compact('leaveRequests', 'stats', 'employees', 'leaveTypes'));
@@ -354,14 +292,7 @@ class ReportController extends Controller
     {
         $query = PerformanceReview::with(['employee', 'reviewer']);
 
-        if (Auth::user()->isDepartmentHead()) {
-            $employeeIds = Auth::user()->getManagedEmployeeIds();
-            if (!empty($employeeIds)) {
-                $query->whereIn('employee_id', $employeeIds);
-            } else {
-                $query->whereRaw('1 = 0');
-            }
-        }
+        $this->scopeByEmployeeQuery($query);
 
         // فلترة حسب الموظف
         if ($request->filled('employee_id')) {
@@ -394,16 +325,7 @@ class ReportController extends Controller
             'top_performers' => $reviews->sortByDesc('overall_rating')->take(10),
         ];
 
-        $employees = Employee::where('is_active', true)
-            ->when(Auth::user()->isDepartmentHead(), function ($q) {
-                $ids = Auth::user()->getManagedEmployeeIds();
-                if (!empty($ids)) {
-                    $q->whereIn('id', $ids);
-                } else {
-                    $q->whereRaw('1 = 0');
-                }
-            })
-            ->get();
+        $employees = $this->scopeEmployeesQuery(Employee::where('is_active', true))->get();
 
         return view('admin.pages.reports.performance', compact('reviews', 'stats', 'employees'));
     }
@@ -608,27 +530,11 @@ class ReportController extends Controller
                 $q->whereBetween('last_working_day', [$dateFrom, $dateTo])
                     ->orWhereBetween('resignation_date', [$dateFrom, $dateTo]);
             });
-        if (Auth::user()->isDepartmentHead()) {
-            $employeeIds = Auth::user()->getManagedEmployeeIds();
-            if (!empty($employeeIds)) {
-                $exitsQuery->whereIn('employee_id', $employeeIds);
-            } else {
-                $exitsQuery->whereRaw('1 = 0');
-            }
-        }
+        $this->scopeByEmployeeQuery($exitsQuery);
         $exitsCount = (clone $exitsQuery)->count();
         $exits = (clone $exitsQuery)->with('employee')->orderBy('last_working_day', 'desc')->get();
 
-        $currentActiveQuery = Employee::where('is_active', true);
-        if (Auth::user()->isDepartmentHead()) {
-            $departmentIds = Auth::user()->getManagedDepartmentIds();
-            if (!empty($departmentIds)) {
-                $currentActiveQuery->whereIn('department_id', $departmentIds);
-            } else {
-                $currentActiveQuery->whereRaw('1 = 0');
-            }
-        }
-        $currentActive = $currentActiveQuery->count();
+        $currentActive = $this->scopeEmployeesQuery(Employee::where('is_active', true))->count();
         $avgHeadcount = $currentActive + $exitsCount / 2;
         $turnoverRate = $avgHeadcount > 0 ? round(($exitsCount / $avgHeadcount) * 100, 2) : 0;
 
@@ -647,28 +553,14 @@ class ReportController extends Controller
         $recordsQuery = TrainingRecord::with(['training', 'employee'])
             ->where('status', 'completed')
             ->whereBetween('completion_date', [$dateFrom, $dateTo]);
-        if (Auth::user()->isDepartmentHead()) {
-            $employeeIds = Auth::user()->getManagedEmployeeIds();
-            if (!empty($employeeIds)) {
-                $recordsQuery->whereIn('employee_id', $employeeIds);
-            } else {
-                $recordsQuery->whereRaw('1 = 0');
-            }
-        }
+        $this->scopeByEmployeeQuery($recordsQuery);
         $completedRecords = (clone $recordsQuery)->get();
         $completedCount = $completedRecords->count();
         $employeesTrained = $completedRecords->pluck('employee_id')->unique()->count();
         $coursesCompleted = $completedRecords->pluck('training_id')->unique()->count();
 
         $totalRegisteredQuery = TrainingRecord::whereBetween('registration_date', [$dateFrom, $dateTo]);
-        if (Auth::user()->isDepartmentHead()) {
-            $employeeIds = Auth::user()->getManagedEmployeeIds();
-            if (!empty($employeeIds)) {
-                $totalRegisteredQuery->whereIn('employee_id', $employeeIds);
-            } else {
-                $totalRegisteredQuery->whereRaw('1 = 0');
-            }
-        }
+        $this->scopeByEmployeeQuery($totalRegisteredQuery);
         $totalRegistered = $totalRegisteredQuery->count();
         $completionRate = $totalRegistered > 0 ? round(($completedCount / $totalRegistered) * 100, 2) : 0;
         $avgScore = $completedRecords->whereNotNull('score')->avg('score');
@@ -699,50 +591,20 @@ class ReportController extends Controller
                         $q2->whereNull('last_working_day')->whereYear('resignation_date', $currentYear);
                     });
             });
-        if (Auth::user()->isDepartmentHead()) {
-            $employeeIds = Auth::user()->getManagedEmployeeIds();
-            if (!empty($employeeIds)) {
-                $exitsQuery->whereIn('employee_id', $employeeIds);
-            } else {
-                $exitsQuery->whereRaw('1 = 0');
-            }
-        }
+        $this->scopeByEmployeeQuery($exitsQuery);
         $exitsThisYear = $exitsQuery->count();
 
-        $activeEmployeesQuery = Employee::where('is_active', true);
-        if (Auth::user()->isDepartmentHead()) {
-            $departmentIds = Auth::user()->getManagedDepartmentIds();
-            if (!empty($departmentIds)) {
-                $activeEmployeesQuery->whereIn('department_id', $departmentIds);
-            } else {
-                $activeEmployeesQuery->whereRaw('1 = 0');
-            }
-        }
-        $activeEmployees = $activeEmployeesQuery->count();
+        $activeEmployees = $this->scopeEmployeesQuery(Employee::where('is_active', true))->count();
         $avgHeadcount = $activeEmployees + $exitsThisYear / 2;
         $turnoverRate = $avgHeadcount > 0 ? round(($exitsThisYear / $avgHeadcount) * 100, 2) : 0;
 
-        $payrollTotal = Payroll::whereIn('status', ['approved', 'paid'])
+        $payrollQuery = Payroll::whereIn('status', ['approved', 'paid'])
             ->where('payroll_month', $currentMonth)
-            ->where('payroll_year', $currentYear)
-            ->when(Auth::user()->isDepartmentHead(), function ($q) {
-                $ids = Auth::user()->getManagedEmployeeIds();
-                if (!empty($ids)) {
-                    $q->whereIn('employee_id', $ids);
-                } else {
-                    $q->whereRaw('1 = 0');
-                }
-            })
-            ->sum('net_salary');
+            ->where('payroll_year', $currentYear);
+        $this->scopeByEmployeeQuery($payrollQuery);
+        $payrollTotal = $payrollQuery->sum('net_salary');
         $pendingLeavesQuery = LeaveRequest::where('status', 'pending');
-        if (Auth::user()->isDepartmentHead()) {
-            $employeeIds = Auth::user()->getManagedEmployeeIds();
-            if (!empty($employeeIds)) {
-                $pendingLeavesQuery->whereIn('employee_id', $employeeIds);
-            } else {
-                $pendingLeavesQuery->whereRaw('1 = 0');
-            }
-        }
+        $this->scopeByEmployeeQuery($pendingLeavesQuery);
         $pendingLeaves = $pendingLeavesQuery->count();
         $publishedVacancies = JobVacancy::where('status', 'published')->count();
         $hiredThisYear = JobApplication::where('status', 'accepted')
@@ -751,16 +613,8 @@ class ReportController extends Controller
 
         $trainingCompletedQuery = TrainingRecord::where('status', 'completed')->whereYear('completion_date', $currentYear);
         $trainingParticipantsQuery = TrainingRecord::where('status', 'attending');
-        if (Auth::user()->isDepartmentHead()) {
-            $employeeIds = Auth::user()->getManagedEmployeeIds();
-            if (!empty($employeeIds)) {
-                $trainingCompletedQuery->whereIn('employee_id', $employeeIds);
-                $trainingParticipantsQuery->whereIn('employee_id', $employeeIds);
-            } else {
-                $trainingCompletedQuery->whereRaw('1 = 0');
-                $trainingParticipantsQuery->whereRaw('1 = 0');
-            }
-        }
+        $this->scopeByEmployeeQuery($trainingCompletedQuery);
+        $this->scopeByEmployeeQuery($trainingParticipantsQuery);
         $trainingCompleted = $trainingCompletedQuery->count();
         $trainingParticipants = $trainingParticipantsQuery->count();
 

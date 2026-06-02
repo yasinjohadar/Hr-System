@@ -10,9 +10,22 @@ Route::prefix('employee')->name('employee.')->group(function () {
     Route::post('/login-by-code', [LoginByCodeController::class, 'useCode'])->name('login-by-code.use');
 });
 
-Route::middleware(['auth', 'check.user.active', 'ensure.employee'])->prefix('employee')->name('employee.')->group(function () {
+Route::middleware(['auth', 'check.user.active', 'ensure.employee', 'two.factor'])->prefix('employee')->name('employee.')->group(function () {
     // لوحة تحكم الموظف
     Route::get('/dashboard', [SelfServiceController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard/refresh', [SelfServiceController::class, 'dashboardRefresh'])->name('dashboard.refresh');
+    Route::get('/dashboard/widgets/{widget}', [SelfServiceController::class, 'dashboardWidget'])->name('dashboard.widget');
+    
+    // التسلسل الإداري
+    Route::get('/hierarchy', [SelfServiceController::class, 'hierarchy'])->name('hierarchy');
+    
+    // إعادة توجيه مسارات رئيس القسم القديمة إلى لوحة الإدارة
+    Route::redirect('/department-head/dashboard', '/admin/team/dashboard', 301);
+    Route::redirect('/department-head/team', '/admin/team/members', 301);
+    Route::redirect('/department-head/approvals', '/admin/team/approvals', 301);
+    Route::redirect('/department-head/structure', '/admin/team/structure', 301);
+    Route::redirect('/department-head/delegations', '/admin/team/delegations', 301);
+    Route::redirect('/department-head/delegations/create', '/admin/team/delegations/create', 301);
     
     // الملف الشخصي
     Route::get('/profile', [SelfServiceController::class, 'profile'])->name('profile');
@@ -89,4 +102,12 @@ Route::middleware(['auth', 'check.user.active', 'ensure.employee'])->prefix('emp
     
     // سجل التدريب
     Route::get('/training-records', [SelfServiceController::class, 'trainingRecords'])->name('training-records');
+
+    // الاستبيانات
+    Route::get('/surveys', [SelfServiceController::class, 'surveys'])->name('surveys');
+    Route::post('/surveys/{id}', [SelfServiceController::class, 'submitSurvey'])->name('surveys.submit');
+
+    // الاستقبال
+    Route::get('/onboarding', [SelfServiceController::class, 'onboarding'])->name('onboarding');
+    Route::post('/onboarding/checklist/{checklistId}/complete', [SelfServiceController::class, 'completeOnboardingTask'])->name('onboarding.complete-task');
 });

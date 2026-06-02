@@ -11,6 +11,7 @@ class TaxSetting extends Model
     use SoftDeletes;
 
     protected $fillable = [
+        'country_id',
         'name',
         'name_ar',
         'code',
@@ -38,6 +39,11 @@ class TaxSetting extends Model
         'effective_from' => 'date',
         'effective_to' => 'date',
     ];
+
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class);
+    }
 
     public function creator(): BelongsTo
     {

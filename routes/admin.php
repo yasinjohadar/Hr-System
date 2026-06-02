@@ -81,10 +81,26 @@ use App\Http\Controllers\Admin\ContractController;
 use App\Http\Controllers\Admin\EmployeeJobChangeController;
 use App\Http\Controllers\Admin\PolicyController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\DepartmentTeamController;
+use App\Http\Controllers\Admin\TeamDelegationController;
 
-Route::middleware(['auth', 'check.user.active', 'ensure.admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'check.user.active', 'ensure.admin', 'two.factor'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    // إدارة الفريق (رئيس القسم)
+    Route::prefix('team')->name('team.')->middleware('ensure.department.head.or.admin')->group(function () {
+        Route::get('/dashboard', [DepartmentTeamController::class, 'dashboard'])->name('dashboard');
+        Route::get('/members', [DepartmentTeamController::class, 'members'])->name('members');
+        Route::get('/approvals', [DepartmentTeamController::class, 'approvals'])->name('approvals');
+        Route::get('/structure', [DepartmentTeamController::class, 'structure'])->name('structure');
+        Route::prefix('delegations')->name('delegations.')->group(function () {
+            Route::get('/', [TeamDelegationController::class, 'index'])->name('index');
+            Route::get('/create', [TeamDelegationController::class, 'create'])->name('create');
+            Route::post('/', [TeamDelegationController::class, 'store'])->name('store');
+            Route::post('/{id}/cancel', [TeamDelegationController::class, 'cancel'])->name('cancel');
+        });
+    });
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
     Route::get('/dashboard/stats', [DashboardController::class, 'getStats'])->name('dashboard.stats');
     // Routes لإعلانات الشركة
@@ -96,6 +112,7 @@ Route::middleware(['auth', 'check.user.active', 'ensure.admin'])->prefix('admin'
     // Routes للموظفين
     Route::post('employees/{employee}/login-code', [EmployeeController::class, 'generateLoginCode'])->name('employees.login-code');
     Route::post('employees/{employee}/login-as', [EmployeeController::class, 'loginAs'])->name('employees.login-as');
+    Route::post('employees/{employee}/toggle-active', [EmployeeController::class, 'toggleActive'])->name('employees.toggle-active');
     Route::resource('employees', EmployeeController::class);
 
     // Routes للمستخدمين
@@ -419,4 +436,8 @@ Route::middleware(['auth', 'check.user.active', 'ensure.admin'])->prefix('admin'
     Route::post('overtimes/{id}/approve', [OvertimeController::class, 'approve'])->name('overtimes.approve');
     Route::post('overtimes/{id}/reject', [OvertimeController::class, 'reject'])->name('overtimes.reject');
     Route::post('overtimes/calculate-from-attendance', [OvertimeController::class, 'calculateFromAttendance'])->name('overtimes.calculate-from-attendance');
+
+    Route::resource('public-holidays', \App\Http\Controllers\Admin\PublicHolidayController::class)->only(['index', 'create', 'store', 'destroy']);
+    Route::resource('leave-accrual-rules', \App\Http\Controllers\Admin\LeaveAccrualRuleController::class)->only(['index', 'create', 'store']);
+    Route::resource('scheduled-reports', \App\Http\Controllers\Admin\ScheduledReportController::class)->only(['index', 'store', 'destroy']);
 });

@@ -10,11 +10,14 @@ use App\Services\WorkflowService;
 use App\Services\ApprovalService;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Admin\Concerns\ScopesByDepartment;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class LeaveRequestController extends Controller
 {
+    use ScopesByDepartment;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -33,15 +36,7 @@ class LeaveRequestController extends Controller
     {
         $leaveRequestsQuery = LeaveRequest::with(['employee.user', 'leaveType', 'approver']);
 
-        // رئيس القسم: فقط طلبات موظفي أقسامه
-        if (Auth::user()->isDepartmentHead()) {
-            $employeeIds = Auth::user()->getManagedEmployeeIds();
-            if (!empty($employeeIds)) {
-                $leaveRequestsQuery->whereIn('employee_id', $employeeIds);
-            } else {
-                $leaveRequestsQuery->whereRaw('1 = 0');
-            }
-        }
+        $this->scopeByEmployeeQuery($leaveRequestsQuery);
 
         // فلترة حسب الموظف
         if ($request->filled('employee_id')) {
@@ -70,10 +65,7 @@ class LeaveRequestController extends Controller
 
         $employees = Employee::where('is_active', true)->with('user')->get();
         // رئيس القسم: قائمة موظفين لأقسامه فقط
-        if (Auth::user()->isDepartmentHead()) {
-            $managedIds = Auth::user()->getManagedEmployeeIds();
-            $employees = $employees->whereIn('id', $managedIds)->values();
-        }
+        $employees = collect($this->departmentScope()->filterEmployeeCollection($employees));
 
         $leaveTypes = LeaveType::where('is_active', true)->get();
 
@@ -172,12 +164,7 @@ class LeaveRequestController extends Controller
     {
         $leaveRequest = LeaveRequest::with(['employee.user', 'leaveType', 'approver', 'creator'])->findOrFail($id);
 
-        if (Auth::user()->isDepartmentHead()) {
-            $employeeIds = Auth::user()->getManagedEmployeeIds();
-            if (!in_array($leaveRequest->employee_id, $employeeIds)) {
-                abort(403, 'غير مصرح لك بعرض هذا الطلب.');
-            }
-        }
+        $this->authorizeManagedEmployeeId((int) $leaveRequest->employee_id, 'غير مصرح لك بعرض هذا الطلب.');
 
         return view("admin.pages.leave-requests.show", compact("leaveRequest"));
     }
@@ -306,12 +293,7 @@ class LeaveRequestController extends Controller
         $leaveRequest = LeaveRequest::findOrFail($id);
         $employee = $leaveRequest->employee;
 
-        if (Auth::user()->isDepartmentHead()) {
-            $employeeIds = Auth::user()->getManagedEmployeeIds();
-            if (!in_array($leaveRequest->employee_id, $employeeIds)) {
-                abort(403, 'غير مصرح لك بالموافقة على هذا الطلب.');
-            }
-        }
+        $this->authorizeManagedEmployeeId((int) $leaveRequest->employee_id, 'غير مصرح لك بالموافقة على هذا الطلب.');
 
         if ($leaveRequest->status != 'pending') {
             return back()->with('error', 'لا يمكن الموافقة على هذا الطلب');
@@ -404,12 +386,7 @@ class LeaveRequestController extends Controller
         $leaveRequest = LeaveRequest::findOrFail($id);
         $employee = $leaveRequest->employee;
 
-        if (Auth::user()->isDepartmentHead()) {
-            $employeeIds = Auth::user()->getManagedEmployeeIds();
-            if (!in_array($leaveRequest->employee_id, $employeeIds)) {
-                abort(403, 'غير مصرح لك برفض هذا الطلب.');
-            }
-        }
+        $this->authorizeManagedEmployeeId((int) $leaveRequest->employee_id, 'غير مصرح لك برفض هذا الطلب.');
 
         // البحث عن workflow instance
         $instance = \App\Models\WorkflowInstance::where('entity_type', 'LeaveRequest')

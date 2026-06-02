@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Admin\Concerns\ScopesByDepartment;
 use App\Models\Employee;
 use App\Models\LeaveRequest;
 use App\Models\ExpenseRequest;
@@ -13,6 +14,8 @@ use Illuminate\Http\Request;
 
 class ApprovalController extends Controller
 {
+    use ScopesByDepartment;
+
     protected WorkflowService $workflowService;
     protected ApprovalService $approvalService;
 
@@ -35,9 +38,9 @@ class ApprovalController extends Controller
         $pendingApprovals = [];
 
         // طلبات الإجازات المعلقة
-        $leaveRequests = LeaveRequest::where('status', 'pending')
-            ->with(['employee', 'leaveType'])
-            ->get()
+        $leaveQuery = LeaveRequest::where('status', 'pending')->with(['employee', 'leaveType']);
+        $this->scopeByEmployeeQuery($leaveQuery);
+        $leaveRequests = $leaveQuery->get()
             ->filter(function ($leaveRequest) use ($user) {
                 if (!$leaveRequest->employee) {
                     return false;
@@ -65,9 +68,9 @@ class ApprovalController extends Controller
             });
 
         // طلبات المصروفات المعلقة
-        $expenseRequests = ExpenseRequest::where('status', 'pending')
-            ->with(['employee', 'category'])
-            ->get()
+        $expenseQuery = ExpenseRequest::where('status', 'pending')->with(['employee', 'category']);
+        $this->scopeByEmployeeQuery($expenseQuery);
+        $expenseRequests = $expenseQuery->get()
             ->filter(function ($expenseRequest) use ($user) {
                 if (!$expenseRequest->employee) {
                     return false;

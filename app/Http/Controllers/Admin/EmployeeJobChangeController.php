@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\ScopesByDepartment;
 use App\Http\Controllers\Controller;
 use App\Models\EmployeeJobChange;
 use App\Models\Employee;
@@ -16,6 +17,8 @@ use Illuminate\Support\Facades\DB;
 
 class EmployeeJobChangeController extends Controller
 {
+    use ScopesByDepartment;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -56,6 +59,8 @@ class EmployeeJobChangeController extends Controller
         if ($request->filled('date_to')) {
             $query->where('effective_date', '<=', $request->date_to);
         }
+
+        $this->scopeByEmployeeQuery($query);
 
         $jobChanges = $query->orderBy('created_at', 'desc')->paginate(15);
 

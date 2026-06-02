@@ -112,7 +112,7 @@ class WorkflowService
 
             if ($approved) {
                 // الموافقة - الانتقال للخطوة التالية
-                $nextStep = $this->getNextStep($instance->workflow, $currentStep);
+                $nextStep = $this->getNextStep($instance->workflow, $currentStep, $entity, $employee);
                 
                 if ($nextStep) {
                     // تحديث instance للخطوة التالية
@@ -132,6 +132,9 @@ class WorkflowService
 
                     // تحديث حالة الكيان
                     $this->updateEntityStatus($entity, 'approved');
+
+                    // إرسال إشعار للموظف بالموافقة النهائية
+                    $this->notifyEmployeeApproval($employee, $entity, $instance);
                 }
             } else {
                 // الرفض - إنهاء سير العمل
@@ -142,6 +145,9 @@ class WorkflowService
 
                 // تحديث حالة الكيان
                 $this->updateEntityStatus($entity, 'rejected', $comments);
+
+                // إرسال إشعار للموظف بالرفض
+                $this->notifyEmployeeRejection($employee, $entity, $instance, $comments);
             }
 
             DB::commit();
@@ -155,15 +161,24 @@ class WorkflowService
     }
 
     /**
-     * الحصول على الخطوة التالية
+     * الحصول على الخطوة التالية (مع دعم الشروط الديناميكية)
      */
-    private function getNextStep(Workflow $workflow, WorkflowStep $currentStep): ?WorkflowStep
+    private function getNextStep(Workflow $workflow, WorkflowStep $currentStep, $entity, Employee $employee): ?WorkflowStep
     {
-        return $workflow->steps()
+        $steps = $workflow->steps()
             ->where('is_required', true)
             ->where('step_order', '>', $currentStep->step_order)
             ->orderBy('step_order')
-            ->first();
+            ->get();
+
+        foreach ($steps as $step) {
+            // تقييم الشروط الديناميكية
+            if ($this->approvalService->evaluateStepConditions($step, $entity)) {
+                return $step;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -350,5 +365,62 @@ class WorkflowService
         }
 
         return $status;
+    }
+
+    /**
+     * إرسال إشعار للموظف عند الموافقة النهائية
+     */
+    private function notifyEmployeeApproval(Employee $employee, $entity, WorkflowInstance $instance): void
+    {
+        $user = $employee->user;
+        if (!$user) {
+            Log::warning("No user found for employee: {$employee->id}");
+            return;
+        }
+
+        try {
+            $entityType = $instance->entity_type;
+            $entityName = $this->getEntityName($entity, $entityType);
+
+            $user->notify(new \App\Notifications\ApprovalCompletedNotification(
+                $entityType,
+                $entityName,
+                $instance->initiated_by,
+                $instance->completed_at ?? now()
+            ));
+
+            Log::info("Approval completed notification sent to employee: {$employee->id} for instance: {$instance->id}");
+        } catch (\Exception $e) {
+            Log::error("Error sending approval completed notification: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * إرسال إشعار للموظف عند الرفض
+     */
+    private function notifyEmployeeRejection(Employee $employee, $entity, WorkflowInstance $instance, ?string $reason = null): void
+    {
+        $user = $employee->user;
+        if (!$user) {
+            Log::warning("No user found for employee: {$employee->id}");
+            return;
+        }
+
+        try {
+            $entityType = $instance->entity_type;
+            $entityName = $this->getEntityName($entity, $entityType);
+
+            $user->notify(new \App\Notifications\ApprovalRejectedNotification(
+                $entityType,
+                $entityName,
+                $reason,
+                $instance->initiated_by,
+                $instance->completed_at ?? now()
+            ));
+
+            Log::info("Approval rejected notification sent to employee: {$employee->id} for instance: {$instance->id}");
+        } catch (\Exception $e) {
+            Log::error("Error sending approval rejected notification: " . $e->getMessage());
+        }
     }
 }

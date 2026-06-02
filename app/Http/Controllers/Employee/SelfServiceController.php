@@ -13,6 +13,7 @@ use App\Models\EmployeeCertificate;
 use App\Models\EmployeeGoal;
 use App\Models\PerformanceReview;
 use App\Models\LeaveType;
+use App\Models\LeaveBalance;
 use App\Models\EmployeeBenefit;
 use App\Models\Task;
 use App\Models\Project;
@@ -31,6 +32,7 @@ use App\Models\Payroll;
 use App\Models\ExpenseCategory;
 use App\Models\Currency;
 use App\Models\TrainingRecord;
+use App\Models\Department;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
@@ -47,55 +49,270 @@ class SelfServiceController extends Controller
      */
     public function dashboard()
     {
-        $user = Auth::user();
-        $employee = $user->employee;
+        $employee = $this->resolveDashboardEmployee();
+        if ($employee instanceof \Illuminate\Http\RedirectResponse) {
+            return $employee;
+        }
 
-        if (!$employee) {
+        return view('employee.pages.self-service.dashboard.index', $this->buildDashboardViewData($employee));
+    }
+
+    /**
+     * تحديث جزئي لبيانات لوحة التحكم (JSON)
+     */
+    public function dashboardRefresh()
+    {
+        $employee = $this->resolveDashboardEmployee();
+        if ($employee instanceof \Illuminate\Http\RedirectResponse) {
+            return response()->json(['error' => 'لا يوجد ملف موظف'], 403);
+        }
+
+        $data = $this->buildDashboardViewData($employee);
+
+        return response()->json([
+            'stats' => $data['stats'],
+            'absentDays' => $data['absentDays'],
+            'lateDays' => $data['lateDays'],
+            'latestPayroll' => $data['latestPayroll'] ? [
+                'net_salary' => number_format($data['latestPayroll']->net_salary, 2),
+                'currency' => $data['latestPayroll']->currency->code ?? 'ر.س',
+                'month_label' => $data['latestPayroll']->month_name . ' ' . $data['latestPayroll']->payroll_year,
+                'status' => $data['latestPayroll']->status,
+                'status_name_ar' => $data['latestPayroll']->status_name_ar,
+            ] : null,
+            'attendanceChart' => $this->buildAttendanceChartPayload($data['attendanceByDay']),
+            'refreshedAt' => now()->format('Y/m/d H:i'),
+        ]);
+    }
+
+    /**
+     * HTML جزئي لقائمة ويدجت
+     */
+    public function dashboardWidget(string $widget)
+    {
+        $employee = $this->resolveDashboardEmployee();
+        if ($employee instanceof \Illuminate\Http\RedirectResponse) {
+            return response('', 403);
+        }
+
+        $allowed = ['meetings', 'tasks', 'announcements', 'leaves', 'payroll', 'violations', 'assets'];
+        if (! in_array($widget, $allowed, true)) {
+            abort(404);
+        }
+
+        $data = $this->buildDashboardViewData($employee);
+
+        return view('employee.pages.self-service.dashboard.partials.widgets.' . $widget, $data);
+    }
+
+    private function resolveDashboardEmployee(): Employee|\Illuminate\Http\RedirectResponse
+    {
+        $employee = Auth::user()->employee;
+
+        if (! $employee) {
             return redirect()->route('dashboard')->with('error', 'لا يوجد ملف موظف مرتبط بحسابك');
         }
 
-        // إحصائيات سريعة
-        $stats = [
-            'pending_leaves' => LeaveRequest::where('employee_id', $employee->id)
-                ->where('status', 'pending')->count(),
-            'approved_leaves' => LeaveRequest::where('employee_id', $employee->id)
-                ->where('status', 'approved')->count(),
-            'total_attendance' => Attendance::where('employee_id', $employee->id)
-                ->whereMonth('attendance_date', now()->month)
-                ->where('status', 'present')->count(),
-            'pending_goals' => EmployeeGoal::where('employee_id', $employee->id)
-                ->where('status', 'in_progress')->count(),
-        ];
+        $employee->load(['position', 'department', 'branch']);
 
-        // آخر الإجازات
+        return $employee;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildDashboardViewData(Employee $employee): array
+    {
+        $currentYear = now()->year;
+        $currentMonth = now()->month;
+
+        $stats = $this->buildDashboardStats($employee, $currentMonth);
+
+        $leaveBalances = LeaveBalance::where('employee_id', $employee->id)
+            ->where('year', $currentYear)
+            ->with('leaveType')
+            ->get();
+
         $recentLeaves = LeaveRequest::where('employee_id', $employee->id)
+            ->with('leaveType')
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
 
-        // آخر الحضور
         $recentAttendance = Attendance::where('employee_id', $employee->id)
+            ->whereMonth('attendance_date', $currentMonth)
             ->orderBy('attendance_date', 'desc')
             ->limit(10)
             ->get();
 
-        // إعلانات الشركة الظاهرة لهذا الموظف
+        $attendanceByDay = Attendance::where('employee_id', $employee->id)
+            ->whereMonth('attendance_date', $currentMonth)
+            ->whereYear('attendance_date', now()->year)
+            ->orderBy('attendance_date')
+            ->get()
+            ->mapWithKeys(fn ($record) => [
+                $record->attendance_date->format('Y-m-d') => [
+                    'status' => $record->status,
+                    'check_in' => $record->check_in ? \Carbon\Carbon::parse($record->check_in)->format('H:i') : null,
+                    'check_out' => $record->check_out ? \Carbon\Carbon::parse($record->check_out)->format('H:i') : null,
+                    'late_minutes' => $record->late_minutes ?? 0,
+                ],
+            ]);
+
+        $latestPayroll = Payroll::where('employee_id', $employee->id)
+            ->with('currency')
+            ->orderByDesc('payroll_year')
+            ->orderByDesc('payroll_month')
+            ->first();
+
+        $recentPayrolls = Payroll::where('employee_id', $employee->id)
+            ->with('currency')
+            ->orderByDesc('payroll_year')
+            ->orderByDesc('payroll_month')
+            ->limit(3)
+            ->get();
+
+        $upcomingMeetings = Meeting::where(function ($q) use ($employee) {
+            $q->where('organizer_id', $employee->id)
+                ->orWhereHas('attendees', fn ($q2) => $q2->where('employee_id', $employee->id));
+        })
+            ->with(['organizer'])
+            ->where('start_time', '>', now())
+            ->orderBy('start_time')
+            ->limit(5)
+            ->get();
+
+        $upcomingTasks = Task::whereHas('assignments', fn ($q) => $q->where('employee_id', $employee->id))
+            ->with(['project'])
+            ->whereNotIn('status', ['completed', 'cancelled'])
+            ->orderBy('due_date')
+            ->limit(5)
+            ->get();
+
+        $recentViolations = EmployeeViolation::where('employee_id', $employee->id)
+            ->with('violationType')
+            ->orderByDesc('violation_date')
+            ->limit(3)
+            ->get();
+
+        $assignedAssets = AssetAssignment::where('employee_id', $employee->id)
+            ->where('assignment_status', 'active')
+            ->with('asset')
+            ->limit(3)
+            ->get();
+
         $announcements = Announcement::visible()
             ->where(function ($q) use ($employee) {
                 $q->where('target_type', 'all')
-                  ->orWhere(function ($q2) use ($employee) {
-                      $q2->where('target_type', 'department')->where('department_id', $employee->department_id);
-                  })
-                  ->orWhere(function ($q2) use ($employee) {
-                      $q2->where('target_type', 'branch')->where('branch_id', $employee->branch_id);
-                  });
+                    ->orWhere(function ($q2) use ($employee) {
+                        $q2->where('target_type', 'department')->where('department_id', $employee->department_id);
+                    })
+                    ->orWhere(function ($q2) use ($employee) {
+                        $q2->where('target_type', 'branch')->where('branch_id', $employee->branch_id);
+                    });
             })
             ->orderByDesc('publish_date')
             ->orderByDesc('created_at')
             ->limit(5)
             ->get();
 
-        return view('employee.pages.self-service.dashboard', compact('employee', 'stats', 'recentLeaves', 'recentAttendance', 'announcements'));
+        $yearsOfService = $employee->hire_date->diffInYears(now());
+        $monthsOfService = $employee->hire_date->diffInMonths(now()) % 12;
+
+        $absentDays = Attendance::where('employee_id', $employee->id)
+            ->whereMonth('attendance_date', $currentMonth)
+            ->where('status', 'absent')->count();
+
+        $lateDays = Attendance::where('employee_id', $employee->id)
+            ->whereMonth('attendance_date', $currentMonth)
+            ->where('status', 'late')->count();
+
+        return compact(
+            'employee', 'stats', 'recentLeaves', 'recentAttendance', 'announcements',
+            'leaveBalances', 'latestPayroll', 'recentPayrolls', 'upcomingMeetings',
+            'upcomingTasks', 'attendanceByDay', 'recentViolations', 'assignedAssets',
+            'yearsOfService', 'monthsOfService', 'absentDays', 'lateDays'
+        );
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    private function buildDashboardStats(Employee $employee, int $currentMonth): array
+    {
+        return [
+            'pending_leaves' => LeaveRequest::where('employee_id', $employee->id)
+                ->where('status', 'pending')->count(),
+            'approved_leaves' => LeaveRequest::where('employee_id', $employee->id)
+                ->where('status', 'approved')->count(),
+            'total_attendance' => Attendance::where('employee_id', $employee->id)
+                ->whereMonth('attendance_date', $currentMonth)
+                ->where('status', 'present')->count(),
+            'pending_goals' => EmployeeGoal::where('employee_id', $employee->id)
+                ->where('status', 'in_progress')->count(),
+            'pending_tasks' => Task::whereHas('assignments', fn ($q) => $q->where('employee_id', $employee->id))
+                ->whereNotIn('status', ['completed', 'cancelled'])->count(),
+            'upcoming_meetings' => Meeting::where(function ($q) use ($employee) {
+                $q->where('organizer_id', $employee->id)
+                    ->orWhereHas('attendees', fn ($q2) => $q2->where('employee_id', $employee->id));
+            })
+                ->where('start_time', '>', now())
+                ->count(),
+            'pending_expenses' => ExpenseRequest::where('employee_id', $employee->id)
+                ->where('status', 'pending')->count(),
+            'open_tickets' => Ticket::where('employee_id', $employee->id)
+                ->where('status', 'open')->count(),
+        ];
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<string, array<string, mixed>>  $attendanceByDay
+     * @return array<string, mixed>
+     */
+    private function buildAttendanceChartPayload($attendanceByDay): array
+    {
+        $daysInMonth = now()->daysInMonth;
+        $year = now()->year;
+        $month = now()->month;
+
+        $categories = [];
+        $data = [];
+        $colors = [];
+
+        $colorMap = [
+            'present' => '#22c55e',
+            'late' => '#f59e0b',
+            'absent' => '#ef4444',
+            'none' => '#94a3b8',
+        ];
+
+        $valueMap = [
+            'present' => 3,
+            'late' => 2,
+            'absent' => 1,
+            'none' => 0,
+        ];
+
+        for ($day = 1; $day <= $daysInMonth; $day++) {
+            $dateKey = sprintf('%04d-%02d-%02d', $year, $month, $day);
+            $categories[] = (string) $day;
+
+            $record = $attendanceByDay->get($dateKey);
+            $status = $record['status'] ?? 'none';
+            if (! isset($valueMap[$status])) {
+                $status = 'none';
+            }
+
+            $data[] = $valueMap[$status];
+            $colors[] = $colorMap[$status];
+        }
+
+        return [
+            'categories' => $categories,
+            'series' => [['name' => 'الحضور', 'data' => $data]],
+            'colors' => $colors,
+            'monthLabel' => now()->translatedFormat('F Y'),
+        ];
     }
 
     /**
@@ -926,5 +1143,134 @@ class SelfServiceController extends Controller
             ->get();
 
         return view('employee.pages.self-service.project-time', compact('entries', 'accessibleProjects'));
+    }
+
+    /**
+     * عرض التسلسل الإداري للموظف
+     */
+    public function hierarchy()
+    {
+        $user = Auth::user();
+        $employee = $user->employee;
+
+        if (! $employee) {
+            return redirect()->route('dashboard')->with('error', 'لا يوجد ملف موظف مرتبط بحسابك');
+        }
+
+        $directManager = $employee->getDirectManager();
+        $departmentManager = $employee->getDepartmentManager();
+        $managerChain = $employee->getManagerChain();
+
+        $departmentHierarchy = $this->getDepartmentHierarchy($employee->department);
+
+        return view('employee.pages.self-service.hierarchy', compact(
+            'employee', 'directManager', 'departmentManager', 'managerChain', 'departmentHierarchy'
+        ));
+    }
+
+    /**
+     * بناء التسلسل الهرمي للقسم
+     */
+    protected function getDepartmentHierarchy($department): array
+    {
+        if (! $department) return [];
+
+        $hierarchy = [];
+        $current = $department;
+
+        while ($current) {
+            array_unshift($hierarchy, [
+                'id' => $current->id,
+                'name' => $current->name,
+                'code' => $current->code,
+                'manager' => $current->manager,
+            ]);
+            $current = $current->parent;
+        }
+
+        return $hierarchy;
+    }
+
+    public function surveys()
+    {
+        $employee = Auth::user()->employee;
+        if (! $employee) {
+            return redirect()->route('employee.dashboard')->with('error', 'لا يوجد ملف موظف.');
+        }
+
+        $surveys = \App\Models\Survey::where('status', 'active')
+            ->whereDate('start_date', '<=', now())
+            ->whereDate('end_date', '>=', now())
+            ->whereDoesntHave('responses', fn ($q) => $q->where('employee_id', $employee->id))
+            ->with('questions')
+            ->get();
+
+        return view('employee.pages.self-service.surveys', compact('surveys'));
+    }
+
+    public function submitSurvey(Request $request, string $id)
+    {
+        $employee = Auth::user()->employee;
+        if (! $employee) {
+            return back()->with('error', 'لا يوجد ملف موظف.');
+        }
+
+        $survey = \App\Models\Survey::with('questions')->findOrFail($id);
+        $answers = $request->input('answers', []);
+
+        \App\Models\SurveyResponse::create([
+            'survey_id' => $survey->id,
+            'employee_id' => $employee->id,
+            'answers' => $answers,
+            'submitted_at' => now(),
+            'ip_address' => $request->ip(),
+        ]);
+
+        $survey->increment('total_responses');
+
+        return redirect()->route('employee.surveys')->with('success', 'شكراً لمشاركتك.');
+    }
+
+    public function onboarding()
+    {
+        $employee = Auth::user()->employee;
+        if (! $employee) {
+            return redirect()->route('employee.dashboard')->with('error', 'لا يوجد ملف موظف.');
+        }
+
+        $process = \App\Models\OnboardingProcess::with(['checklists.task'])
+            ->where('employee_id', $employee->id)
+            ->whereIn('status', ['not_started', 'in_progress'])
+            ->latest()
+            ->first();
+
+        return view('employee.pages.self-service.onboarding', compact('process'));
+    }
+
+    public function completeOnboardingTask(Request $request, string $checklistId)
+    {
+        $employee = Auth::user()->employee;
+        $checklist = \App\Models\OnboardingChecklist::with('process')->findOrFail($checklistId);
+
+        if ($checklist->process->employee_id !== $employee?->id) {
+            abort(403);
+        }
+
+        $checklist->update([
+            'status' => 'completed',
+            'completed_date' => now(),
+            'completed_by' => Auth::id(),
+            'completion_notes' => $request->input('notes'),
+        ]);
+
+        $process = $checklist->process;
+        $total = $process->checklists()->count();
+        $done = $process->checklists()->where('status', 'completed')->count();
+        $process->update([
+            'completion_percentage' => $total > 0 ? (int) round(($done / $total) * 100) : 0,
+            'status' => $done >= $total ? 'completed' : 'in_progress',
+        ]);
+
+        return back()->with('success', 'تم إكمال المهمة.');
     }
 }

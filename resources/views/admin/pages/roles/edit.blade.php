@@ -80,6 +80,20 @@
                                     <button type="submit" class="btn btn-primary">تعديل بيانات الرول</button>
                                 </div>
 
+                                @if (!empty($roleTemplates))
+                                    <div class="alert alert-info d-flex flex-wrap align-items-center gap-2 mb-3">
+                                        <span class="small">تطبيق قالب صلاحيات جاهز:</span>
+                                        @foreach ($roleTemplates as $key => $template)
+                                            <form method="POST" action="{{ route('roles.apply-template', $role->id) }}" class="d-inline"
+                                                onsubmit="return confirm('سيتم استبدال صلاحيات هذا الدور بقالب «{{ $template['label'] ?? $key }}». متابعة؟');">
+                                                @csrf
+                                                <input type="hidden" name="template" value="{{ $key }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-primary">{{ $template['label'] ?? $key }}</button>
+                                            </form>
+                                        @endforeach
+                                    </div>
+                                @endif
+
                                 <div class="mb-4">
                                     <label class="form-label fw-bold d-block mb-3">الصلاحيات</label>
                                     @foreach ($permissionsGrouped as $categoryName => $permissions)

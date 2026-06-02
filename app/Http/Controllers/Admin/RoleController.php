@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
+use Illuminate\Support\Facades\Auth;
 
 class RoleController extends Controller
 {
@@ -63,6 +65,78 @@ public function __construct()
      *
      * @return array<string, \Illuminate\Support\Collection>
      */
+    protected function roleTemplates(): array
+    {
+        return config('role-templates', []);
+    }
+
+    protected function isPermissionAllowedForRole(string $permissionName, string $roleName): bool
+    {
+        $templates = $this->roleTemplates();
+        if (! isset($templates[$roleName]['restricted_for_ui'])) {
+            return true;
+        }
+
+        foreach ($templates[$roleName]['restricted_for_ui'] as $prefix) {
+            if (str_starts_with($permissionName, $prefix)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    protected function filterGroupedPermissionsForRole(array $grouped, string $roleName): array
+    {
+        foreach ($grouped as $category => $permissions) {
+            $grouped[$category] = $permissions->filter(
+                fn ($p) => $this->isPermissionAllowedForRole($p->name, $roleName)
+            )->values();
+        }
+
+        return array_filter($grouped, fn ($c) => $c->isNotEmpty());
+    }
+
+    public function applyTemplate(Request $request, string $id)
+    {
+        $request->validate([
+            'template' => 'required|string',
+        ]);
+
+        $role = Role::findOrFail($id);
+        $templates = $this->roleTemplates();
+        $templateKey = $request->input('template');
+
+        if (! isset($templates[$templateKey])) {
+            return back()->with('error', 'قالب الأدوار غير موجود.');
+        }
+
+        $permissionNames = $templates[$templateKey]['permissions'];
+        $role->syncPermissions(
+            Permission::whereIn('name', $permissionNames)->pluck('name')
+        );
+
+        $this->logRolePermissionChange($role, 'apply_template', ['template' => $templateKey]);
+
+        return back()->with('success', 'تم تطبيق قالب «' . ($templates[$templateKey]['label'] ?? $templateKey) . '» على الدور.');
+    }
+
+    protected function logRolePermissionChange(Role $role, string $action, array $meta = []): void
+    {
+        AuditLog::create([
+            'user_id' => Auth::id(),
+            'action' => 'role_permissions_' . $action,
+            'model_type' => Role::class,
+            'model_id' => $role->id,
+            'description' => 'تعديل صلاحيات الدور: ' . $role->name,
+            'new_values' => array_merge(['permissions' => $role->permissions->pluck('name')->all()], $meta),
+            'ip_address' => request()->ip(),
+            'user_agent' => (string) request()->userAgent(),
+            'url' => request()->fullUrl(),
+            'severity' => 'info',
+        ]);
+    }
+
     protected function groupPermissionsByCategory(): array
     {
         $all = Permission::orderBy('name')->get();
@@ -139,8 +213,13 @@ public function __construct()
     public function edit(string $id)
     {
         $role = Role::findOrFail($id);
-        $permissionsGrouped = $this->groupPermissionsByCategory();
-        return view("admin.pages.roles.edit", compact("role", "permissionsGrouped"));
+        $permissionsGrouped = $this->filterGroupedPermissionsForRole(
+            $this->groupPermissionsByCategory(),
+            $role->name
+        );
+        $roleTemplates = $this->roleTemplates();
+
+        return view('admin.pages.roles.edit', compact('role', 'permissionsGrouped', 'roleTemplates'));
     }
 
     /**
@@ -155,7 +234,8 @@ public function __construct()
             "name" => $request->name
             ]
         );
-        $role->syncPermissions($request->permissions);
+        $role->syncPermissions($request->permissions ?? []);
+        $this->logRolePermissionChange($role, 'manual_update');
         return redirect()->route("roles.index")->with("success" , "تم تعديل الروول بنجاح");
     }
 
