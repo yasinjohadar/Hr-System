@@ -89,7 +89,6 @@ class DashboardController extends Controller
             'attendanceStats' => $this->getAttendanceStats(),
             'leaveStats' => $this->getLeaveStats(),
             'salaryStats' => $this->getSalaryStats(),
-            'recentActivities' => $this->getRecentActivities(),
             'urgentTasks' => $this->getUrgentTasks(),
             'importantNotifications' => $this->getImportantNotifications(),
             'chartData' => ['attendance' => $this->getAttendanceChartData()],
@@ -214,59 +213,6 @@ class DashboardController extends Controller
             'pending_count' => (int) ($row->pending_count ?? 0),
             'total_employees' => (int) ($row->total_employees ?? 0),
         ];
-    }
-
-    private function getRecentActivities()
-    {
-        $activities = collect();
-
-        $activities = $activities->merge(
-            Employee::query()
-                ->latest('created_at')
-                ->limit(5)
-                ->get(['id', 'first_name', 'last_name', 'created_at'])
-                ->map(fn ($employee) => [
-                    'type' => 'employee_added',
-                    'title' => 'تم إضافة موظف جديد',
-                    'description' => $employee->full_name,
-                    'time' => $employee->created_at,
-                    'icon' => 'fas fa-user-plus',
-                    'color' => 'primary',
-                ])
-        );
-
-        $activities = $activities->merge(
-            LeaveRequest::query()
-                ->with(['employee:id,first_name,last_name'])
-                ->latest('created_at')
-                ->limit(5)
-                ->get(['id', 'employee_id', 'created_at'])
-                ->map(fn ($leave) => [
-                    'type' => 'leave_request',
-                    'title' => 'طلب إجازة جديد',
-                    'description' => $leave->employee?->full_name ?? 'موظف',
-                    'time' => $leave->created_at,
-                    'icon' => 'fas fa-calendar',
-                    'color' => 'info',
-                ])
-        );
-
-        $activities = $activities->merge(
-            Ticket::query()
-                ->latest('created_at')
-                ->limit(5)
-                ->get(['id', 'title', 'created_at'])
-                ->map(fn ($ticket) => [
-                    'type' => 'ticket',
-                    'title' => 'تذكرة جديدة',
-                    'description' => $ticket->title,
-                    'time' => $ticket->created_at,
-                    'icon' => 'fas fa-ticket-alt',
-                    'color' => 'warning',
-                ])
-        );
-
-        return $activities->sortByDesc('time')->take(10)->values();
     }
 
     private function getUrgentTasks(): array

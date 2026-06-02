@@ -90,33 +90,6 @@
         });
     }
 
-    function restoreTab() {
-        const saved = localStorage.getItem('admin_dashboard_tab');
-        if (!saved) {
-            return;
-        }
-        const btn = document.querySelector('#adminDashboardTabs [data-tab-key="' + saved + '"]');
-        if (btn && typeof bootstrap !== 'undefined') {
-            bootstrap.Tab.getOrCreateInstance(btn).show();
-        }
-    }
-
-    function bindTabs() {
-        const tabList = document.getElementById('adminDashboardTabs');
-        if (!tabList) {
-            return;
-        }
-        tabList.addEventListener('shown.bs.tab', function (e) {
-            const key = e.target.getAttribute('data-tab-key');
-            if (key) {
-                localStorage.setItem('admin_dashboard_tab', key);
-            }
-            if (key === 'analytics' && !attendanceChart) {
-                initChart();
-            }
-        });
-    }
-
     window.refreshAdminDashboard = function (ev) {
         const btn = ev?.target?.closest('button');
         if (btn) {
@@ -131,14 +104,7 @@
     };
 
     document.addEventListener('DOMContentLoaded', function () {
-        restoreTab();
-        bindTabs();
-
-        const active = document.querySelector('#adminDashboardTabs .nav-link.active');
-        if (active?.getAttribute('data-tab-key') === 'analytics') {
-            initChart();
-        }
-
+        initChart();
         observeTheme();
 
         if (!document.getElementById('admin-dash-spin')) {

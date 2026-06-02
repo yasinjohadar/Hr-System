@@ -109,40 +109,12 @@
     font-size: 1.1rem;
 }
 
-.admin-dashboard .nav-tabs-dashboard {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    border-bottom-color: var(--default-border);
+.admin-dashboard .dashboard-single-page > * {
+    margin-bottom: 1.5rem;
 }
 
-.admin-dashboard .nav-tabs-dashboard .nav-link {
-    white-space: nowrap;
-    color: var(--text-muted);
-}
-
-.admin-dashboard .nav-tabs-dashboard .nav-link.active {
-    color: var(--primary-color);
-    background: var(--custom-white, #fff);
-    border-color: var(--default-border) var(--default-border) var(--custom-white, #fff);
-}
-
-.admin-dashboard .activity-timeline-item {
-    border-bottom: 1px solid var(--default-border);
-    padding: 0.85rem 0;
-}
-
-.admin-dashboard .activity-timeline-item:last-child {
-    border-bottom: none;
-}
-
-.admin-dashboard .activity-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+.admin-dashboard .dashboard-single-page > *:last-child {
+    margin-bottom: 0;
 }
 
 .admin-dashboard .quick-action-btn {
