@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -77,12 +78,15 @@ public function index(Request $request)
      */
     public function store(Request $request)
     {
+        $this->normalizeOptionalUserFields($request);
+        $this->applyUsernameIntent($request);
+
         // التحقق من صحة البيانات
         $request->validate([
             'name' => 'required|string|max:255',
-            'username' => 'nullable|string|max:255|unique:users,username',
+            'username' => ['nullable', 'string', 'max:255', Rule::unique('users', 'username')],
             'email' => 'required|string|email|max:255|unique:users,email',
-            'phone' => 'nullable|string|max:20|unique:users,phone',
+            'phone' => ['nullable', 'string', 'max:20', Rule::unique('users', 'phone')],
             'password' => 'required|string|min:8|confirmed',
             'status' => 'required|in:active,inactive,banned',
             'is_active' => 'boolean',
@@ -163,13 +167,15 @@ public function index(Request $request)
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
+        $this->normalizeOptionalUserFields($request);
+        $this->applyUsernameIntent($request, $user);
 
         // التحقق من صحة البيانات
         $request->validate([
             'name' => 'required|string|max:255',
-            'username' => 'nullable|string|max:255|unique:users,username,' . $id,
-            'email' => 'required|string|email|max:255|unique:users,email,' . $id,
-            'phone' => 'nullable|string|max:20|unique:users,phone,' . $id,
+            'username' => ['nullable', 'string', 'max:255', Rule::unique('users', 'username')->ignore($user->id)],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'phone' => ['nullable', 'string', 'max:20', Rule::unique('users', 'phone')->ignore($user->id)],
             'password' => 'nullable|string|min:8|confirmed',
             'status' => 'required|in:active,inactive,banned',
             'is_active' => 'boolean',
@@ -419,6 +425,31 @@ public function toggleStatus(Request $request, $id)
             ->groupBy('user_id')
             ->get()
             ->keyBy('user_id');
+    }
+
+    /**
+     * تحويل الحقول الاختيارية الفارغة إلى null (وتجنب تعارض unique على سلسلة فارغة).
+     */
+    private function normalizeOptionalUserFields(Request $request): void
+    {
+        $request->merge([
+            'username' => $request->filled('username') ? trim((string) $request->username) : null,
+            'phone' => $request->filled('phone') ? trim((string) $request->phone) : null,
+        ]);
+    }
+
+    /**
+     * تجاهل اسم المستخدم المرسل تلقائياً من المتصفح ما لم يُفعَّل خيار التعيين صراحةً.
+     */
+    private function applyUsernameIntent(Request $request, ?User $user = null): void
+    {
+        if ($user && filled($user->username)) {
+            return;
+        }
+
+        if (! $request->boolean('set_username')) {
+            $request->merge(['username' => null]);
+        }
     }
 
     /**

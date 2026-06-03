@@ -1,0 +1,215 @@
+/* بوابة الموظف — المهام (مسطّح) */
+.employee-tasks-page {
+    --tk-primary: var(--primary-color, #5c67f7);
+    --tk-primary-soft: rgba(var(--primary-rgb, 92, 103, 247), 0.12);
+    --tk-success: #10b981;
+    --tk-warning: #f59e0b;
+    --tk-danger: #ef4444;
+    --tk-muted: #64748b;
+    --tk-surface: var(--custom-white, #fff);
+    --tk-border: var(--default-border, rgba(15, 23, 42, 0.08));
+    --tk-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    --tk-radius: 0.75rem;
+}
+
+.employee-tasks-page .page-hero {
+    background: var(--tk-surface);
+    border: 1px solid var(--tk-border);
+    border-inline-start: 4px solid var(--tk-primary);
+    border-radius: var(--tk-radius);
+    box-shadow: var(--tk-shadow);
+}
+
+.employee-tasks-page .page-hero-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: var(--tk-primary-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    color: var(--tk-primary);
+}
+
+.employee-tasks-page .page-hero-title { color: var(--default-text-color, #0f172a); }
+.employee-tasks-page .page-hero-subtitle { color: var(--tk-muted); font-size: 0.8125rem; }
+
+.employee-tasks-page .stat-card {
+    border: 1px solid var(--tk-border);
+    border-radius: var(--tk-radius);
+    background: var(--tk-surface);
+    box-shadow: var(--tk-shadow);
+    padding: 1.25rem;
+    height: 100%;
+}
+
+.employee-tasks-page .stat-value { font-size: 1.75rem; font-weight: 700; color: var(--default-text-color, #0f172a); }
+.employee-tasks-page .stat-label { font-size: 0.8125rem; color: var(--tk-muted); }
+
+.employee-tasks-page .stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+}
+
+.employee-tasks-page .stat-icon--primary { background: var(--tk-primary-soft); color: var(--tk-primary); }
+.employee-tasks-page .stat-icon--warning { background: rgba(245, 158, 11, 0.12); color: var(--tk-warning); }
+.employee-tasks-page .stat-icon--success { background: rgba(16, 185, 129, 0.12); color: var(--tk-success); }
+.employee-tasks-page .stat-icon--danger { background: rgba(239, 68, 68, 0.12); color: var(--tk-danger); }
+
+.employee-tasks-page .content-panel {
+    border: 1px solid var(--tk-border);
+    border-radius: var(--tk-radius);
+    background: var(--tk-surface);
+    box-shadow: var(--tk-shadow);
+}
+
+.employee-tasks-page .content-panel-header {
+    padding: 1.15rem 1.35rem;
+    border-bottom: 1px solid var(--tk-border);
+}
+
+.employee-tasks-page .filter-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.employee-tasks-page .filter-pill {
+    border: 1px solid var(--tk-border);
+    background: var(--tk-surface);
+    color: var(--tk-muted);
+    padding: 0.4rem 1rem;
+    border-radius: 99px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.employee-tasks-page .filter-pill:hover,
+.employee-tasks-page .filter-pill.active {
+    background: var(--tk-primary);
+    border-color: var(--tk-primary);
+    color: #fff;
+}
+
+.employee-tasks-page .task-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.15rem 1.35rem;
+    border-bottom: 1px solid var(--tk-border);
+    transition: background 0.15s;
+}
+
+.employee-tasks-page .task-card:last-child { border-bottom: none; }
+.employee-tasks-page .task-card:hover { background: rgba(var(--primary-rgb, 92, 103, 247), 0.04); }
+.employee-tasks-page .task-card.is-overdue { border-inline-start: 3px solid var(--tk-danger); }
+
+.employee-tasks-page .task-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: var(--tk-primary-soft);
+    color: var(--tk-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.employee-tasks-page .task-title {
+    font-weight: 700;
+    font-size: 0.9375rem;
+    color: var(--default-text-color, #0f172a);
+    margin-bottom: 0.2rem;
+}
+
+.employee-tasks-page .task-project {
+    font-size: 0.75rem;
+    color: var(--tk-muted);
+}
+
+.employee-tasks-page .task-project a {
+    color: var(--tk-primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.employee-tasks-page .task-project a:hover { text-decoration: underline; }
+
+.employee-tasks-page .task-due {
+    font-size: 0.8125rem;
+    color: var(--tk-muted);
+    white-space: nowrap;
+}
+
+.employee-tasks-page .task-due.is-late { color: var(--tk-danger); font-weight: 600; }
+
+.employee-tasks-page .task-progress {
+    width: 80px;
+    flex-shrink: 0;
+}
+
+.employee-tasks-page .task-progress-bar-wrap {
+    height: 6px;
+    border-radius: 99px;
+    background: #e2e8f0;
+    overflow: hidden;
+    margin-bottom: 0.25rem;
+}
+
+.employee-tasks-page .task-progress-bar {
+    height: 100%;
+    border-radius: 99px;
+    background: var(--tk-primary);
+}
+
+.employee-tasks-page .task-progress-pct {
+    font-size: 0.7rem;
+    color: var(--tk-muted);
+    text-align: center;
+}
+
+.employee-tasks-page .priority-pill,
+.employee-tasks-page .status-pill {
+    padding: 0.35rem 0.85rem;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.employee-tasks-page .priority-pill--low { background: rgba(100, 116, 139, 0.12); color: #475569; }
+.employee-tasks-page .priority-pill--medium { background: rgba(14, 165, 233, 0.12); color: #0369a1; }
+.employee-tasks-page .priority-pill--high { background: rgba(245, 158, 11, 0.15); color: #b45309; }
+.employee-tasks-page .priority-pill--urgent { background: rgba(239, 68, 68, 0.15); color: #b91c1c; }
+
+.employee-tasks-page .status-pill--pending { background: rgba(100, 116, 139, 0.15); color: #475569; }
+.employee-tasks-page .status-pill--in_progress { background: rgba(var(--primary-rgb, 92, 103, 247), 0.15); color: var(--tk-primary); }
+.employee-tasks-page .status-pill--in_review { background: rgba(14, 165, 233, 0.15); color: #0369a1; }
+.employee-tasks-page .status-pill--completed { background: rgba(16, 185, 129, 0.15); color: #047857; }
+.employee-tasks-page .status-pill--cancelled { background: rgba(239, 68, 68, 0.15); color: #b91c1c; }
+.employee-tasks-page .status-pill--on_hold { background: rgba(120, 53, 15, 0.12); color: #92400e; }
+
+.employee-tasks-page .empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+}
+
+.employee-tasks-page .empty-state .empty-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    background: var(--tk-primary-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: var(--tk-primary);
+}

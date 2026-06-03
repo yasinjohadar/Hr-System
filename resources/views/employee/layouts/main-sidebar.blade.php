@@ -33,15 +33,6 @@
                             </a>
                         </li>
 
-                        @if(auth()->check() && auth()->user()->hasRole('department_head'))
-                        <li class="slide">
-                            <a href="{{ route('admin.team.dashboard') }}" class="side-menu__item">
-                                <i class="ri-team-line side-menu__icon"></i>
-                                <span class="side-menu__label">إدارة الفريق</span>
-                            </a>
-                        </li>
-                        @endif
-
                         <li class="slide">
                             <a href="{{ route('employee.announcements') }}" class="side-menu__item">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/></svg>

@@ -3,13 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Models\Workflow;
+use App\Services\WorkflowStepSyncService;
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
 
 class WorkflowController extends Controller
 {
-    public function __construct()
-    {
+    public function __construct(
+        protected WorkflowStepSyncService $stepSync
+    ) {
         $this->middleware('auth');
         $this->middleware('permission:workflow-list')->only('index');
         $this->middleware('permission:workflow-create')->only(['create', 'store']);
@@ -46,56 +50,90 @@ class WorkflowController extends Controller
 
     public function create()
     {
-        return view('admin.pages.workflows.create');
+        return view('admin.pages.workflows.create', array_merge($this->formSharedData(), [
+            'editorSteps' => old('steps') ? array_values(old('steps')) : [],
+            'hasActiveInstances' => false,
+        ]));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'name_ar' => 'nullable|string|max:255',
-            'code' => 'nullable|string|max:50|unique:workflows,code',
-            'description' => 'nullable|string',
-            'type' => 'required|in:leave_request,expense_request,task_approval,performance_review,custom',
-            'is_active' => 'boolean',
+        $validated = $this->validateWorkflow($request);
+
+        $workflow = Workflow::create([
+            'name' => $validated['name'],
+            'name_ar' => $validated['name_ar'] ?? null,
+            'code' => $validated['code'] ?? null,
+            'description' => $validated['description'] ?? null,
+            'type' => $validated['type'],
+            'is_active' => $request->boolean('is_active'),
+            'created_by' => auth()->id(),
         ]);
 
-        $data = $request->all();
-        $data['created_by'] = auth()->id();
+        try {
+            $this->stepSync->syncSteps($workflow, $validated['steps']);
+        } catch (\RuntimeException $e) {
+            $workflow->delete();
 
-        Workflow::create($data);
+            return back()->withInput()->with('error', $e->getMessage());
+        }
 
-        return redirect()->route('admin.workflows.index')->with('success', 'تم إضافة سير العمل بنجاح.');
+        return redirect()
+            ->route('admin.workflows.show', $workflow->id)
+            ->with('success', 'تم إضافة سير العمل والخطوات بنجاح.');
     }
 
     public function show(string $id)
     {
-        $workflow = Workflow::with(['steps', 'instances', 'creator'])->findOrFail($id);
+        $workflow = Workflow::with(['steps.role', 'steps.approver', 'creator'])
+            ->withCount(['steps', 'instances'])
+            ->findOrFail($id);
+
         return view('admin.pages.workflows.show', compact('workflow'));
     }
 
     public function edit(string $id)
     {
-        $workflow = Workflow::findOrFail($id);
-        return view('admin.pages.workflows.edit', compact('workflow'));
+        $workflow = Workflow::withCount('instances')->findOrFail($id);
+
+        return view('admin.pages.workflows.edit', array_merge(
+            $this->formSharedData(),
+            [
+                'workflow' => $workflow,
+                'editorSteps' => $this->editorStepsFromRequestOrWorkflow($workflow),
+                'hasActiveInstances' => $workflow->instances_count > 0,
+            ]
+        ));
     }
 
     public function update(Request $request, string $id)
     {
-        $workflow = Workflow::findOrFail($id);
+        $workflow = Workflow::withCount('instances')->findOrFail($id);
+        $validated = $this->validateWorkflow($request);
 
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'name_ar' => 'nullable|string|max:255',
-            'code' => 'nullable|string|max:50|unique:workflows,code,' . $id,
-            'description' => 'nullable|string',
-            'type' => 'required|in:leave_request,expense_request,task_approval,performance_review,custom',
-            'is_active' => 'boolean',
+        $workflow->update([
+            'name' => $validated['name'],
+            'name_ar' => $validated['name_ar'] ?? null,
+            'code' => $validated['code'] ?? null,
+            'description' => $validated['description'] ?? null,
+            'type' => $validated['type'],
+            'is_active' => $request->boolean('is_active'),
         ]);
 
-        $workflow->update($request->all());
+        try {
+            $this->stepSync->syncSteps($workflow, $validated['steps']);
+        } catch (\RuntimeException $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
 
-        return redirect()->route('admin.workflows.index')->with('success', 'تم تحديث سير العمل بنجاح.');
+        $message = 'تم تحديث سير العمل بنجاح.';
+        if ($workflow->instances_count > 0) {
+            $message .= ' التعديلات على الخطوات تطبّق على الطلبات الجديدة فقط.';
+        }
+
+        return redirect()
+            ->route('admin.workflows.show', $workflow->id)
+            ->with('success', $message);
     }
 
     public function destroy(string $id)
@@ -109,5 +147,77 @@ class WorkflowController extends Controller
         $workflow->delete();
 
         return redirect()->route('admin.workflows.index')->with('success', 'تم حذف سير العمل بنجاح.');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function validateWorkflow(Request $request): array
+    {
+        $workflowId = $request->route('workflow');
+
+        return $request->validate(array_merge([
+            'name' => 'required|string|max:255',
+            'name_ar' => 'nullable|string|max:255',
+            'code' => 'nullable|string|max:50|unique:workflows,code' . ($workflowId ? ',' . $workflowId : ''),
+            'description' => 'nullable|string',
+            'type' => 'required|in:' . implode(',', Workflow::allowedTypes()),
+            'is_active' => 'boolean',
+        ], WorkflowStepSyncService::stepValidationRules()));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function formSharedData(): array
+    {
+        $roles = Role::orderBy('name')->get(['id', 'name']);
+        $users = User::where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
+
+        $defaultTemplate = [
+            [
+                'name_ar' => 'موافقة رئيس القسم',
+                'name' => 'Department Head Approval',
+                'approver_type' => 'department_manager',
+                'role_id' => null,
+                'approver_id' => null,
+                'is_required' => true,
+                'can_reject' => true,
+            ],
+            [
+                'name_ar' => 'موافقة المدير التنفيذي',
+                'name' => 'Executive Director Approval',
+                'approver_type' => 'role',
+                'role_id' => $roles->firstWhere('name', 'executive_director')?->id,
+                'approver_id' => null,
+                'is_required' => true,
+                'can_reject' => true,
+            ],
+            [
+                'name_ar' => 'موافقة المدير العام',
+                'name' => 'General Manager Approval',
+                'approver_type' => 'role',
+                'role_id' => $roles->firstWhere('name', 'general_manager')?->id,
+                'approver_id' => null,
+                'is_required' => true,
+                'can_reject' => true,
+            ],
+        ];
+
+        return compact('roles', 'users', 'defaultTemplate');
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    protected function editorStepsFromRequestOrWorkflow(Workflow $workflow): array
+    {
+        if (old('steps')) {
+            return array_values(old('steps'));
+        }
+
+        return $this->stepSync->stepsForEditor($workflow);
     }
 }

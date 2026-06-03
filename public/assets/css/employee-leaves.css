@@ -1,0 +1,332 @@
+/* بوابة الموظف — صفحة الإجازات (بدون تدرجات) */
+.employee-leaves-page {
+    --lv-primary: var(--primary-color, #5c67f7);
+    --lv-primary-soft: rgba(var(--primary-rgb, 92, 103, 247), 0.12);
+    --lv-success: #10b981;
+    --lv-warning: #f59e0b;
+    --lv-danger: #ef4444;
+    --lv-surface: var(--custom-white, #fff);
+    --lv-muted: #64748b;
+    --lv-border: var(--default-border, rgba(15, 23, 42, 0.08));
+    --lv-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    --lv-radius: 0.75rem;
+}
+
+.employee-leaves-page .leaves-hero {
+    background: var(--lv-surface);
+    border: 1px solid var(--lv-border);
+    border-inline-start: 4px solid var(--lv-primary);
+    border-radius: var(--lv-radius);
+    box-shadow: var(--lv-shadow);
+}
+
+.employee-leaves-page .leaves-hero-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: var(--lv-primary-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    color: var(--lv-primary);
+    flex-shrink: 0;
+}
+
+.employee-leaves-page .leaves-hero-title {
+    color: var(--default-text-color, #0f172a);
+}
+
+.employee-leaves-page .leaves-hero-subtitle {
+    color: var(--lv-muted);
+    font-size: 0.8125rem;
+}
+
+.employee-leaves-page .stat-card {
+    border: 1px solid var(--lv-border);
+    border-radius: var(--lv-radius);
+    background: var(--lv-surface);
+    box-shadow: var(--lv-shadow);
+    padding: 1.25rem;
+    height: 100%;
+    transition: box-shadow 0.2s;
+}
+
+.employee-leaves-page .stat-card:hover {
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.employee-leaves-page .stat-card .stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+}
+
+.employee-leaves-page .stat-card .stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--default-text-color, #0f172a);
+}
+
+.employee-leaves-page .stat-card .stat-label {
+    font-size: 0.8125rem;
+    color: var(--lv-muted);
+    margin-top: 0.15rem;
+}
+
+.employee-leaves-page .stat-icon--total { background: var(--lv-primary-soft); color: var(--lv-primary); }
+.employee-leaves-page .stat-icon--pending { background: rgba(245, 158, 11, 0.15); color: var(--lv-warning); }
+.employee-leaves-page .stat-icon--approved { background: rgba(16, 185, 129, 0.15); color: var(--lv-success); }
+.employee-leaves-page .stat-icon--days { background: rgba(100, 116, 139, 0.12); color: var(--lv-muted); }
+
+.employee-leaves-page .balance-card {
+    border: 1px solid var(--lv-border);
+    border-radius: var(--lv-radius);
+    background: var(--lv-surface);
+    padding: 1rem 1.15rem;
+    height: 100%;
+    box-shadow: var(--lv-shadow);
+}
+
+.employee-leaves-page .balance-card .balance-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--default-text-color, #0f172a);
+    margin-bottom: 0.75rem;
+}
+
+.employee-leaves-page .balance-progress {
+    height: 8px;
+    border-radius: 99px;
+    background: #e2e8f0;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.employee-leaves-page .balance-progress-bar {
+    height: 100%;
+    border-radius: 99px;
+    background: var(--lv-primary);
+    transition: width 0.6s ease;
+}
+
+.employee-leaves-page .balance-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--lv-muted);
+}
+
+.employee-leaves-page .balance-remaining {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--lv-primary);
+}
+
+.employee-leaves-page .filter-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.employee-leaves-page .filter-pill {
+    border: 1px solid var(--lv-border);
+    background: var(--lv-surface);
+    color: var(--lv-muted);
+    padding: 0.4rem 1rem;
+    border-radius: 99px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.employee-leaves-page .filter-pill:hover,
+.employee-leaves-page .filter-pill.active {
+    background: var(--lv-primary);
+    border-color: var(--lv-primary);
+    color: #fff;
+}
+
+.employee-leaves-page .requests-panel {
+    border: 1px solid var(--lv-border);
+    border-radius: var(--lv-radius);
+    background: var(--lv-surface);
+    box-shadow: var(--lv-shadow);
+    overflow: hidden;
+}
+
+.employee-leaves-page .requests-panel-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--lv-border);
+    background: #f8fafc;
+}
+
+[data-theme-mode='dark'] .employee-leaves-page .requests-panel-header {
+    background: var(--body-bg-rgb, #1a1d2e);
+}
+
+.employee-leaves-page .leave-request-card {
+    padding: 1.15rem 1.5rem;
+    border-bottom: 1px solid var(--lv-border);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    transition: background 0.2s;
+}
+
+.employee-leaves-page .leave-request-card:last-child {
+    border-bottom: none;
+}
+
+.employee-leaves-page .leave-request-card:hover {
+    background: #f8fafc;
+}
+
+[data-theme-mode='dark'] .employee-leaves-page .leave-request-card:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.employee-leaves-page .leave-type-badge {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    flex-shrink: 0;
+}
+
+.employee-leaves-page .leave-type-badge--annual { background: var(--lv-primary-soft); color: var(--lv-primary); }
+.employee-leaves-page .leave-type-badge--sick { background: rgba(239, 68, 68, 0.12); color: #ef4444; }
+.employee-leaves-page .leave-type-badge--emergency { background: rgba(245, 158, 11, 0.12); color: #f59e0b; }
+.employee-leaves-page .leave-type-badge--paternity,
+.employee-leaves-page .leave-type-badge--maternity { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+.employee-leaves-page .leave-type-badge--default { background: rgba(100, 116, 139, 0.12); color: #64748b; }
+
+.employee-leaves-page .leave-dates {
+    font-size: 0.875rem;
+    color: var(--lv-muted);
+}
+
+.employee-leaves-page .leave-dates strong {
+    color: var(--default-text-color, #0f172a);
+    font-weight: 600;
+}
+
+.employee-leaves-page .days-chip {
+    background: var(--lv-primary-soft);
+    color: var(--lv-primary);
+    font-weight: 600;
+    padding: 0.35rem 0.85rem;
+    border-radius: 8px;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+}
+
+.employee-leaves-page .status-pill {
+    padding: 0.35rem 0.9rem;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.employee-leaves-page .status-pill--pending {
+    background: rgba(245, 158, 11, 0.15);
+    color: #b45309;
+}
+
+.employee-leaves-page .status-pill--approved {
+    background: rgba(16, 185, 129, 0.15);
+    color: #047857;
+}
+
+.employee-leaves-page .status-pill--rejected {
+    background: rgba(239, 68, 68, 0.15);
+    color: #b91c1c;
+}
+
+.employee-leaves-page .status-pill--cancelled {
+    background: rgba(100, 116, 139, 0.15);
+    color: #475569;
+}
+
+.employee-leaves-page .empty-leaves {
+    text-align: center;
+    padding: 3.5rem 1.5rem;
+}
+
+.employee-leaves-page .empty-leaves .empty-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    background: var(--lv-primary-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: var(--lv-primary);
+}
+
+.employee-leaves-page #requestLeaveModal .modal-content {
+    border: 1px solid var(--lv-border);
+    border-radius: var(--lv-radius);
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.employee-leaves-page #requestLeaveModal .modal-header {
+    background: #f8fafc;
+    color: var(--default-text-color, #0f172a);
+    border-bottom: 1px solid var(--lv-border);
+    padding: 1.25rem 1.5rem;
+}
+
+[data-theme-mode='dark'] .employee-leaves-page #requestLeaveModal .modal-header {
+    background: var(--body-bg-rgb, #1a1d2e);
+}
+
+.employee-leaves-page #requestLeaveModal .form-control,
+.employee-leaves-page #requestLeaveModal .form-select {
+    border-radius: 10px;
+    border-color: var(--lv-border);
+}
+
+.employee-leaves-page #requestLeaveModal .form-control:focus,
+.employee-leaves-page #requestLeaveModal .form-select:focus {
+    border-color: var(--lv-primary);
+    box-shadow: 0 0 0 3px var(--lv-primary-soft);
+}
+
+.employee-leaves-page .leave-duration-preview {
+    background: #f1f5f9;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    color: var(--lv-muted);
+    display: none;
+}
+
+.employee-leaves-page .leave-duration-preview.is-visible {
+    display: block;
+}
+
+.employee-leaves-page .leave-duration-preview strong {
+    color: var(--lv-primary);
+}
+
+@media (max-width: 767.98px) {
+    .employee-leaves-page .leave-request-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

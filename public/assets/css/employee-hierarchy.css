@@ -1,0 +1,231 @@
+/* بوابة الموظف — التسلسل الإداري (مسطّح) */
+.employee-hierarchy-page {
+    --h-primary: var(--primary-color, #5c67f7);
+    --h-primary-soft: rgba(var(--primary-rgb, 92, 103, 247), 0.12);
+    --h-success: #10b981;
+    --h-info: #06b6d4;
+    --h-warning: #f59e0b;
+    --h-muted: #64748b;
+    --h-surface: var(--custom-white, #fff);
+    --h-border: var(--default-border, rgba(15, 23, 42, 0.08));
+    --h-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    --h-radius: 0.75rem;
+}
+
+.employee-hierarchy-page .page-hero {
+    background: var(--h-surface);
+    border: 1px solid var(--h-border);
+    border-inline-start: 4px solid var(--h-primary);
+    border-radius: var(--h-radius);
+    box-shadow: var(--h-shadow);
+}
+
+.employee-hierarchy-page .page-hero-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: var(--h-primary-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    color: var(--h-primary);
+}
+
+.employee-hierarchy-page .page-hero-title {
+    color: var(--default-text-color, #0f172a);
+}
+
+.employee-hierarchy-page .page-hero-subtitle {
+    color: var(--h-muted);
+    font-size: 0.8125rem;
+}
+
+.employee-hierarchy-page .stat-card {
+    border: 1px solid var(--h-border);
+    border-radius: var(--h-radius);
+    background: var(--h-surface);
+    box-shadow: var(--h-shadow);
+    padding: 1.25rem;
+    height: 100%;
+}
+
+.employee-hierarchy-page .stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--default-text-color, #0f172a);
+}
+
+.employee-hierarchy-page .stat-label {
+    font-size: 0.8125rem;
+    color: var(--h-muted);
+}
+
+.employee-hierarchy-page .stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+}
+
+.employee-hierarchy-page .stat-icon--primary { background: var(--h-primary-soft); color: var(--h-primary); }
+.employee-hierarchy-page .stat-icon--success { background: rgba(16, 185, 129, 0.12); color: var(--h-success); }
+.employee-hierarchy-page .stat-icon--info { background: rgba(6, 182, 212, 0.12); color: var(--h-info); }
+
+.employee-hierarchy-page .section-card {
+    border: 1px solid var(--h-border);
+    border-radius: var(--h-radius);
+    background: var(--h-surface);
+    box-shadow: var(--h-shadow);
+    height: 100%;
+    overflow: hidden;
+}
+
+.employee-hierarchy-page .section-card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--h-border);
+    background: #f8fafc;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--default-text-color, #0f172a);
+}
+
+[data-theme-mode='dark'] .employee-hierarchy-page .section-card-header {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.employee-hierarchy-page .section-card-body {
+    padding: 1.25rem;
+}
+
+.employee-hierarchy-page .profile-avatar {
+    width: 96px;
+    height: 96px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid var(--h-primary);
+}
+
+.employee-hierarchy-page .profile-avatar--placeholder {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 700;
+    background: var(--h-primary-soft);
+    color: var(--h-primary);
+}
+
+.employee-hierarchy-page .profile-detail-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid var(--h-border);
+    font-size: 0.8125rem;
+}
+
+.employee-hierarchy-page .profile-detail-row:last-child {
+    border-bottom: none;
+}
+
+.employee-hierarchy-page .profile-detail-label {
+    color: var(--h-muted);
+}
+
+.employee-hierarchy-page .profile-detail-value {
+    font-weight: 600;
+    text-align: end;
+}
+
+.employee-hierarchy-page .chain-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding: 0.85rem 0;
+    position: relative;
+}
+
+.employee-hierarchy-page .chain-item:not(:last-child) {
+    border-bottom: 1px solid var(--h-border);
+}
+
+.employee-hierarchy-page .chain-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.employee-hierarchy-page .chain-avatar--self { background: var(--h-primary-soft); color: var(--h-primary); }
+.employee-hierarchy-page .chain-avatar--manager { background: rgba(16, 185, 129, 0.12); color: var(--h-success); }
+.employee-hierarchy-page .chain-avatar--dept { background: rgba(6, 182, 212, 0.12); color: var(--h-info); }
+.employee-hierarchy-page .chain-avatar--other { background: rgba(245, 158, 11, 0.12); color: var(--h-warning); }
+
+.employee-hierarchy-page .chain-role {
+    font-size: 0.7rem;
+    color: var(--h-muted);
+    text-transform: none;
+}
+
+.employee-hierarchy-page .chain-name {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--default-text-color, #0f172a);
+}
+
+.employee-hierarchy-page .chain-meta {
+    font-size: 0.75rem;
+    color: var(--h-muted);
+}
+
+.employee-hierarchy-page .chain-empty {
+    text-align: center;
+    padding: 1.5rem;
+    color: var(--h-muted);
+    font-size: 0.875rem;
+}
+
+.employee-hierarchy-page .dept-tree-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--h-border);
+}
+
+.employee-hierarchy-page .dept-tree-item:last-child {
+    border-bottom: none;
+}
+
+.employee-hierarchy-page .dept-tree-item[data-level="1"] { padding-inline-start: 1rem; }
+.employee-hierarchy-page .dept-tree-item[data-level="2"] { padding-inline-start: 2rem; }
+.employee-hierarchy-page .dept-tree-item[data-level="3"] { padding-inline-start: 3rem; }
+
+.employee-hierarchy-page .dept-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--h-primary-soft);
+    color: var(--h-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.employee-hierarchy-page .dept-icon--current {
+    background: rgba(16, 185, 129, 0.12);
+    color: var(--h-success);
+}

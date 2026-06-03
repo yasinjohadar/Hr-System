@@ -12,6 +12,7 @@ use App\Models\Branch;
 use App\Models\WorkflowInstance;
 use App\Services\ApprovalService;
 use App\Services\WorkflowService;
+use App\Services\WorkflowProgressPresenter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -62,12 +63,19 @@ class EmployeeJobChangeController extends Controller
 
         $this->scopeByEmployeeQuery($query);
 
+        $stats = [
+            'total' => (clone $query)->count(),
+            'pending' => (clone $query)->where('status', EmployeeJobChange::STATUS_PENDING)->count(),
+            'approved' => (clone $query)->where('status', EmployeeJobChange::STATUS_APPROVED)->count(),
+            'rejected' => (clone $query)->where('status', EmployeeJobChange::STATUS_REJECTED)->count(),
+        ];
+
         $jobChanges = $query->orderBy('created_at', 'desc')->paginate(15);
 
         // جلب الموظفين النشطين للفلتر
         $employees = Employee::where('is_active', true)->get(['id', 'first_name', 'last_name', 'full_name']);
 
-        return view('admin.pages.employee-job-changes.index', compact('jobChanges', 'employees'));
+        return view('admin.pages.employee-job-changes.index', compact('jobChanges', 'employees', 'stats'));
     }
 
     /**
@@ -127,16 +135,21 @@ class EmployeeJobChangeController extends Controller
                 'new_salary' => $validated['new_salary'] ?? null,
             ]);
 
-            app(WorkflowService::class)->startWorkflow(
+            app(\App\Services\EmployeeRequestSubmissionService::class)->afterRequestCreated(
                 'employee_job_change',
                 $employee,
-                'EmployeeJobChange',
-                $jobChange->id
+                $jobChange
             );
 
             DB::commit();
             return redirect()->route('admin.employee-job-changes.index')
                 ->with('success', 'تم إنشاء طلب التغيير الوظيفي بنجاح');
+        } catch (\RuntimeException $e) {
+            DB::rollBack();
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', $e->getMessage());
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()
@@ -164,7 +177,9 @@ class EmployeeJobChangeController extends Controller
             'newManager'
         ]);
 
-        return view('admin.pages.employee-job-changes.show', compact('employeeJobChange'));
+        $workflowProgress = app(WorkflowProgressPresenter::class)->resolveForEntity($employeeJobChange);
+
+        return view('admin.pages.employee-job-changes.show', compact('employeeJobChange', 'workflowProgress'));
     }
 
     /**
@@ -222,14 +237,15 @@ class EmployeeJobChangeController extends Controller
                 ->with('error', 'لا يمكن الموافقة على هذا الطلب');
         }
 
+        $request->validate([
+            'comments' => 'nullable|string|max:2000',
+        ]);
+
         $workflowService = app(WorkflowService::class);
         $approvalService = app(ApprovalService::class);
         $employee = $employeeJobChange->employee;
 
-        $instance = WorkflowInstance::where('entity_type', 'EmployeeJobChange')
-            ->where('entity_id', $employeeJobChange->id)
-            ->whereNotIn('status', ['approved', 'rejected'])
-            ->first();
+        $instance = WorkflowService::findInstanceForEntity(EmployeeJobChange::class, $employeeJobChange->id);
 
         if ($instance && $employee) {
             $currentStep = $instance->currentStep;
@@ -266,7 +282,7 @@ class EmployeeJobChangeController extends Controller
                     }
 
                     return redirect()->route('admin.employee-job-changes.show', $employeeJobChange)
-                        ->with('success', 'تم تسجيل الموافقة بنجاح');
+                        ->with('success', $workflowService->approvalFlashMessage($instance, true));
                 }
 
                 return redirect()->route('admin.employee-job-changes.show', $employeeJobChange)
@@ -274,24 +290,8 @@ class EmployeeJobChangeController extends Controller
             }
         }
 
-        DB::beginTransaction();
-        try {
-            $employeeJobChange->update([
-                'status' => EmployeeJobChange::STATUS_APPROVED,
-                'approved_by' => auth()->id(),
-                'approved_at' => now(),
-            ]);
-
-            $this->applyApprovedJobChangeToEmployee($employeeJobChange->fresh());
-
-            DB::commit();
-            return redirect()->route('admin.employee-job-changes.show', $employeeJobChange)
-                ->with('success', 'تمت الموافقة على الطلب وتطبيق التغييرات بنجاح');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->route('admin.employee-job-changes.show', $employeeJobChange)
-                ->with('error', 'حدث خطأ أثناء الموافقة على الطلب: ' . $e->getMessage());
-        }
+        return redirect()->route('admin.employee-job-changes.show', $employeeJobChange)
+            ->with('error', 'لا يوجد مسار موافقة نشط لهذا الطلب.');
     }
 
     /**
@@ -305,17 +305,14 @@ class EmployeeJobChangeController extends Controller
         }
 
         $validated = $request->validate([
-            'rejection_reason' => 'required|string',
+            'rejection_reason' => 'nullable|string|max:2000',
         ]);
 
         $workflowService = app(WorkflowService::class);
         $approvalService = app(ApprovalService::class);
         $employee = $employeeJobChange->employee;
 
-        $instance = WorkflowInstance::where('entity_type', 'EmployeeJobChange')
-            ->where('entity_id', $employeeJobChange->id)
-            ->whereNotIn('status', ['approved', 'rejected'])
-            ->first();
+        $instance = WorkflowService::findInstanceForEntity(EmployeeJobChange::class, $employeeJobChange->id);
 
         if ($instance && $employee) {
             $currentStep = $instance->currentStep;
@@ -338,8 +335,10 @@ class EmployeeJobChangeController extends Controller
                 );
 
                 if ($ok) {
+                    $instance->refresh();
+
                     return redirect()->route('admin.employee-job-changes.show', $employeeJobChange)
-                        ->with('success', 'تم رفض الطلب بنجاح');
+                        ->with('success', $workflowService->approvalFlashMessage($instance, false));
                 }
 
                 return redirect()->route('admin.employee-job-changes.show', $employeeJobChange)
@@ -347,13 +346,8 @@ class EmployeeJobChangeController extends Controller
             }
         }
 
-        $employeeJobChange->update([
-            'status' => EmployeeJobChange::STATUS_REJECTED,
-            'rejection_reason' => $validated['rejection_reason'],
-        ]);
-
         return redirect()->route('admin.employee-job-changes.show', $employeeJobChange)
-            ->with('success', 'تم رفض الطلب بنجاح');
+            ->with('error', 'لا يوجد مسار موافقة نشط لهذا الطلب.');
     }
 
     /**

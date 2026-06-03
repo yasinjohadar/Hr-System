@@ -4,218 +4,157 @@
     التقرير الشامل
 @stop
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('assets/css/admin-reports.css') }}">
+@endpush
+
 @section('content')
-    <div class="main-content app-content">
-        <div class="container-fluid">
-            <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
-                <div class="my-auto">
-                    <h5 class="page-title fs-21 mb-1">التقرير الشامل - لوحة المعلومات</h5>
-                </div>
-                <div>
-                    <a href="{{ route('admin.reports.index') }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-right me-2"></i>العودة للتقارير
-                    </a>
-                </div>
-            </div>
+    @php
+        $overviewStats = [
+            ['key' => 'total_employees', 'label' => 'إجمالي الموظفين', 'icon' => 'ri-team-line', 'tone' => 'primary'],
+            ['key' => 'total_departments', 'label' => 'الأقسام', 'icon' => 'ri-building-line', 'tone' => 'success'],
+            ['key' => 'total_positions', 'label' => 'المناصب', 'icon' => 'ri-briefcase-line', 'tone' => 'info'],
+            ['key' => 'total_branches', 'label' => 'الفروع', 'icon' => 'ri-map-pin-line', 'tone' => 'warning'],
+        ];
+        $attendanceStats = [
+            ['key' => 'today_attendance', 'label' => 'حضور اليوم', 'icon' => 'ri-user-check-line', 'tone' => 'success'],
+            ['key' => 'today_absent', 'label' => 'غياب اليوم', 'icon' => 'ri-user-unfollow-line', 'tone' => 'danger'],
+            ['key' => 'approved_leaves', 'label' => 'في إجازة حالياً', 'icon' => 'ri-sun-line', 'tone' => 'info'],
+        ];
+        $hrStats = [
+            ['key' => 'active_vacancies', 'label' => 'وظائف شاغرة', 'icon' => 'ri-user-search-line', 'tone' => 'primary'],
+            ['key' => 'pending_applications', 'label' => 'طلبات قيد المراجعة', 'icon' => 'ri-time-line', 'tone' => 'warning'],
+            ['key' => 'ongoing_trainings', 'label' => 'دورات قيد التنفيذ', 'icon' => 'ri-book-open-line', 'tone' => 'info'],
+            ['key' => 'training_participants', 'label' => 'مشاركون في التدريب', 'icon' => 'ri-graduation-cap-line', 'tone' => 'muted'],
+        ];
+        $quickLinks = [
+            ['route' => 'admin.reports.employees', 'label' => 'تقارير الموظفين', 'icon' => 'ri-team-line', 'tone' => 'primary'],
+            ['route' => 'admin.reports.attendance', 'label' => 'تقارير الحضور', 'icon' => 'ri-calendar-check-line', 'tone' => 'success'],
+            ['route' => 'admin.reports.salaries', 'label' => 'تقارير الرواتب', 'icon' => 'ri-wallet-3-line', 'tone' => 'warning'],
+            ['route' => 'admin.reports.leaves', 'label' => 'تقارير الإجازات', 'icon' => 'ri-sun-line', 'tone' => 'info'],
+            ['route' => 'admin.reports.performance', 'label' => 'تقارير التقييمات', 'icon' => 'ri-star-line', 'tone' => 'purple'],
+            ['route' => 'admin.reports.training', 'label' => 'تقارير التدريب', 'icon' => 'ri-graduation-cap-line', 'tone' => 'secondary'],
+            ['route' => 'admin.reports.recruitment', 'label' => 'تقارير التوظيف', 'icon' => 'ri-briefcase-line', 'tone' => 'danger'],
+            ['route' => 'admin.reports.benefits', 'label' => 'تقارير المزايا', 'icon' => 'ri-gift-line', 'tone' => 'teal'],
+        ];
+        $salaryTotal = $monthlySalaries?->total ?? 0;
+        $salaryBase = $monthlySalaries?->base ?? 0;
+        $salaryCount = $monthlySalaries?->count ?? 0;
+    @endphp
 
-            <!-- إحصائيات عامة -->
-            <div class="row mb-3">
-                <div class="col-md-3">
-                    <div class="card bg-primary text-white">
-                        <div class="card-body">
-                            <h6 class="card-title">إجمالي الموظفين</h6>
-                            <h2 class="mb-0">{{ $stats['total_employees'] }}</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-success text-white">
-                        <div class="card-body">
-                            <h6 class="card-title">الأقسام</h6>
-                            <h2 class="mb-0">{{ $stats['total_departments'] }}</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-info text-white">
-                        <div class="card-body">
-                            <h6 class="card-title">المناصب</h6>
-                            <h2 class="mb-0">{{ $stats['total_positions'] }}</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-warning text-white">
-                        <div class="card-body">
-                            <h6 class="card-title">الفروع</h6>
-                            <h2 class="mb-0">{{ $stats['total_branches'] }}</h2>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="main-content app-content admin-reports-page">
+        <div class="container-fluid pt-4">
 
-            <!-- إحصائيات الحضور -->
-            <div class="row mb-3">
-                <div class="col-md-4">
-                    <div class="card bg-success text-white">
-                        <div class="card-body">
-                            <h6 class="card-title">حضور اليوم</h6>
-                            <h2 class="mb-0">{{ $stats['today_attendance'] }}</h2>
+            <div class="card page-hero mb-4">
+                <div class="card-body py-4">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="page-hero-icon">
+                                <i class="ri-dashboard-3-line"></i>
+                            </div>
+                            <div>
+                                <h4 class="mb-1 page-hero-title fw-bold">التقرير الشامل</h4>
+                                <p class="mb-0 page-hero-subtitle">لوحة معلومات سريعة لأهم مؤشرات الموارد البشرية</p>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card bg-danger text-white">
-                        <div class="card-body">
-                            <h6 class="card-title">غياب اليوم</h6>
-                            <h2 class="mb-0">{{ $stats['today_absent'] }}</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card bg-info text-white">
-                        <div class="card-body">
-                            <h6 class="card-title">في إجازة حالياً</h6>
-                            <h2 class="mb-0">{{ $stats['approved_leaves'] }}</h2>
-                        </div>
+                        <a href="{{ route('admin.reports.index') }}" class="btn btn-hero-outline btn-sm">
+                            <i class="ri-arrow-right-line me-1"></i>العودة للتقارير
+                        </a>
                     </div>
                 </div>
             </div>
 
-            <!-- إحصائيات التوظيف والتدريب -->
-            <div class="row mb-3">
-                <div class="col-md-3">
-                    <div class="card bg-primary text-white">
-                        <div class="card-body">
-                            <h6 class="card-title">وظائف شاغرة</h6>
-                            <h2 class="mb-0">{{ $stats['active_vacancies'] }}</h2>
+            <p class="section-heading">نظرة عامة</p>
+            <div class="row g-3 mb-4">
+                @foreach ($overviewStats as $item)
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="stat-value">{{ $stats[$item['key']] }}</div>
+                                    <div class="stat-label">{{ $item['label'] }}</div>
+                                </div>
+                                <div class="stat-icon stat-icon--{{ $item['tone'] }}"><i class="{{ $item['icon'] }}"></i></div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-warning text-white">
-                        <div class="card-body">
-                            <h6 class="card-title">طلبات قيد المراجعة</h6>
-                            <h2 class="mb-0">{{ $stats['pending_applications'] }}</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-info text-white">
-                        <div class="card-body">
-                            <h6 class="card-title">دورات قيد التنفيذ</h6>
-                            <h2 class="mb-0">{{ $stats['ongoing_trainings'] }}</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-secondary text-white">
-                        <div class="card-body">
-                            <h6 class="card-title">مشاركون في التدريب</h6>
-                            <h2 class="mb-0">{{ $stats['training_participants'] }}</h2>
-                        </div>
-                    </div>
-                </div>
+                @endforeach
             </div>
 
-            <!-- إحصائيات الرواتب الشهرية -->
-            @if ($monthlySalaries)
-            <div class="card mb-3">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">إحصائيات رواتب الشهر الحالي</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
+            <p class="section-heading">الحضور والإجازات اليوم</p>
+            <div class="row g-3 mb-4">
+                @foreach ($attendanceStats as $item)
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="stat-value">{{ $stats[$item['key']] }}</div>
+                                    <div class="stat-label">{{ $item['label'] }}</div>
+                                </div>
+                                <div class="stat-icon stat-icon--{{ $item['tone'] }}"><i class="{{ $item['icon'] }}"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <p class="section-heading">التوظيف والتدريب</p>
+            <div class="row g-3 mb-4">
+                @foreach ($hrStats as $item)
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="stat-value">{{ $stats[$item['key']] }}</div>
+                                    <div class="stat-label">{{ $item['label'] }}</div>
+                                </div>
+                                <div class="stat-icon stat-icon--{{ $item['tone'] }}"><i class="{{ $item['icon'] }}"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <div class="content-panel mb-4">
+                <div class="content-panel-header">إحصائيات رواتب الشهر الحالي</div>
+                <div class="content-panel-body">
+                    <div class="row g-3">
                         <div class="col-md-4">
-                            <h6>إجمالي الرواتب</h6>
-                            <h3 class="text-primary">{{ number_format($monthlySalaries->total, 2) }} ر.س</h3>
+                            <div class="salary-stat">
+                                <div class="salary-stat-label">إجمالي الرواتب</div>
+                                <div class="salary-stat-value salary-stat-value--primary">{{ number_format($salaryTotal, 2) }} ر.س</div>
+                            </div>
                         </div>
                         <div class="col-md-4">
-                            <h6>إجمالي الأساسي</h6>
-                            <h3 class="text-success">{{ number_format($monthlySalaries->base, 2) }} ر.س</h3>
+                            <div class="salary-stat">
+                                <div class="salary-stat-label">إجمالي الأساسي</div>
+                                <div class="salary-stat-value salary-stat-value--success">{{ number_format($salaryBase, 2) }} ر.س</div>
+                            </div>
                         </div>
                         <div class="col-md-4">
-                            <h6>عدد الرواتب</h6>
-                            <h3 class="text-info">{{ $monthlySalaries->count }}</h3>
+                            <div class="salary-stat">
+                                <div class="salary-stat-label">عدد الرواتب</div>
+                                <div class="salary-stat-value salary-stat-value--info">{{ $salaryCount }}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            @endif
 
-            <!-- روابط سريعة للتقارير -->
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">روابط سريعة للتقارير التفصيلية</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3 mb-2">
-                            <a href="{{ route('admin.reports.employees') }}" class="btn btn-outline-primary w-100">
-                                <i class="fas fa-users me-2"></i>تقارير الموظفين
+            <div class="content-panel">
+                <div class="content-panel-header">روابط سريعة للتقارير التفصيلية</div>
+                <div class="content-panel-body">
+                    <div class="quick-links-grid">
+                        @foreach ($quickLinks as $link)
+                            <a href="{{ route($link['route']) }}" class="quick-link-chip quick-link-chip--{{ $link['tone'] }}">
+                                <i class="{{ $link['icon'] }}"></i>
+                                <span>{{ $link['label'] }}</span>
                             </a>
-                        </div>
-                        <div class="col-md-3 mb-2">
-                            <a href="{{ route('admin.reports.attendance') }}" class="btn btn-outline-success w-100">
-                                <i class="fas fa-calendar-check me-2"></i>تقارير الحضور
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-2">
-                            <a href="{{ route('admin.reports.salaries') }}" class="btn btn-outline-warning w-100">
-                                <i class="fas fa-money-bill-wave me-2"></i>تقارير الرواتب
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-2">
-                            <a href="{{ route('admin.reports.leaves') }}" class="btn btn-outline-info w-100">
-                                <i class="fas fa-calendar-times me-2"></i>تقارير الإجازات
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-2">
-                            <a href="{{ route('admin.reports.performance') }}" class="btn btn-outline-purple w-100">
-                                <i class="fas fa-star me-2"></i>تقارير التقييمات
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-2">
-                            <a href="{{ route('admin.reports.training') }}" class="btn btn-outline-secondary w-100">
-                                <i class="fas fa-graduation-cap me-2"></i>تقارير التدريب
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-2">
-                            <a href="{{ route('admin.reports.recruitment') }}" class="btn btn-outline-danger w-100">
-                                <i class="fas fa-briefcase me-2"></i>تقارير التوظيف
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-2">
-                            <a href="{{ route('admin.reports.benefits') }}" class="btn btn-outline-teal w-100">
-                                <i class="fas fa-gift me-2"></i>تقارير المزايا
-                            </a>
-                        </div>
+                        @endforeach
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 @stop
-
-@section('css')
-    <style>
-        .btn-outline-purple {
-            border-color: #6f42c1;
-            color: #6f42c1;
-        }
-        .btn-outline-purple:hover {
-            background-color: #6f42c1;
-            color: white;
-        }
-        .btn-outline-teal {
-            border-color: #20c997;
-            color: #20c997;
-        }
-        .btn-outline-teal:hover {
-            background-color: #20c997;
-            color: white;
-        }
-    </style>
-@stop
-
-

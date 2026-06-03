@@ -54,6 +54,13 @@ class PerformanceReviewController extends Controller
             $reviewsQuery->where('review_period', 'like', '%' . $request->input('review_period') . '%');
         }
 
+        $stats = [
+            'total' => (clone $reviewsQuery)->count(),
+            'draft' => (clone $reviewsQuery)->where('status', 'draft')->count(),
+            'completed' => (clone $reviewsQuery)->where('status', 'completed')->count(),
+            'approved' => (clone $reviewsQuery)->where('status', 'approved')->count(),
+        ];
+
         $reviews = $reviewsQuery->orderBy('review_date', 'desc')
             ->orderBy('created_at', 'desc')
             ->paginate(20);
@@ -61,7 +68,7 @@ class PerformanceReviewController extends Controller
         $employees = Employee::where('is_active', true)->with('user')->get();
         $employees = collect($this->departmentScope()->filterEmployeeCollection($employees));
 
-        return view("admin.pages.performance-reviews.index", compact("reviews", "employees"));
+        return view('admin.pages.performance-reviews.index', compact('reviews', 'employees', 'stats'));
     }
 
     /**

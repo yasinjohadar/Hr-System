@@ -35,3 +35,7 @@
 
 <!-- Custom Css -->
 <link rel="stylesheet" href="{{ asset('assets/css/custom.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/flat-surfaces.css') }}">
+
+<!-- Sidebar: منع وميض القوائم الفرعية عند التحميل -->
+<link rel="stylesheet" href="{{ asset('assets/css/sidebar-nav-critical.css') }}">

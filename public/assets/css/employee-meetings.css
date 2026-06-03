@@ -1,0 +1,218 @@
+/* بوابة الموظف — الاجتماعات (مسطّح) */
+.employee-meetings-page {
+    --mt-primary: var(--primary-color, #5c67f7);
+    --mt-primary-soft: rgba(var(--primary-rgb, 92, 103, 247), 0.12);
+    --mt-success: #10b981;
+    --mt-warning: #f59e0b;
+    --mt-danger: #ef4444;
+    --mt-muted: #64748b;
+    --mt-surface: var(--custom-white, #fff);
+    --mt-border: var(--default-border, rgba(15, 23, 42, 0.08));
+    --mt-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    --mt-radius: 0.75rem;
+}
+
+.employee-meetings-page .page-hero {
+    background: var(--mt-surface);
+    border: 1px solid var(--mt-border);
+    border-inline-start: 4px solid var(--mt-primary);
+    border-radius: var(--mt-radius);
+    box-shadow: var(--mt-shadow);
+}
+
+.employee-meetings-page .page-hero-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: var(--mt-primary-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    color: var(--mt-primary);
+}
+
+.employee-meetings-page .page-hero-title { color: var(--default-text-color, #0f172a); }
+.employee-meetings-page .page-hero-subtitle { color: var(--mt-muted); font-size: 0.8125rem; }
+
+.employee-meetings-page .stat-card {
+    border: 1px solid var(--mt-border);
+    border-radius: var(--mt-radius);
+    background: var(--mt-surface);
+    box-shadow: var(--mt-shadow);
+    padding: 1.25rem;
+    height: 100%;
+}
+
+.employee-meetings-page .stat-value { font-size: 1.75rem; font-weight: 700; color: var(--default-text-color, #0f172a); }
+.employee-meetings-page .stat-label { font-size: 0.8125rem; color: var(--mt-muted); }
+
+.employee-meetings-page .stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+}
+
+.employee-meetings-page .stat-icon--primary { background: var(--mt-primary-soft); color: var(--mt-primary); }
+.employee-meetings-page .stat-icon--warning { background: rgba(245, 158, 11, 0.12); color: var(--mt-warning); }
+.employee-meetings-page .stat-icon--success { background: rgba(16, 185, 129, 0.12); color: var(--mt-success); }
+
+.employee-meetings-page .content-panel {
+    border: 1px solid var(--mt-border);
+    border-radius: var(--mt-radius);
+    background: var(--mt-surface);
+    box-shadow: var(--mt-shadow);
+}
+
+.employee-meetings-page .content-panel-header {
+    padding: 1.15rem 1.35rem;
+    border-bottom: 1px solid var(--mt-border);
+}
+
+.employee-meetings-page .filter-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.employee-meetings-page .filter-pill {
+    border: 1px solid var(--mt-border);
+    background: var(--mt-surface);
+    color: var(--mt-muted);
+    padding: 0.4rem 1rem;
+    border-radius: 99px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.employee-meetings-page .filter-pill:hover,
+.employee-meetings-page .filter-pill.active {
+    background: var(--mt-primary);
+    border-color: var(--mt-primary);
+    color: #fff;
+}
+
+.employee-meetings-page .meeting-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.15rem 1.35rem;
+    border-bottom: 1px solid var(--mt-border);
+    transition: background 0.15s;
+}
+
+.employee-meetings-page .meeting-card:last-child { border-bottom: none; }
+.employee-meetings-page .meeting-card:hover { background: rgba(var(--primary-rgb, 92, 103, 247), 0.04); }
+.employee-meetings-page .meeting-card.is-today { border-inline-start: 3px solid var(--mt-primary); }
+
+.employee-meetings-page .meeting-date-box {
+    width: 52px;
+    text-align: center;
+    flex-shrink: 0;
+    border: 1px solid var(--mt-border);
+    border-radius: 10px;
+    padding: 0.4rem 0.35rem;
+    background: #f8fafc;
+}
+
+.employee-meetings-page .meeting-date-box .day {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--mt-primary);
+    line-height: 1;
+}
+
+.employee-meetings-page .meeting-date-box .month {
+    font-size: 0.65rem;
+    color: var(--mt-muted);
+    text-transform: uppercase;
+}
+
+.employee-meetings-page .meeting-title {
+    font-weight: 700;
+    font-size: 0.9375rem;
+    color: var(--default-text-color, #0f172a);
+    margin-bottom: 0.2rem;
+}
+
+.employee-meetings-page .meeting-meta {
+    font-size: 0.75rem;
+    color: var(--mt-muted);
+}
+
+.employee-meetings-page .meeting-time {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--default-text-color, #334155);
+    white-space: nowrap;
+}
+
+.employee-meetings-page .type-pill {
+    padding: 0.3rem 0.7rem;
+    border-radius: 99px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: var(--mt-primary-soft);
+    color: var(--mt-primary);
+}
+
+.employee-meetings-page .status-pill {
+    padding: 0.35rem 0.85rem;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.employee-meetings-page .status-pill--scheduled { background: rgba(var(--primary-rgb, 92, 103, 247), 0.15); color: var(--mt-primary); }
+.employee-meetings-page .status-pill--in_progress { background: rgba(14, 165, 233, 0.15); color: #0369a1; }
+.employee-meetings-page .status-pill--completed { background: rgba(16, 185, 129, 0.15); color: #047857; }
+.employee-meetings-page .status-pill--cancelled { background: rgba(239, 68, 68, 0.15); color: #b91c1c; }
+.employee-meetings-page .status-pill--postponed { background: rgba(245, 158, 11, 0.15); color: #b45309; }
+
+.employee-meetings-page .role-badge {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 99px;
+    background: rgba(16, 185, 129, 0.12);
+    color: #047857;
+    font-weight: 600;
+}
+
+.employee-meetings-page .meeting-link-btn {
+    border: 1px solid var(--mt-border);
+    color: var(--mt-primary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.employee-meetings-page .meeting-link-btn:hover {
+    background: var(--mt-primary);
+    border-color: var(--mt-primary);
+    color: #fff;
+}
+
+.employee-meetings-page .empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+}
+
+.employee-meetings-page .empty-state .empty-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    background: var(--mt-primary-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: var(--mt-primary);
+}

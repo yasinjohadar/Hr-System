@@ -42,6 +42,10 @@ class PermissionSeeder extends Seeder
             "department-delete",
             "department-show",
 
+            // صلاحيات رؤساء الأقسام
+            "department-head-list",
+            "department-head-manage",
+
             // صلاحيات المناصب
             "position-list",
             "position-create",

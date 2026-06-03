@@ -1,0 +1,25 @@
+.workflow-steps-editor .workflow-step-card {
+    border: 1px solid var(--default-border, #e2e8f0);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    background: #fff;
+}
+
+.workflow-steps-editor .workflow-step-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--default-border, #e2e8f0);
+}
+
+.workflow-steps-editor .workflow-step-card__order {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.admin-workflows-show .steps-table th {
+    white-space: nowrap;
+}

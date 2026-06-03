@@ -6,7 +6,7 @@
 
 @section('content')
     <div class="main-content app-content employee-dashboard" id="employee-dashboard">
-        <div class="container-fluid">
+        <div class="container-fluid pt-4">
             @include('employee.pages.self-service.dashboard.partials.header')
 
             <ul class="nav nav-tabs nav-tabs-dashboard mb-4" id="dashboardTabs" role="tablist">

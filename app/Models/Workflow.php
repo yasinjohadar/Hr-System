@@ -53,13 +53,33 @@ class Workflow extends Model
 
     public function getTypeNameArAttribute(): string
     {
-        return match($this->type) {
+        $fromConfig = config("approval_workflows.types.{$this->type}.label_ar");
+
+        return $fromConfig ?? match ($this->type) {
             'leave_request' => 'طلب إجازة',
             'expense_request' => 'طلب مصروف',
+            'employee_job_change' => 'تغيير وظيفي',
+            'ticket_request' => 'تذكرة',
+            'project_time_entry' => 'وقت مشروع',
             'task_approval' => 'موافقة مهمة',
             'performance_review' => 'تقييم الأداء',
+            'overtime_request' => 'عمل إضافي',
             'custom' => 'مخصص',
             default => $this->type,
         };
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public static function allowedTypes(): array
+    {
+        $fromConfig = array_keys(config('approval_workflows.types', []));
+
+        return array_values(array_unique(array_merge($fromConfig, [
+            'task_approval',
+            'performance_review',
+            'custom',
+        ])));
     }
 }

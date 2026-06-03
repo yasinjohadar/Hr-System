@@ -5,6 +5,8 @@
     $photoSrc = $isEdit && $user?->photo
         ? asset('storage/' . $user->photo)
         : asset('assets/images/faces/default-avatar.jpg');
+    $hasUsername = $isEdit && $user && filled($user->username);
+    $wantUsername = (bool) old('set_username', $hasUsername) || $errors->has('username');
 @endphp
 
 <div class="form-section-title"><i class="ri-user-line me-1"></i>المعلومات الأساسية</div>
@@ -15,10 +17,25 @@
             value="{{ old('name', $user->name ?? '') }}" required>
         @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
     </div>
-    <div class="col-md-6">
+    @if (! $hasUsername)
+        <div class="col-12">
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" name="set_username" value="1" id="set_username"
+                    {{ $wantUsername ? 'checked' : '' }}>
+                <label class="form-check-label" for="set_username">
+                    تعيين اسم مستخدم للدخول (اختياري — الدخول بالبريد كافٍ)
+                </label>
+            </div>
+        </div>
+    @endif
+    <div class="col-md-6 {{ $wantUsername ? '' : 'd-none' }}" id="username-field-col" data-username-optional="1">
         <label class="form-label">اسم المستخدم</label>
-        <input type="text" class="form-control @error('username') is-invalid @enderror" name="username"
-            value="{{ old('username', $user->username ?? '') }}">
+        <input type="text" class="form-control @error('username') is-invalid @enderror" name="username" id="username-input"
+            value="{{ $wantUsername ? old('username', $user->username ?? '') : '' }}"
+            autocomplete="off" autocapitalize="off" spellcheck="false"
+            placeholder="مثال: nayef.alobaid"
+            @if (! $wantUsername) disabled @endif>
+        <small class="text-muted d-block mt-1">يجب أن يكون فريداً. لا تستخدم بريد مستخدم آخر.</small>
         @error('username')<div class="invalid-feedback">{{ $message }}</div>@enderror
     </div>
     <div class="col-md-6">

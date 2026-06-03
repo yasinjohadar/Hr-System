@@ -22,8 +22,8 @@
                     </div>
                     <ul class="main-menu">
                         <!-- Start::slide has-sub - مركز الإدارة -->
-                        @canAny(['dashboard-view', 'role-list', 'user-list', 'announcement-list'])
-                        <li class="slide has-sub">
+                        @canAny(['dashboard-view', 'role-list', 'user-list', 'department-head-list', 'announcement-list'])
+                        <li class="slide has-sub {{ sidebar_section_class('admin_center') }}">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24" ><path d="M0 0h24v24H0V0z" fill="none"/><path d="M5 5h4v6H5zm10 8h4v6h-4zM5 17h4v2H5zM15 5h4v2h-4z" opacity=".3"/><path d="M3 13h8V3H3v10zm2-8h4v6H5V5zm8 16h8V11h-8v10zm2-8h4v6h-4v-6zM13 3v6h8V3h-8zm6 4h-4V5h4v2zM3 21h8v-6H3v6zm2-4h4v2H5v-2z"/></svg>
                                 <span class="side-menu__label">مركز الإدارة</span>
@@ -49,6 +49,11 @@
                                     <a href="{{route("users.index")}}" class="side-menu__item">المستخدمون</a>
                                 </li>
                                 @endcan
+                                @can('department-head-list')
+                                <li class="slide">
+                                    <a href="{{ route('admin.department-heads.index') }}" class="side-menu__item">رؤساء الأقسام</a>
+                                </li>
+                                @endcan
                                 @can('announcement-list')
                                 <li class="slide">
                                     <a href="{{route("admin.announcements.index")}}" class="side-menu__item">
@@ -63,7 +68,7 @@
                         <!-- End::slide has-sub -->
 
                         @if(auth()->check() && (auth()->user()->hasRole('department_head') || auth()->user()->hasRole('admin')))
-                        <li class="slide has-sub">
+                        <li class="slide has-sub {{ sidebar_section_class('team') }}">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <i class="ri-team-line side-menu__icon"></i>
                                 <span class="side-menu__label">إدارة الفريق</span>
@@ -91,7 +96,7 @@
                         
                         <!-- Start::slide has-sub - إدارة الموارد البشرية -->
                         @canAny(['employee-list', 'dashboard-view', 'salary-list', 'payroll-list', 'salary-component-list', 'tax-setting-list', 'bank-account-list', 'payroll-payment-list', 'payroll-approval-list', 'announcement-list', 'contract-list', 'employee-job-change-list', 'policy-list'])
-                        <li class="slide has-sub">
+                        <li class="slide has-sub {{ sidebar_section_class('hr') }}">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 5.9c1.16 0 2.1.94 2.1 2.1s-.94 2.1-2.1 2.1S9.9 9.16 9.9 8s.94-2.1 2.1-2.1m0 9c2.97 0 6.1 1.46 6.1 2.1v1.1H5.9V17c0-.64 3.13-2.1 6.1-2.1M12 4C9.79 4 8 5.79 8 8s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 9c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4z"/></svg>
                                 <span class="side-menu__label">إدارة الموارد البشرية</span>
@@ -201,7 +206,7 @@
                         
                         <!-- Start::slide has-sub - إدارة الإجازات -->
                         @canAny(['leave-type-list', 'leave-request-list', 'leave-balance-list'])
-                        <li class="slide has-sub">
+                        <li class="slide has-sub {{ sidebar_section_class('leave') }}">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
                                 <span class="side-menu__label">إدارة الإجازات</span>
@@ -239,7 +244,7 @@
                         
                         <!-- Start::slide has-sub - الحضور والتقييمات والتدريب -->
                         @canAny(['attendance-list', 'shift-list', 'shift-assignment-list', 'attendance-rule-list', 'overtime-list', 'attendance-location-list', 'attendance-break-list', 'performance-review-list', 'training-list', 'training-record-list'])
-                        <li class="slide has-sub">
+                        <li class="slide has-sub {{ sidebar_section_class('attendance') }}">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.72-2.92 0-1.21-.49-2.19-3.55-2.68z"/></svg>
                                 <span class="side-menu__label">الحضور والتقييمات والتدريب</span>
@@ -333,7 +338,7 @@
                         
                         <!-- Start::slide has-sub - التوظيف -->
                         @canAny(['requisition-list', 'job-vacancy-list', 'candidate-list', 'job-application-list', 'interview-list', 'offer-letter-list'])
-                        <li class="slide has-sub">
+                        <li class="slide has-sub {{ sidebar_section_class('recruitment') }}">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 0 0-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15 10.83 16.62 12 20 8.76V14z"/></svg>
                                 <span class="side-menu__label">التوظيف</span>
@@ -395,7 +400,7 @@
                         
                         <!-- Start::slide has-sub - المزايا والتعويضات -->
                         @canAny(['benefit-type-list', 'employee-benefit-list'])
-                        <li class="slide has-sub">
+                        <li class="slide has-sub {{ sidebar_section_class('benefits') }}">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
                                 <span class="side-menu__label">المزايا والتعويضات</span>
@@ -425,7 +430,7 @@
                         
                         <!-- Start::slide has-sub - التقارير -->
                         @canAny(['report-view', 'report-dashboard', 'report-employees', 'report-attendance', 'report-salaries', 'report-leaves', 'report-performance', 'report-training', 'report-recruitment', 'report-benefits', 'report-turnover', 'report-training-effectiveness', 'report-kpis'])
-                        <li class="slide has-sub">
+                        <li class="slide has-sub {{ sidebar_section_class('reports') }}">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
                                 <span class="side-menu__label">التقارير</span>
@@ -455,7 +460,7 @@
                         
                         <!-- Start::slide has-sub - الإعدادات -->
                         @can('setting-view')
-                        <li class="slide has-sub">
+                        <li class="slide has-sub {{ sidebar_section_class('settings') }}">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
                                 <span class="side-menu__label">الإعدادات</span>
@@ -475,7 +480,7 @@
                         
                         <!-- Start::slide has-sub - إدارة الموظفين المتقدمة -->
                         @canAny(['employee-document-list', 'employee-skill-list', 'employee-certificate-list', 'employee-goal-list', 'employee-exit-list'])
-                        <li class="slide has-sub">
+                        <li class="slide has-sub {{ sidebar_section_class('employee_advanced') }}">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 5.9c1.16 0 2.1.94 2.1 2.1s-.94 2.1-2.1 2.1S9.9 9.16 9.9 8s.94-2.1 2.1-2.1m0 9c2.97 0 6.1 1.46 6.1 2.1v1.1H5.9V17c0-.64 3.13-2.1 6.1-2.1M12 4C9.79 4 8 5.79 8 8s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 9c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4z"/></svg>
                                 <span class="side-menu__label">إدارة الموظفين المتقدمة</span>
@@ -529,7 +534,7 @@
                         
                         <!-- Start::slide has-sub - إدارة الأصول -->
                         @canAny(['asset-list', 'asset-assignment-list', 'asset-maintenance-list'])
-                        <li class="slide has-sub">
+                        <li class="slide has-sub {{ sidebar_section_class('assets') }}">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z"/></svg>
                                 <span class="side-menu__label">إدارة الأصول</span>
@@ -567,7 +572,7 @@
                         
                         <!-- Start::slide has-sub - إدارة المصروفات -->
                         @canAny(['expense-category-list', 'expense-request-list'])
-                        <li class="slide has-sub">
+                        <li class="slide has-sub {{ sidebar_section_class('expenses') }}">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
                                 <span class="side-menu__label">إدارة المصروفات</span>
@@ -597,7 +602,7 @@
 
                         <!-- Start::slide has-sub - الإجراءات التأديبية -->
                         @canAny(['violation-type-list', 'disciplinary-action-list', 'employee-violation-list'])
-                        <li class="slide has-sub">
+                        <li class="slide has-sub {{ sidebar_section_class('disciplinary') }}">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
                                 <span class="side-menu__label">الإجراءات التأديبية</span>
@@ -635,7 +640,7 @@
 
                         <!-- Start::slide has-sub - إدارة المهام والمشاريع -->
                         @canAny(['project-list', 'task-list'])
-                        <li class="slide has-sub">
+                        <li class="slide has-sub {{ sidebar_section_class('projects') }}">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
                                 <span class="side-menu__label">إدارة المهام والمشاريع</span>
@@ -665,7 +670,7 @@
 
                         <!-- Start::slide has-sub - عرض البيانات -->
                         @canAny(['organization-chart-view', 'employee-directory-view'])
-                        <li class="slide has-sub">
+                        <li class="slide has-sub {{ sidebar_section_class('org_view') }}">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
                                 <span class="side-menu__label">عرض البيانات</span>
@@ -695,7 +700,7 @@
 
                         <!-- Start::slide has-sub - الميزات المتقدمة -->
                         @canAny(['workflow-list', 'succession-plan-list', 'ticket-list', 'meeting-list', 'feedback-request-list', 'reward-type-list', 'employee-reward-list'])
-                        <li class="slide has-sub">
+                        <li class="slide has-sub {{ sidebar_section_class('advanced') }}">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
                                 <span class="side-menu__label">الميزات المتقدمة</span>
@@ -765,7 +770,7 @@
 
                         <!-- Start::slide has-sub - الميزات الإضافية -->
                         @canAny(['onboarding-template-list', 'onboarding-process-list', 'audit-log-list', 'survey-list', 'email-template-list', 'document-template-list', 'department-list', 'position-list', 'branch-list'])
-                        <li class="slide has-sub">
+                        <li class="slide has-sub {{ sidebar_section_class('extra') }}">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
                                 <span class="side-menu__label">الميزات الإضافية</span>
@@ -851,7 +856,7 @@
                         
                         <!-- Start::slide has-sub - التقويم -->
                         @can('calendar-list')
-                        <li class="slide has-sub">
+                        <li class="slide has-sub {{ sidebar_section_class('calendar') }}">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
                                 <span class="side-menu__label">التقويم</span>
@@ -882,7 +887,7 @@
 
                         <!-- Start::slide has-sub - الإعدادات العامة -->
                         @canAny(['country-list', 'currency-list'])
-                        <li class="slide has-sub">
+                        <li class="slide has-sub {{ sidebar_section_class('geo') }}">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
                                 <span class="side-menu__label">الإعدادات العامة</span>
@@ -956,241 +961,3 @@
 
         </aside>
         <!-- End::app-sidebar -->
-
-<style>
-/* تمييز الرابط النشط */
-.side-menu__item.active {
-    background-color: rgba(59, 130, 246, 0.15) !important;
-    color: #3b82f6 !important;
-    font-weight: 600;
-}
-
-.side-menu__item.active .side-menu__icon {
-    fill: #3b82f6 !important;
-    color: #3b82f6 !important;
-}
-
-.side-menu__item.active .side-menu__label {
-    color: #3b82f6 !important;
-}
-
-.side-menu__item.active::before {
-    content: "";
-    width: 3px;
-    height: 100%;
-    background: #3b82f6;
-    position: absolute;
-    inset-inline-start: 0;
-    top: 0;
-}
-
-/* إظهار القوائم المنسدلة عند الفتح */
-.slide-menu.child1 {
-    display: none !important;
-}
-
-.slide.has-sub.open .slide-menu.child1 {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    transform: translate(0, 0) !important;
-    height: auto !important;
-    overflow: visible !important;
-}
-
-.slide.has-sub.has-active .slide-menu.child1 {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    transform: translate(0, 0) !important;
-    height: auto !important;
-    overflow: visible !important;
-}
-
-.slide.has-sub.open > .side-menu__item .side-menu__angle {
-    transform: rotate(90deg) !important;
-    color: var(--primary-color);
-}
-
-.slide.has-sub.has-active > .side-menu__item {
-    color: var(--primary-color);
-}
-
-.slide.has-sub.has-active.open > .side-menu__item .side-menu__angle {
-    transform: rotate(90deg) !important;
-    color: var(--primary-color);
-}
-
-/* إصلاح أي مشاكل في العرض */
-.slide.has-sub .slide-menu {
-    max-height: none !important;
-}
-</style>
-
-<script>
-(function() {
-    'use strict';
-    
-    // الانتظار حتى يتم تحميل الصفحة بالكامل
-    function initSidebar() {
-        // الحصول على URL الحالي
-        const currentUrl = window.location.href;
-        const currentPath = window.location.pathname;
-        
-        // إزالة التمييز من جميع الروابط
-        document.querySelectorAll('.side-menu__item').forEach(item => {
-            item.classList.remove('active');
-        });
-        
-        // البحث عن الرابط المطابق وإضافة class active
-        let activeItem = null;
-        document.querySelectorAll('.side-menu__item').forEach(item => {
-            const href = item.getAttribute('href');
-            if (href && href !== 'javascript:void(0);' && href !== '#' && href !== '') {
-                try {
-                    // مقارنة المسارات
-                    let itemPath = href;
-                    if (href.startsWith('http')) {
-                        itemPath = new URL(href).pathname;
-                    } else if (href.startsWith('/')) {
-                        itemPath = href;
-                    } else {
-                        itemPath = '/' + href;
-                    }
-                    
-                    if (currentPath === itemPath || 
-                        currentPath.startsWith(itemPath + '/') || 
-                        currentUrl.includes(href) ||
-                        currentPath.includes(itemPath)) {
-                        item.classList.add('active');
-                        activeItem = item;
-                        
-                        // فتح القائمة المنسدلة التي تحتوي على هذا الرابط
-                        const parentSlide = item.closest('.slide.has-sub');
-                        if (parentSlide) {
-                            parentSlide.classList.add('open', 'has-active');
-                            const slideMenu = parentSlide.querySelector('.slide-menu');
-                            if (slideMenu) {
-                                slideMenu.style.display = 'block';
-                                slideMenu.style.visibility = 'visible';
-                                slideMenu.style.opacity = '1';
-                            }
-                        }
-                    }
-                } catch(e) {
-                    // في حالة خطأ في URL، استخدام مقارنة بسيطة
-                    if (currentPath.includes(href) || currentUrl.includes(href)) {
-                        item.classList.add('active');
-                        activeItem = item;
-                        
-                        const parentSlide = item.closest('.slide.has-sub');
-                        if (parentSlide) {
-                            parentSlide.classList.add('open', 'has-active');
-                            const slideMenu = parentSlide.querySelector('.slide-menu');
-                            if (slideMenu) {
-                                slideMenu.style.display = 'block';
-                                slideMenu.style.visibility = 'visible';
-                                slideMenu.style.opacity = '1';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        
-        // التمرير إلى الرابط النشط
-        if (activeItem) {
-            setTimeout(() => {
-                const sidebarScroll = document.getElementById('sidebar-scroll');
-                if (sidebarScroll) {
-                    const itemTop = activeItem.offsetTop;
-                    const sidebarHeight = sidebarScroll.clientHeight;
-                    sidebarScroll.scrollTo({
-                        top: itemTop - (sidebarHeight / 2),
-                        behavior: 'smooth'
-                    });
-                }
-            }, 500);
-        }
-    }
-    
-    // تشغيل الكود بعد تحميل الصفحة
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(initSidebar, 800);
-        });
-    } else {
-        setTimeout(initSidebar, 800);
-    }
-    
-    // فتح القوائم المنسدلة عند النقر - استخدام event delegation
-    document.addEventListener('click', function(e) {
-        const clickedItem = e.target.closest('.slide.has-sub > .side-menu__item');
-        if (clickedItem) {
-            const href = clickedItem.getAttribute('href');
-            if (href === 'javascript:void(0);' || href === '#' || !href) {
-                e.preventDefault();
-                e.stopPropagation();
-                const parentSlide = clickedItem.closest('.slide.has-sub');
-                if (parentSlide) {
-                    const isOpen = parentSlide.classList.contains('open');
-                    
-                    // تبديل حالة القائمة المنسدلة
-                    if (isOpen) {
-                        parentSlide.classList.remove('open');
-                        const slideMenu = parentSlide.querySelector('.slide-menu');
-                        if (slideMenu) {
-                            slideMenu.style.display = 'none';
-                            slideMenu.style.visibility = 'hidden';
-                            slideMenu.style.opacity = '0';
-                        }
-                    } else {
-                        parentSlide.classList.add('open');
-                        const slideMenu = parentSlide.querySelector('.slide-menu');
-                        if (slideMenu) {
-                            slideMenu.style.display = 'block';
-                            slideMenu.style.visibility = 'visible';
-                            slideMenu.style.opacity = '1';
-                            // إجبار إظهار القائمة
-                            slideMenu.removeAttribute('style');
-                            slideMenu.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important;';
-                        }
-                    }
-                }
-            }
-        }
-    });
-    
-    // إضافة event listener مباشر على الروابط
-    setTimeout(function() {
-        document.querySelectorAll('.slide.has-sub > .side-menu__item').forEach(function(item) {
-            const href = item.getAttribute('href');
-            if (href === 'javascript:void(0);' || href === '#' || !href) {
-                item.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const parentSlide = this.closest('.slide.has-sub');
-                    if (parentSlide) {
-                        const isOpen = parentSlide.classList.contains('open');
-                        const slideMenu = parentSlide.querySelector('.slide-menu');
-                        
-                        if (isOpen) {
-                            parentSlide.classList.remove('open');
-                            if (slideMenu) {
-                                slideMenu.style.display = 'none';
-                            }
-                        } else {
-                            parentSlide.classList.add('open');
-                            if (slideMenu) {
-                                slideMenu.style.display = 'block';
-                                slideMenu.style.visibility = 'visible';
-                                slideMenu.style.opacity = '1';
-                            }
-                        }
-                    }
-                }, true);
-            }
-        });
-    }, 1000);
-})();
-</script>

@@ -9,16 +9,18 @@ use App\Models\Employee;
 use App\Models\ExpenseRequest;
 use App\Models\LeaveRequest;
 use App\Models\Meeting;
-use App\Models\WorkflowInstance;
 use App\Services\ApprovalService;
 use App\Services\DepartmentScopeService;
+use App\Services\EmployeeRequestSubmissionService;
+use App\Services\WorkflowService;
 use Illuminate\Support\Facades\Auth;
 
 class DepartmentTeamController extends Controller
 {
     public function __construct(
         protected ApprovalService $approvalService,
-        protected DepartmentScopeService $departmentScope
+        protected DepartmentScopeService $departmentScope,
+        protected EmployeeRequestSubmissionService $submissionService
     ) {
         $this->middleware('auth');
         $this->middleware('ensure.department.head.or.admin');
@@ -154,7 +156,20 @@ class DepartmentTeamController extends Controller
                 ->whereMonth('updated_at', now()->month)
                 ->count();
 
-        return view('admin.pages.team.approvals', compact('pendingApprovals', 'approvedCount', 'rejectedCount'));
+        $approvalTypeFilters = collect($this->submissionService->allTypes())
+            ->map(fn ($config, $key) => [
+                'key' => $config['team_filter'],
+                'label' => $config['label_ar'],
+            ])
+            ->values()
+            ->all();
+
+        return view('admin.pages.team.approvals', compact(
+            'pendingApprovals',
+            'approvedCount',
+            'rejectedCount',
+            'approvalTypeFilters'
+        ));
     }
 
     public function structure()
@@ -180,69 +195,49 @@ class DepartmentTeamController extends Controller
     {
         $approvals = [];
 
-        $leaveRequests = LeaveRequest::whereIn('employee_id', $employeeIds)
-            ->where('status', 'pending')
-            ->with(['employee.user', 'employee.department', 'employee.position', 'leaveType'])
-            ->orderByDesc('created_at')
-            ->get();
+        foreach ($this->submissionService->allTypes() as $workflowType => $config) {
+            $query = $this->submissionService->pendingQueryFor($workflowType, $employeeIds);
+            if (! empty($config['with'])) {
+                $query->with($config['with']);
+            }
+            $requests = $query->orderByDesc('created_at')->get();
 
-        foreach ($leaveRequests as $request) {
-            $instance = WorkflowInstance::where('entity_type', LeaveRequest::class)
-                ->where('entity_id', $request->id)
-                ->where('status', 'in_progress')
-                ->with('currentStep')
-                ->first();
+            foreach ($requests as $request) {
+                if (! $request->employee) {
+                    continue;
+                }
 
-            if ($instance && $instance->currentStep) {
+                $instance = WorkflowService::findInstanceForEntity($config['model'], (int) $request->getKey());
+                if (! $instance?->currentStep) {
+                    continue;
+                }
+
                 try {
-                    if ($this->approvalService->canUserApprove(
-                        $user, 'leave_request', $request->employee, $instance->currentStep->step_order
+                    if (! $this->approvalService->canUserApprove(
+                        $user,
+                        $workflowType,
+                        $request->employee,
+                        $instance->currentStep->step_order
                     )) {
-                        $approvals[] = [
-                            'type' => 'leave',
-                            'request' => $request,
-                            'instance' => $instance,
-                            'step' => $instance->currentStep,
-                            'created_at' => $request->created_at,
-                        ];
+                        continue;
                     }
+
+                    $approvals[] = [
+                        'type' => $config['team_filter'],
+                        'workflow_type' => $workflowType,
+                        'label_ar' => $config['label_ar'],
+                        'request' => $request,
+                        'instance' => $instance,
+                        'step' => $instance->currentStep,
+                        'show_route' => $config['show_route'] ?? null,
+                        'created_at' => $request->created_at,
+                    ];
                 } catch (\Exception $e) {
                 }
             }
         }
 
-        $expenseRequests = ExpenseRequest::whereIn('employee_id', $employeeIds)
-            ->where('status', 'pending')
-            ->with(['employee.user', 'employee.department', 'employee.position', 'category', 'currency'])
-            ->orderByDesc('created_at')
-            ->get();
-
-        foreach ($expenseRequests as $request) {
-            $instance = WorkflowInstance::where('entity_type', ExpenseRequest::class)
-                ->where('entity_id', $request->id)
-                ->where('status', 'in_progress')
-                ->with('currentStep')
-                ->first();
-
-            if ($instance && $instance->currentStep) {
-                try {
-                    if ($this->approvalService->canUserApprove(
-                        $user, 'expense_request', $request->employee, $instance->currentStep->step_order
-                    )) {
-                        $approvals[] = [
-                            'type' => 'expense',
-                            'request' => $request,
-                            'instance' => $instance,
-                            'step' => $instance->currentStep,
-                            'created_at' => $request->created_at,
-                        ];
-                    }
-                } catch (\Exception $e) {
-                }
-            }
-        }
-
-        usort($approvals, fn ($a, $b) => $a['created_at']->cmp($b['created_at']));
+        usort($approvals, fn ($a, $b) => $b['created_at'] <=> $a['created_at']);
 
         return $approvals;
     }

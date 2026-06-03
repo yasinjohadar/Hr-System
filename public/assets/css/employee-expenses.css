@@ -1,0 +1,405 @@
+/* بوابة الموظف — المصروفات (مسطّح) */
+.employee-expenses-page {
+    --ex-primary: var(--primary-color, #5c67f7);
+    --ex-primary-soft: rgba(var(--primary-rgb, 92, 103, 247), 0.12);
+    --ex-success: #10b981;
+    --ex-warning: #f59e0b;
+    --ex-danger: #ef4444;
+    --ex-info: #0ea5e9;
+    --ex-muted: #64748b;
+    --ex-surface: var(--custom-white, #fff);
+    --ex-border: var(--default-border, rgba(15, 23, 42, 0.08));
+    --ex-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    --ex-radius: 0.75rem;
+}
+
+.employee-expenses-page .page-hero {
+    background: var(--ex-surface);
+    border: 1px solid var(--ex-border);
+    border-inline-start: 4px solid var(--ex-primary);
+    border-radius: var(--ex-radius);
+    box-shadow: var(--ex-shadow);
+}
+
+.employee-expenses-page .page-hero-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: var(--ex-primary-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    color: var(--ex-primary);
+    flex-shrink: 0;
+}
+
+.employee-expenses-page .page-hero-title { color: var(--default-text-color, #0f172a); }
+.employee-expenses-page .page-hero-subtitle { color: var(--ex-muted); font-size: 0.8125rem; }
+
+.employee-expenses-page .btn-hero-back {
+    border: 1px solid var(--ex-border);
+    background: var(--ex-surface);
+    color: var(--ex-muted);
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+}
+
+.employee-expenses-page .btn-hero-back:hover {
+    border-color: var(--ex-primary);
+    color: var(--ex-primary);
+    background: var(--ex-primary-soft);
+}
+
+.employee-expenses-page .btn-hero-primary {
+    background: var(--ex-primary);
+    border-color: var(--ex-primary);
+    font-weight: 600;
+    padding: 0.5rem 1.15rem;
+    border-radius: 0.5rem;
+}
+
+.employee-expenses-page .stat-card {
+    border: 1px solid var(--ex-border);
+    border-radius: var(--ex-radius);
+    background: var(--ex-surface);
+    box-shadow: var(--ex-shadow);
+    padding: 1.25rem;
+    height: 100%;
+}
+
+.employee-expenses-page .stat-value { font-size: 1.75rem; font-weight: 700; color: var(--default-text-color, #0f172a); }
+.employee-expenses-page .stat-label { font-size: 0.8125rem; color: var(--ex-muted); }
+
+.employee-expenses-page .stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+}
+
+.employee-expenses-page .stat-icon--primary { background: var(--ex-primary-soft); color: var(--ex-primary); }
+.employee-expenses-page .stat-icon--warning { background: rgba(245, 158, 11, 0.12); color: var(--ex-warning); }
+.employee-expenses-page .stat-icon--success { background: rgba(16, 185, 129, 0.12); color: var(--ex-success); }
+.employee-expenses-page .stat-icon--danger { background: rgba(239, 68, 68, 0.12); color: var(--ex-danger); }
+
+.employee-expenses-page .content-panel,
+.employee-expenses-page .form-panel {
+    border: 1px solid var(--ex-border);
+    border-radius: var(--ex-radius);
+    background: var(--ex-surface);
+    box-shadow: var(--ex-shadow);
+}
+
+.employee-expenses-page .content-panel-header,
+.employee-expenses-page .form-panel-header {
+    padding: 1.15rem 1.35rem;
+    border-bottom: 1px solid var(--ex-border);
+}
+
+.employee-expenses-page .content-panel-body,
+.employee-expenses-page .form-panel-body {
+    padding: 1.35rem;
+}
+
+.employee-expenses-page .filter-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.employee-expenses-page .filter-pill {
+    border: 1px solid var(--ex-border);
+    background: var(--ex-surface);
+    color: var(--ex-muted);
+    padding: 0.4rem 1rem;
+    border-radius: 99px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.employee-expenses-page .filter-pill:hover,
+.employee-expenses-page .filter-pill.active {
+    background: var(--ex-primary);
+    border-color: var(--ex-primary);
+    color: #fff;
+}
+
+.employee-expenses-page .expense-request-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.1rem 1.25rem;
+    border-bottom: 1px solid var(--ex-border);
+    transition: background 0.15s;
+}
+
+.employee-expenses-page .expense-request-card:last-child { border-bottom: none; }
+.employee-expenses-page .expense-request-card:hover { background: rgba(var(--primary-rgb, 92, 103, 247), 0.04); }
+
+.employee-expenses-page .expense-type-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: var(--ex-primary-soft);
+    color: var(--ex-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.employee-expenses-page .expense-amount {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--default-text-color, #0f172a);
+    white-space: nowrap;
+}
+
+.employee-expenses-page .status-pill {
+    padding: 0.35rem 0.85rem;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.employee-expenses-page .status-pill--pending { background: rgba(245, 158, 11, 0.15); color: #b45309; }
+.employee-expenses-page .status-pill--approved { background: rgba(16, 185, 129, 0.15); color: #047857; }
+.employee-expenses-page .status-pill--paid { background: rgba(14, 165, 233, 0.15); color: #0369a1; }
+.employee-expenses-page .status-pill--rejected { background: rgba(239, 68, 68, 0.15); color: #b91c1c; }
+.employee-expenses-page .status-pill--cancelled { background: rgba(100, 116, 139, 0.15); color: #475569; }
+
+.employee-expenses-page .btn-view-detail {
+    border: 1px solid var(--ex-border);
+    background: var(--ex-surface);
+    color: var(--ex-primary);
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.employee-expenses-page .btn-view-detail:hover {
+    background: var(--ex-primary);
+    border-color: var(--ex-primary);
+    color: #fff;
+}
+
+/* نموذج الإنشاء */
+.employee-expenses-page .form-section {
+    margin-bottom: 1.75rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid var(--ex-border);
+}
+
+.employee-expenses-page .form-section:last-of-type {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.employee-expenses-page .form-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--default-text-color, #0f172a);
+    margin-bottom: 1.15rem;
+}
+
+.employee-expenses-page .form-section-title .section-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--ex-primary-soft);
+    color: var(--ex-primary);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.employee-expenses-page .form-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--default-text-color, #334155);
+    margin-bottom: 0.4rem;
+}
+
+.employee-expenses-page .field-wrap {
+    position: relative;
+}
+
+.employee-expenses-page .field-wrap .field-icon {
+    position: absolute;
+    top: 50%;
+    inset-inline-start: 0.85rem;
+    transform: translateY(-50%);
+    color: var(--ex-muted);
+    font-size: 1.1rem;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.employee-expenses-page .field-wrap .form-control,
+.employee-expenses-page .field-wrap .form-select {
+    padding-inline-start: 2.65rem;
+    border-radius: 0.5rem;
+    border-color: var(--ex-border);
+    min-height: 42px;
+}
+
+.employee-expenses-page .field-wrap textarea.form-control {
+    padding-inline-start: 0.85rem;
+    min-height: auto;
+}
+
+.employee-expenses-page .form-control:focus,
+.employee-expenses-page .form-select:focus {
+    border-color: var(--ex-primary);
+    box-shadow: 0 0 0 3px var(--ex-primary-soft);
+}
+
+.employee-expenses-page .file-drop {
+    display: block;
+    border: 2px dashed var(--ex-border);
+    border-radius: var(--ex-radius);
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    margin-bottom: 0;
+}
+
+.employee-expenses-page .file-drop:hover,
+.employee-expenses-page .file-drop.has-file {
+    border-color: var(--ex-primary);
+    background: var(--ex-primary-soft);
+}
+
+.employee-expenses-page .file-drop-icon {
+    font-size: 2rem;
+    color: var(--ex-primary);
+    margin-bottom: 0.5rem;
+}
+
+.employee-expenses-page .file-drop-hint { font-size: 0.75rem; color: var(--ex-muted); }
+
+.employee-expenses-page .category-hint {
+    font-size: 0.75rem;
+    color: var(--ex-muted);
+    margin-top: 0.35rem;
+    min-height: 1.1rem;
+}
+
+.employee-expenses-page .category-hint.is-warning { color: #b45309; }
+.employee-expenses-page .category-hint.is-danger { color: var(--ex-danger); }
+
+.employee-expenses-page .tips-card {
+    border: 1px solid var(--ex-border);
+    border-radius: var(--ex-radius);
+    background: #f8fafc;
+    padding: 1.25rem;
+    height: 100%;
+}
+
+.employee-expenses-page .tips-card h6 {
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    color: var(--default-text-color, #0f172a);
+}
+
+.employee-expenses-page .tips-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.employee-expenses-page .tips-list li {
+    display: flex;
+    gap: 0.65rem;
+    font-size: 0.8125rem;
+    color: var(--ex-muted);
+    margin-bottom: 0.75rem;
+    line-height: 1.45;
+}
+
+.employee-expenses-page .tips-list li i {
+    color: var(--ex-success);
+    font-size: 1rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+}
+
+.employee-expenses-page .form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    padding-top: 1.25rem;
+    margin-top: 0.5rem;
+    border-top: 1px solid var(--ex-border);
+}
+
+.employee-expenses-page .btn-submit-expense {
+    background: var(--ex-primary);
+    border-color: var(--ex-primary);
+    font-weight: 600;
+    padding: 0.6rem 1.5rem;
+    border-radius: 0.5rem;
+}
+
+.employee-expenses-page .btn-cancel-expense {
+    border: 1px solid var(--ex-border);
+    background: var(--ex-surface);
+    color: var(--ex-muted);
+    font-weight: 500;
+    padding: 0.6rem 1.35rem;
+    border-radius: 0.5rem;
+}
+
+.employee-expenses-page .empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+}
+
+.employee-expenses-page .empty-state .empty-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    background: var(--ex-primary-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: var(--ex-primary);
+}
+
+.employee-expenses-page .detail-modal .modal-header {
+    border-bottom: 1px solid var(--ex-border);
+}
+
+.employee-expenses-page .detail-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid var(--ex-border);
+    font-size: 0.875rem;
+}
+
+.employee-expenses-page .detail-row:last-child { border-bottom: none; }
+.employee-expenses-page .detail-row strong { color: var(--ex-muted); font-weight: 500; }

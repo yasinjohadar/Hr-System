@@ -1,0 +1,152 @@
+/* بوابة الموظف — الملف الشخصي (مسطّح) */
+.employee-profile-page {
+    --pf-primary: var(--primary-color, #5c67f7);
+    --pf-primary-soft: rgba(var(--primary-rgb, 92, 103, 247), 0.12);
+    --pf-muted: #64748b;
+    --pf-surface: var(--custom-white, #fff);
+    --pf-border: var(--default-border, rgba(15, 23, 42, 0.08));
+    --pf-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    --pf-radius: 0.75rem;
+}
+
+.employee-profile-page .page-hero {
+    background: var(--pf-surface);
+    border: 1px solid var(--pf-border);
+    border-inline-start: 4px solid var(--pf-primary);
+    border-radius: var(--pf-radius);
+    box-shadow: var(--pf-shadow);
+}
+
+.employee-profile-page .page-hero-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: var(--pf-primary-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    color: var(--pf-primary);
+}
+
+.employee-profile-page .page-hero-title {
+    color: var(--default-text-color, #0f172a);
+}
+
+.employee-profile-page .page-hero-subtitle {
+    color: var(--pf-muted);
+    font-size: 0.8125rem;
+}
+
+.employee-profile-page .profile-sidebar {
+    border: 1px solid var(--pf-border);
+    border-radius: var(--pf-radius);
+    background: var(--pf-surface);
+    box-shadow: var(--pf-shadow);
+    padding: 1.5rem;
+    text-align: center;
+    height: 100%;
+}
+
+.employee-profile-page .profile-sidebar-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--pf-primary);
+    margin-bottom: 1rem;
+}
+
+.employee-profile-page .profile-sidebar-avatar--placeholder {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.25rem;
+    font-weight: 700;
+    background: var(--pf-primary-soft);
+    color: var(--pf-primary);
+    margin-bottom: 1rem;
+}
+
+.employee-profile-page .profile-sidebar-meta {
+    text-align: start;
+    border-top: 1px solid var(--pf-border);
+    padding-top: 1rem;
+    margin-top: 1rem;
+}
+
+.employee-profile-page .profile-sidebar-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    padding: 0.4rem 0;
+}
+
+.employee-profile-page .profile-sidebar-label {
+    color: var(--pf-muted);
+}
+
+.employee-profile-page .profile-sidebar-value {
+    font-weight: 600;
+    text-align: end;
+}
+
+.employee-profile-page .form-section {
+    border: 1px solid var(--pf-border);
+    border-radius: var(--pf-radius);
+    background: var(--pf-surface);
+    box-shadow: var(--pf-shadow);
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+}
+
+.employee-profile-page .form-section-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--pf-border);
+    background: #f8fafc;
+    font-weight: 600;
+    font-size: 0.9375rem;
+}
+
+[data-theme-mode='dark'] .employee-profile-page .form-section-header {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.employee-profile-page .form-section-body {
+    padding: 1.25rem;
+}
+
+.employee-profile-page .form-label {
+    font-weight: 500;
+    font-size: 0.8125rem;
+    color: var(--default-text-color, #0f172a);
+}
+
+.employee-profile-page .form-control:disabled,
+.employee-profile-page .form-control[readonly] {
+    background: #f1f5f9;
+    color: var(--pf-muted);
+    border-color: var(--pf-border);
+}
+
+.employee-profile-page .form-control:focus {
+    border-color: var(--pf-primary);
+    box-shadow: 0 0 0 3px var(--pf-primary-soft);
+}
+
+.employee-profile-page .form-actions {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--pf-border);
+    background: #f8fafc;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+[data-theme-mode='dark'] .employee-profile-page .form-actions {
+    background: rgba(255, 255, 255, 0.03);
+}

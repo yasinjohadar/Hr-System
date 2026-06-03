@@ -17,7 +17,7 @@
 
             <div class="card custom-card">
                 <div class="card-body">
-                    <form method="POST" action="{{ route('users.store') }}" enctype="multipart/form-data">
+                    <form method="POST" action="{{ route('users.store') }}" enctype="multipart/form-data" autocomplete="off">
                         @csrf
                         @include('admin.pages.users.partials.form', ['isEdit' => false, 'roles' => $roles])
 

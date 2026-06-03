@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Admin\Concerns\ScopesByDepartment;
-use App\Models\Employee;
 use App\Models\LeaveRequest;
 use App\Models\ExpenseRequest;
 use App\Models\WorkflowInstance;
 use App\Services\WorkflowService;
 use App\Services\ApprovalService;
+use App\Services\WorkflowProgressPresenter;
 use Illuminate\Http\Request;
 
 class ApprovalController extends Controller
@@ -41,89 +41,17 @@ class ApprovalController extends Controller
         $leaveQuery = LeaveRequest::where('status', 'pending')->with(['employee', 'leaveType']);
         $this->scopeByEmployeeQuery($leaveQuery);
         $leaveRequests = $leaveQuery->get()
-            ->filter(function ($leaveRequest) use ($user) {
-                if (!$leaveRequest->employee) {
-                    return false;
-                }
-
-                $instance = WorkflowInstance::where('entity_type', 'LeaveRequest')
-                    ->where('entity_id', $leaveRequest->id)
-                    ->whereIn('status', ['pending', 'in_progress'])
-                    ->first();
-
-                if ($instance) {
-                    $currentStep = $instance->currentStep;
-                    if ($currentStep) {
-                        return $this->approvalService->canUserApprove(
-                            $user,
-                            'leave_request',
-                            $leaveRequest->employee,
-                            $currentStep->step_order
-                        );
-                    }
-                }
-
-                // Fallback: التحقق من التسلسل الهرمي
-                return $this->isUserApprover($user, $leaveRequest->employee);
-            });
+            ->filter(fn ($leaveRequest) => $leaveRequest->employee
+                && $this->approvalService->canActOnEntity($user, $leaveRequest));
 
         // طلبات المصروفات المعلقة
         $expenseQuery = ExpenseRequest::where('status', 'pending')->with(['employee', 'category']);
         $this->scopeByEmployeeQuery($expenseQuery);
         $expenseRequests = $expenseQuery->get()
-            ->filter(function ($expenseRequest) use ($user) {
-                if (!$expenseRequest->employee) {
-                    return false;
-                }
-
-                $instance = WorkflowInstance::where('entity_type', 'ExpenseRequest')
-                    ->where('entity_id', $expenseRequest->id)
-                    ->whereIn('status', ['pending', 'in_progress'])
-                    ->first();
-
-                if ($instance) {
-                    $currentStep = $instance->currentStep;
-                    if ($currentStep) {
-                        return $this->approvalService->canUserApprove(
-                            $user,
-                            'expense_request',
-                            $expenseRequest->employee,
-                            $currentStep->step_order
-                        );
-                    }
-                }
-
-                // Fallback: التحقق من التسلسل الهرمي
-                return $this->isUserApprover($user, $expenseRequest->employee);
-            });
+            ->filter(fn ($expenseRequest) => $expenseRequest->employee
+                && $this->approvalService->canActOnEntity($user, $expenseRequest));
 
         return view('admin.pages.approvals.index', compact('leaveRequests', 'expenseRequests'));
-    }
-
-    /**
-     * التحقق من أن المستخدم يمكنه الموافقة على طلب موظف معين
-     */
-    private function isUserApprover(\App\Models\User $user, Employee $employee): bool
-    {
-        // المدير المباشر
-        $directManager = $employee->getDirectManager();
-        if ($directManager && $directManager->user_id === $user->id) {
-            return true;
-        }
-
-        // مدير القسم
-        $deptManager = $employee->getDepartmentManager();
-        if ($deptManager && $deptManager->id === $user->id) {
-            return true;
-        }
-
-        // صلاحيات عامة
-        if ($user->hasPermissionTo('leave-request-approve-all') || 
-            $user->hasPermissionTo('expense-request-approve-all')) {
-            return true;
-        }
-
-        return false;
     }
 
     /**
@@ -137,17 +65,18 @@ class ApprovalController extends Controller
             default => abort(404),
         };
 
-        $entityType = match($type) {
-            'leave' => 'LeaveRequest',
-            'expense' => 'ExpenseRequest',
+        $entityClass = match ($type) {
+            'leave' => LeaveRequest::class,
+            'expense' => ExpenseRequest::class,
             default => null,
         };
 
         $instance = null;
-        if ($entityType) {
-            $instance = WorkflowInstance::where('entity_type', $entityType)
+        if ($entityClass) {
+            $instance = WorkflowInstance::where('entity_type', $entityClass)
                 ->where('entity_id', $entity->id)
                 ->with(['workflow', 'currentStep'])
+                ->latest('id')
                 ->first();
         }
 
@@ -156,6 +85,9 @@ class ApprovalController extends Controller
             $workflowStatus = $this->workflowService->getWorkflowStatus($instance);
         }
 
-        return view('admin.pages.approvals.show', compact('entity', 'type', 'instance', 'workflowStatus'));
+        $canApproveNow = $this->approvalService->canActOnEntity(auth()->user(), $entity);
+        $workflowProgress = app(WorkflowProgressPresenter::class)->resolveForEntity($entity);
+
+        return view('admin.pages.approvals.show', compact('entity', 'type', 'instance', 'workflowStatus', 'canApproveNow', 'workflowProgress'));
     }
 }

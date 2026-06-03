@@ -4,105 +4,155 @@
     الرواتب
 @stop
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('assets/css/employee-salaries.css') }}">
+@endpush
+
 @section('content')
-    <div class="main-content app-content">
-        <div class="container-fluid">
-            <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
-                <div class="my-auto">
-                    <h5 class="page-title fs-21 mb-1">كشف الرواتب</h5>
-                </div>
-            </div>
+    <div class="main-content app-content employee-salaries-page">
+        <div class="container-fluid pt-4">
 
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">سجلات الرواتب ({{ $salaries->total() }})</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>الشهر/السنة</th>
-                                    <th>الراتب الأساسي</th>
-                                    <th>البدلات</th>
-                                    <th>المكافآت</th>
-                                    <th>الخصومات</th>
-                                    <th>الإجمالي</th>
-                                    <th>حالة الدفع</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($salaries as $salary)
-                                    <tr>
-                                        <td>{{ $loop->iteration }}</td>
-                                        <td>{{ $salary->salary_month }}/{{ $salary->salary_year }}</td>
-                                        <td>{{ number_format($salary->base_salary, 2) }} {{ $salary->currency->symbol_ar ?? $salary->currency->symbol ?? 'ر.س' }}</td>
-                                        <td>{{ number_format($salary->allowances, 2) }} {{ $salary->currency->symbol_ar ?? $salary->currency->symbol ?? 'ر.س' }}</td>
-                                        <td>{{ number_format($salary->bonuses, 2) }} {{ $salary->currency->symbol_ar ?? $salary->currency->symbol ?? 'ر.س' }}</td>
-                                        <td>{{ number_format($salary->deductions, 2) }} {{ $salary->currency->symbol_ar ?? $salary->currency->symbol ?? 'ر.س' }}</td>
-                                        <td><strong>{{ number_format($salary->total_salary, 2) }} {{ $salary->currency->symbol_ar ?? $salary->currency->symbol ?? 'ر.س' }}</strong></td>
-                                        <td>
-                                            <span class="badge bg-{{ $salary->payment_status == 'paid' ? 'success' : 'warning' }}">
-                                                {{ $salary->payment_status == 'paid' ? 'مدفوع' : 'قيد الانتظار' }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="8" class="text-center">لا توجد سجلات رواتب</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="mt-3">
-                        {{ $salaries->links() }}
+            <div class="card page-hero mb-4">
+                <div class="card-body py-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="page-hero-icon">
+                            <i class="ri-wallet-3-line"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-1 page-hero-title fw-bold">كشف الرواتب</h4>
+                            <p class="mb-0 page-hero-subtitle">سجلات الرواتب وكشوف القسائم الشهرية</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            @if(isset($payrolls) && $payrolls->isNotEmpty())
-            <div class="card mt-4">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">كشوف الرواتب الشهرية — تحميل القسيمة PDF</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-sm-6 col-xl-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-value">
+                                    @if ($stats['latest_net'])
+                                        {{ number_format($stats['latest_net'], 0) }}
+                                        <small class="fs-14 fw-normal text-muted">{{ $stats['latest_currency'] }}</small>
+                                    @else
+                                        —
+                                    @endif
+                                </div>
+                                <div class="stat-label">آخر صافي @if($stats['latest_period'])<span class="d-block">{{ $stats['latest_period'] }}</span>@endif</div>
+                            </div>
+                            <div class="stat-icon stat-icon--primary"><i class="ri-money-dollar-circle-line"></i></div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>كود الكشف</th>
-                                    <th>الشهر/السنة</th>
-                                    <th>الصافي</th>
-                                    <th>الحالة</th>
-                                    <th>إجراء</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($payrolls as $p)
-                                    <tr>
-                                        <td>{{ $loop->iteration }}</td>
-                                        <td>{{ $p->payroll_code }}</td>
-                                        <td>{{ $p->month_name ?? $p->payroll_month }}/{{ $p->payroll_year }}</td>
-                                        <td>{{ $p->net_salary ? number_format($p->net_salary, 2) : '-' }} {{ $p->currency->symbol ?? $p->currency->code ?? 'ر.س' }}</td>
-                                        <td><span class="badge bg-{{ $p->status === 'approved' || $p->status === 'paid' ? 'success' : 'warning' }}">{{ $p->status_name_ar }}</span></td>
-                                        <td>
-                                            <a href="{{ route('employee.payrolls.payslip.pdf', $p->id) }}" class="btn btn-sm btn-primary" target="_blank">
-                                                <i class="fas fa-file-pdf me-1"></i>تحميل PDF
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-value">{{ $stats['records'] }}</div>
+                                <div class="stat-label">سجلات راتب</div>
+                            </div>
+                            <div class="stat-icon stat-icon--primary"><i class="ri-file-list-3-line"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-value">{{ $stats['paid'] }}</div>
+                                <div class="stat-label">مدفوعة</div>
+                            </div>
+                            <div class="stat-icon stat-icon--success"><i class="ri-checkbox-circle-line"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-value">{{ $stats['pending'] }}</div>
+                                <div class="stat-label">قيد الانتظار</div>
+                            </div>
+                            <div class="stat-icon stat-icon--warning"><i class="ri-time-line"></i></div>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <div class="content-panel">
+                <div class="content-panel-header">
+                    <h5 class="fw-bold mb-1 text-dark">سجلات الرواتب</h5>
+                    <p class="text-muted fs-13 mb-0">{{ $salaries->total() }} سجل</p>
+                </div>
+                @forelse ($salaries as $salary)
+                    @php
+                        $cur = $salary->currency->symbol_ar ?? $salary->currency->symbol ?? 'ر.س';
+                        $paid = $salary->payment_status === 'paid';
+                    @endphp
+                    <div class="salary-record-card">
+                        <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+                            <div>
+                                <div class="salary-period">{{ $salary->month_name }} {{ $salary->salary_year }}</div>
+                                <div class="salary-breakdown">
+                                    <span>أساسي: {{ number_format($salary->base_salary, 2) }} {{ $cur }}</span>
+                                    <span>بدلات: {{ number_format($salary->allowances, 2) }}</span>
+                                    <span>مكافآت: {{ number_format($salary->bonuses, 2) }}</span>
+                                    <span>خصومات: {{ number_format($salary->deductions, 2) }}</span>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="salary-total mb-1">{{ number_format($salary->total_salary, 2) }} {{ $cur }}</div>
+                                <span class="status-pill status-pill--{{ $paid ? 'paid' : 'pending' }}">{{ $salary->payment_status_ar }}</span>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="empty-state">
+                        <div class="empty-icon"><i class="ri-wallet-line"></i></div>
+                        <p class="mb-0">لا توجد سجلات رواتب</p>
+                    </div>
+                @endforelse
+                @if ($salaries->hasPages())
+                    <div class="p-3 border-top">{{ $salaries->links() }}</div>
+                @endif
+            </div>
+
+            @if ($payrolls->isNotEmpty())
+                <div class="content-panel">
+                    <div class="content-panel-header">
+                        <h5 class="fw-bold mb-1 text-dark">كشوف الرواتب الشهرية</h5>
+                        <p class="text-muted fs-13 mb-0">{{ $stats['payslips'] }} قسيمة — تحميل PDF</p>
+                    </div>
+                    @foreach ($payrolls as $p)
+                        @php
+                            $cur = $p->currency->symbol ?? $p->currency->code ?? 'ر.س';
+                            $statusClass = match ($p->status) {
+                                'paid', 'approved' => 'paid',
+                                'calculated' => 'calculated',
+                                'draft' => 'draft',
+                                'cancelled' => 'cancelled',
+                                default => 'pending',
+                            };
+                        @endphp
+                        <div class="payslip-card">
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="salary-period">{{ $p->month_name }} {{ $p->payroll_year }}</div>
+                                <div class="payslip-code mt-1">{{ $p->payroll_code }}</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="salary-total fs-16 mb-1">
+                                    {{ $p->net_salary ? number_format($p->net_salary, 2).' '.$cur : '—' }}
+                                </div>
+                                <span class="status-pill status-pill--{{ $statusClass }}">{{ $p->status_name_ar }}</span>
+                            </div>
+                            <a href="{{ route('employee.payrolls.payslip.pdf', $p->id) }}" class="btn btn-outline-primary btn-sm" target="_blank" rel="noopener">
+                                <i class="ri-file-pdf-line me-1"></i>PDF
+                            </a>
+                        </div>
+                    @endforeach
+                </div>
             @endif
         </div>
     </div>
 @stop
-
-

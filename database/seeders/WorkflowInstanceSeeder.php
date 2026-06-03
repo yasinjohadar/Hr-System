@@ -38,7 +38,7 @@ class WorkflowInstanceSeeder extends Seeder
             WorkflowInstance::firstOrCreate(
                 [
                     'workflow_id' => $workflow->id,
-                    'entity_type' => 'LeaveRequest',
+                    'entity_type' => \App\Models\LeaveRequest::class,
                     'entity_id' => $request->id,
                 ],
                 [
@@ -65,7 +65,7 @@ class WorkflowInstanceSeeder extends Seeder
             WorkflowInstance::firstOrCreate(
                 [
                     'workflow_id' => $workflow->id,
-                    'entity_type' => 'ExpenseRequest',
+                    'entity_type' => \App\Models\ExpenseRequest::class,
                     'entity_id' => $request->id,
                 ],
                 [

@@ -4,346 +4,298 @@
     لوحة رئيس القسم
 @stop
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('assets/css/admin-team-dashboard.css') }}">
+@endpush
+
 @section('content')
-    <div class="main-content app-content">
-        <div class="container-fluid">
-            <!-- Page Header -->
-            <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
-                <div>
-                    <h5 class="page-title fs-21 mb-1">لوحة رئيس القسم</h5>
-                    <p class="text-muted fs-13 mb-0">إدارة الفريق والموافقات</p>
-                </div>
-                <div class="d-flex gap-2 mt-2 mt-md-0">
-                    <a href="{{ route('admin.team.members') }}" class="btn btn-primary btn-sm">
-                        <i class="ri-team-line me-1"></i>فريق العمل
-                    </a>
-                    <a href="{{ route('admin.team.approvals') }}" class="btn btn-outline-primary btn-sm">
-                        <i class="ri-checkbox-circle-line me-1"></i>الموافقات
-                    </a>
-                </div>
-            </div>
+    @php
+        $attendancePct = $stats['total_employees'] > 0
+            ? min(100, (int) round(($stats['present_today'] / $stats['total_employees']) * 100))
+            : 0;
+    @endphp
 
-            <!-- Stats Cards -->
-            <div class="row mb-4">
-                <div class="col-xl-3 col-md-6">
-                    <div class="card custom-card overflow-hidden">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center">
-                                <div class="avatar avatar-xl bg-primary-transparent avatar-rounded me-3">
-                                    <i class="ri-team-line fs-20 text-primary"></i>
-                                </div>
-                                <div>
-                                    <p class="text-muted mb-0 fs-13">موظفو القسم</p>
-                                    <h4 class="mb-0 fw-semibold">{{ $stats['total_employees'] }}</h4>
-                                </div>
+    <div class="main-content app-content admin-team-dashboard-page">
+        <div class="container-fluid pt-4">
+
+            <div class="card page-hero mb-4">
+                <div class="card-body py-4">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="page-hero-icon">
+                                <i class="ri-dashboard-3-line"></i>
+                            </div>
+                            <div>
+                                <h4 class="mb-1 page-hero-title fw-bold">لوحة رئيس القسم</h4>
+                                <p class="mb-0 page-hero-subtitle">إدارة الفريق والموافقات</p>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <div class="col-xl-3 col-md-6">
-                    <div class="card custom-card overflow-hidden">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center">
-                                <div class="avatar avatar-xl bg-success-transparent avatar-rounded me-3">
-                                    <i class="ri-user-check-line fs-20 text-success"></i>
-                                </div>
-                                <div>
-                                    <p class="text-muted mb-0 fs-13">حضور اليوم</p>
-                                    <h4 class="mb-0 fw-semibold">{{ $stats['present_today'] }} <span class="fs-14 text-muted">/ {{ $stats['total_employees'] }}</span></h4>
-                                </div>
-                            </div>
-                            <div class="mt-2">
-                                @if($stats['late_today'] > 0)
-                                    <span class="badge bg-warning-transparent">{{ $stats['late_today'] }} متأخر</span>
-                                @endif
-                                @if($stats['absent_today'] > 0)
-                                    <span class="badge bg-danger-transparent ms-1">{{ $stats['absent_today'] }} غائب</span>
-                                @endif
-                                @if($stats['on_leave_today'] > 0)
-                                    <span class="badge bg-info-transparent ms-1">{{ $stats['on_leave_today'] }} إجازة</span>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-xl-3 col-md-6">
-                    <div class="card custom-card overflow-hidden">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center">
-                                <div class="avatar avatar-xl bg-warning-transparent avatar-rounded me-3">
-                                    <i class="ri-time-line fs-20 text-warning"></i>
-                                </div>
-                                <div>
-                                    <p class="text-muted mb-0 fs-13">طلبات معلقة</p>
-                                    <h4 class="mb-0 fw-semibold">{{ $stats['my_pending_approvals'] }}</h4>
-                                </div>
-                            </div>
-                            <div class="mt-2">
-                                <span class="badge bg-success-transparent">{{ $stats['pending_leaves'] }} إجازة</span>
-                                <span class="badge bg-info-transparent ms-1">{{ $stats['pending_expenses'] }} مصروفات</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-xl-3 col-md-6">
-                    <div class="card custom-card overflow-hidden">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center">
-                                <div class="avatar avatar-xl bg-info-transparent avatar-rounded me-3">
-                                    <i class="ri-calendar-check-line fs-20 text-info"></i>
-                                </div>
-                                <div>
-                                    <p class="text-muted mb-0 fs-13">حضور الشهر</p>
-                                    <h4 class="mb-0 fw-semibold">{{ $stats['month_attendance'] }} <span class="fs-14 text-muted">يوم</span></h4>
-                                </div>
-                            </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="{{ route('admin.team.members') }}" class="btn btn-hero-primary btn-sm">
+                                <i class="ri-team-line me-1"></i>فريق العمل
+                            </a>
+                            <a href="{{ route('admin.team.approvals') }}" class="btn btn-hero-outline btn-sm">
+                                <i class="ri-checkbox-circle-line me-1"></i>الموافقات
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Main Content Row -->
-            <div class="row mb-4">
-                <!-- Pending Approvals -->
+            <div class="row g-3 mb-4">
+                <div class="col-sm-6 col-xl-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-value">{{ $stats['total_employees'] }}</div>
+                                <div class="stat-label">موظفو القسم</div>
+                            </div>
+                            <div class="stat-icon stat-icon--primary"><i class="ri-team-line"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1 pe-2">
+                                <div class="stat-value">
+                                    {{ $stats['present_today'] }}
+                                    <span class="fs-6 fw-normal text-muted">/ {{ $stats['total_employees'] }}</span>
+                                </div>
+                                <div class="stat-label">حضور اليوم</div>
+                                <div class="stat-progress">
+                                    <div class="stat-progress-bar" style="width: {{ $attendancePct }}%"></div>
+                                </div>
+                                <div class="stat-mini-pills">
+                                    @if($stats['late_today'] > 0)
+                                        <span class="mini-pill mini-pill--warning">{{ $stats['late_today'] }} متأخر</span>
+                                    @endif
+                                    @if($stats['absent_today'] > 0)
+                                        <span class="mini-pill mini-pill--danger">{{ $stats['absent_today'] }} غائب</span>
+                                    @endif
+                                    @if($stats['on_leave_today'] > 0)
+                                        <span class="mini-pill mini-pill--info">{{ $stats['on_leave_today'] }} إجازة</span>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="stat-icon stat-icon--success"><i class="ri-user-check-line"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-value">{{ $stats['my_pending_approvals'] }}</div>
+                                <div class="stat-label">طلبات معلقة</div>
+                                <div class="stat-mini-pills">
+                                    <span class="mini-pill mini-pill--success">{{ $stats['pending_leaves'] }} إجازة</span>
+                                    <span class="mini-pill mini-pill--info">{{ $stats['pending_expenses'] }} مصروفات</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon stat-icon--warning"><i class="ri-time-line"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-value">{{ $stats['month_attendance'] }}</div>
+                                <div class="stat-label">حضور الشهر (يوم)</div>
+                            </div>
+                            <div class="stat-icon stat-icon--info"><i class="ri-calendar-check-line"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
                 <div class="col-xl-8 col-lg-7">
-                    <div class="card custom-card">
-                        <div class="card-header justify-content-between">
-                            <h6 class="card-title fw-semibold">
-                                <i class="ri-checkbox-circle-line me-1"></i>طلبات الموافقة المعلقة
-                            </h6>
-                            <a href="{{ route('admin.team.approvals') }}" class="btn btn-sm btn-outline-primary">عرض الكل</a>
+                    <div class="content-panel">
+                        <div class="content-panel-header">
+                            <h5><i class="ri-checkbox-circle-line me-1 text-primary"></i>طلبات الموافقة المعلقة</h5>
+                            <a href="{{ route('admin.team.approvals') }}" class="btn-panel-link">عرض الكل</a>
                         </div>
-                        <div class="card-body p-0">
-                            @forelse($pendingApprovals as $approval)
-                                <div class="p-3 border-bottom">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <div class="d-flex align-items-start">
-                                            <div class="avatar avatar-sm bg-{{ $approval['type'] === 'leave' ? 'success' : 'info' }}-transparent avatar-rounded me-3 mt-1">
-                                                <i class="ri-{{ $approval['type'] === 'leave' ? 'sun' : 'money-dollar-circle' }}-line text-{{ $approval['type'] === 'leave' ? 'success' : 'info' }}"></i>
-                                            </div>
-                                            <div>
-                                                <h6 class="mb-1 fs-14 fw-semibold">
-                                                    {{ $approval['request']->employee->full_name }}
-                                                </h6>
-                                                <p class="text-muted fs-13 mb-1">
-                                                    @if($approval['type'] === 'leave')
-                                                        <span class="badge bg-success-transparent me-1">{{ $approval['request']->leaveType->name_ar ?? $approval['request']->leaveType->name }}</span>
-                                                        {{ $approval['request']->start_date->format('Y/m/d') }} - {{ $approval['request']->end_date->format('Y/m/d') }}
-                                                        ({{ $approval['request']->days_count }} يوم)
-                                                    @else
-                                                        <span class="badge bg-info-transparent me-1">{{ $approval['request']->category->name_ar ?? $approval['request']->category->name }}</span>
-                                                        {{ number_format($approval['request']->amount, 2) }} {{ $approval['request']->currency->code ?? 'ر.س' }}
-                                                    @endif
-                                                </p>
-                                                <small class="text-muted">
-                                                    <i class="ri-time-line me-1"></i>
-                                                    {{ $approval['request']->created_at->diffForHumans() }}
-                                                </small>
-                                            </div>
+                        @forelse($pendingApprovals as $approval)
+                            <div class="approval-item">
+                                <div class="d-flex justify-content-between align-items-start gap-2">
+                                    <div class="d-flex align-items-start gap-3 flex-grow-1">
+                                        <div class="item-icon item-icon--{{ $approval['type'] === 'leave' ? 'leave' : 'expense' }}">
+                                            <i class="ri-{{ $approval['type'] === 'leave' ? 'sun' : 'money-dollar-circle' }}-line"></i>
                                         </div>
-                                        <div class="d-flex gap-2">
-                                            @if($approval['type'] === 'leave')
-                                                <a href="{{ route('admin.leave-requests.show', $approval['request']->id) }}" class="btn btn-sm btn-outline-primary">
-                                                    <i class="ri-eye-line"></i>
-                                                </a>
-                                            @else
-                                                <a href="{{ route('admin.expense-requests.show', $approval['request']->id) }}" class="btn btn-sm btn-outline-primary">
-                                                    <i class="ri-eye-line"></i>
-                                                </a>
-                                            @endif
+                                        <div class="min-w-0">
+                                            <div class="item-title">{{ $approval['request']->employee->full_name }}</div>
+                                            <div class="item-meta mt-1">
+                                                @if($approval['type'] === 'leave')
+                                                    <span class="type-pill type-pill--leave">{{ $approval['request']->leaveType->name_ar ?? $approval['request']->leaveType->name }}</span>
+                                                    {{ $approval['request']->start_date->format('Y/m/d') }} — {{ $approval['request']->end_date->format('Y/m/d') }}
+                                                    ({{ $approval['request']->days_count }} يوم)
+                                                @else
+                                                    <span class="type-pill type-pill--expense">{{ $approval['request']->category->name_ar ?? $approval['request']->category->name }}</span>
+                                                    {{ number_format($approval['request']->amount, 2) }} {{ $approval['request']->currency->code ?? 'ر.س' }}
+                                                @endif
+                                            </div>
+                                            <div class="item-meta mt-1">
+                                                <i class="ri-time-line me-1"></i>{{ $approval['request']->created_at->diffForHumans() }}
+                                            </div>
                                         </div>
                                     </div>
+                                    @if($approval['type'] === 'leave')
+                                        <a href="{{ route('admin.leave-requests.show', $approval['request']->id) }}" class="btn-view-sm" title="عرض">
+                                            <i class="ri-eye-line"></i>
+                                        </a>
+                                    @else
+                                        <a href="{{ route('admin.expense-requests.show', $approval['request']->id) }}" class="btn-view-sm" title="عرض">
+                                            <i class="ri-eye-line"></i>
+                                        </a>
+                                    @endif
                                 </div>
-                            @empty
-                                <div class="text-center text-muted py-5">
-                                    <i class="ri-checkbox-circle-line fs-32 d-block mb-3 text-success"></i>
-                                    <h6>لا توجد طلبات معلقة</h6>
-                                    <p class="fs-13">جميع الطلبات تمت معالجتها</p>
-                                </div>
-                            @endforelse
-                        </div>
+                            </div>
+                        @empty
+                            <div class="empty-state">
+                                <div class="empty-icon"><i class="ri-checkbox-circle-line"></i></div>
+                                <h6>لا توجد طلبات معلقة</h6>
+                                <p>جميع الطلبات تمت معالجتها</p>
+                            </div>
+                        @endforelse
                     </div>
                 </div>
 
-                <!-- Departments & Quick Info -->
-                <div class="col-xl-4 col-lg-5">
-                    <!-- Departments -->
-                    <div class="card custom-card mb-4">
-                        <div class="card-header">
-                            <h6 class="card-title fw-semibold">
-                                <i class="ri-building-line me-1"></i>الأقسام المُدارة
-                            </h6>
+                <div class="col-xl-4 col-lg-5 d-flex flex-column gap-3">
+                    <div class="content-panel">
+                        <div class="content-panel-header">
+                            <h5><i class="ri-building-line me-1 text-primary"></i>الأقسام المُدارة</h5>
                         </div>
-                        <div class="card-body p-0">
-                            @forelse($departments as $dept)
-                                <div class="p-3 border-bottom">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <h6 class="mb-1 fs-14 fw-semibold">{{ $dept->name }}</h6>
-                                            <small class="text-muted">{{ $dept->employees_count }} موظف</small>
+                        @forelse($departments as $dept)
+                            <div class="dept-item">
+                                <div class="d-flex justify-content-between align-items-center gap-2">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="item-icon item-icon--dept">
+                                            <i class="ri-building-2-line"></i>
                                         </div>
-                                        <span class="badge bg-{{ $dept->is_active ? 'success' : 'danger' }}-transparent">
-                                            {{ $dept->is_active ? 'نشط' : 'غير نشط' }}
-                                        </span>
+                                        <div>
+                                            <div class="item-title">{{ $dept->name }}</div>
+                                            <div class="item-meta">{{ $dept->employees_count }} موظف</div>
+                                        </div>
                                     </div>
+                                    <span class="status-pill status-pill--{{ $dept->is_active ? 'active' : 'inactive' }}">
+                                        {{ $dept->is_active ? 'نشط' : 'غير نشط' }}
+                                    </span>
                                 </div>
-                            @empty
-                                <div class="text-center text-muted py-3">
-                                    لا توجد أقسام مُدارة
-                                </div>
-                            @endforelse
-                        </div>
+                            </div>
+                        @empty
+                            <div class="empty-state py-4">
+                                <p class="mb-0">لا توجد أقسام مُدارة</p>
+                            </div>
+                        @endforelse
                     </div>
 
-                    <!-- Upcoming Meetings -->
                     @if($upcomingMeetings->isNotEmpty())
-                        <div class="card custom-card">
-                            <div class="card-header">
-                                <h6 class="card-title fw-semibold">
-                                    <i class="ri-calendar-event-line me-1"></i>اجتماعات قادمة
-                                </h6>
+                        <div class="content-panel">
+                            <div class="content-panel-header">
+                                <h5><i class="ri-calendar-event-line me-1 text-primary"></i>اجتماعات قادمة</h5>
                             </div>
-                            <div class="card-body p-0">
-                                @foreach($upcomingMeetings->take(3) as $meeting)
-                                    <div class="p-3 border-bottom">
-                                        <h6 class="mb-1 fs-14 fw-semibold">{{ $meeting->title }}</h6>
-                                        <p class="text-muted fs-13 mb-0">
-                                            <i class="ri-time-line me-1"></i>
-                                            {{ \Carbon\Carbon::parse($meeting->start_time)->format('Y/m/d H:i') }}
-                                        </p>
+                            @foreach($upcomingMeetings->take(3) as $meeting)
+                                <div class="meeting-item">
+                                    <div class="item-title">{{ $meeting->title }}</div>
+                                    <div class="item-meta mt-1">
+                                        <i class="ri-time-line me-1"></i>
+                                        {{ \Carbon\Carbon::parse($meeting->start_time)->format('Y/m/d H:i') }}
                                     </div>
-                                @endforeach
-                            </div>
+                                </div>
+                            @endforeach
                         </div>
                     @endif
                 </div>
             </div>
 
-            <!-- Today Attendance -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="card custom-card">
-                        <div class="card-header justify-content-between">
-                            <h6 class="card-title fw-semibold">
-                                <i class="ri-calendar-check-line me-1"></i>حضور اليوم - {{ today()->format('Y/m/d') }}
-                            </h6>
-                            <div>
-                                <span class="badge bg-success-transparent me-2">
-                                    <i class="ri-check-line me-1"></i>{{ $stats['present_today'] }} حاضر
-                                </span>
-                                <span class="badge bg-warning-transparent me-2">
-                                    <i class="ri-time-line me-1"></i>{{ $stats['late_today'] }} متأخر
-                                </span>
-                                <span class="badge bg-danger-transparent me-2">
-                                    <i class="ri-close-line me-1"></i>{{ $stats['absent_today'] }} غائب
-                                </span>
-                                <span class="badge bg-info-transparent">
-                                    <i class="ri-sun-line me-1"></i>{{ $stats['on_leave_today'] }} إجازة
-                                </span>
-                            </div>
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-hover text-nowrap mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>الموظف</th>
-                                            <th>القسم</th>
-                                            <th>المنصب</th>
-                                            <th>الحالة</th>
-                                            <th>دخول</th>
-                                            <th>خروج</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse($todayAttendance as $attendance)
-                                            <tr>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="avatar avatar-sm bg-primary-transparent avatar-rounded me-2">
-                                                            {{ substr($attendance->employee->first_name, 0, 1) }}
-                                                        </div>
-                                                        <span class="fw-medium">{{ $attendance->employee->full_name }}</span>
-                                                    </div>
-                                                </td>
-                                                <td>{{ $attendance->employee->department->name ?? '-' }}</td>
-                                                <td>{{ $attendance->employee->position->title ?? '-' }}</td>
-                                                <td>
-                                                    <span class="badge bg-{{ $attendance->status === 'present' ? 'success' : ($attendance->status === 'absent' ? 'danger' : ($attendance->status === 'late' ? 'warning' : 'info')) }}-transparent">
-                                                        {{ $attendance->status_name_ar }}
-                                                    </span>
-                                                </td>
-                                                <td>{{ $attendance->check_in ? \Carbon\Carbon::parse($attendance->check_in)->format('H:i') : '-' }}</td>
-                                                <td>{{ $attendance->check_out ? \Carbon\Carbon::parse($attendance->check_out)->format('H:i') : '-' }}</td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="6" class="text-center text-muted py-4">
-                                                    لا توجد سجلات حضور اليوم
-                                                </td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+            <div class="content-panel mb-4">
+                <div class="content-panel-header">
+                    <h5><i class="ri-calendar-check-line me-1 text-primary"></i>حضور اليوم — {{ today()->format('Y/m/d') }}</h5>
+                    <div class="attendance-legend">
+                        <span class="legend-chip mini-pill mini-pill--success">{{ $stats['present_today'] }} حاضر</span>
+                        <span class="legend-chip mini-pill mini-pill--warning">{{ $stats['late_today'] }} متأخر</span>
+                        <span class="legend-chip mini-pill mini-pill--danger">{{ $stats['absent_today'] }} غائب</span>
+                        <span class="legend-chip mini-pill mini-pill--info">{{ $stats['on_leave_today'] }} إجازة</span>
                     </div>
+                </div>
+                <div class="attendance-table-wrap">
+                    <div class="table-header-row">
+                        <span>الموظف</span>
+                        <span>القسم</span>
+                        <span>المنصب</span>
+                        <span>الحالة</span>
+                        <span>دخول</span>
+                        <span>خروج</span>
+                    </div>
+                    @forelse($todayAttendance as $attendance)
+                        @php
+                            $statusClass = match($attendance->status) {
+                                'present' => 'present',
+                                'absent' => 'absent',
+                                'late' => 'late',
+                                'on_leave' => 'on_leave',
+                                default => 'inactive',
+                            };
+                        @endphp
+                        <div class="attendance-row">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="employee-avatar">
+                                    {{ mb_substr($attendance->employee->first_name ?? '?', 0, 1) }}
+                                </div>
+                                <span class="item-title">{{ $attendance->employee->full_name }}</span>
+                            </div>
+                            <span class="item-meta">{{ $attendance->employee->department->name ?? '—' }}</span>
+                            <span class="item-meta">{{ $attendance->employee->position->title ?? '—' }}</span>
+                            <span class="status-pill status-pill--{{ $statusClass }}">{{ $attendance->status_ar }}</span>
+                            <span class="item-meta">{{ $attendance->check_in ? \Carbon\Carbon::parse($attendance->check_in)->format('H:i') : '—' }}</span>
+                            <span class="item-meta">{{ $attendance->check_out ? \Carbon\Carbon::parse($attendance->check_out)->format('H:i') : '—' }}</span>
+                        </div>
+                    @empty
+                        <div class="empty-state">
+                            <p class="mb-0">لا توجد سجلات حضور اليوم</p>
+                        </div>
+                    @endforelse
                 </div>
             </div>
 
-            <!-- Recent Leaves -->
-            <div class="row">
-                <div class="col-12">
-                    <div class="card custom-card">
-                        <div class="card-header">
-                            <h6 class="card-title fw-semibold">
-                                <i class="ri-sun-line me-1"></i>آخر طلبات الإجازة
-                            </h6>
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-hover text-nowrap mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>الموظف</th>
-                                            <th>نوع الإجازة</th>
-                                            <th>من</th>
-                                            <th>إلى</th>
-                                            <th>الأيام</th>
-                                            <th>الحالة</th>
-                                            <th>تاريخ الطلب</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse($recentLeaves as $leave)
-                                            <tr>
-                                                <td>{{ $leave->employee->full_name }}</td>
-                                                <td>{{ $leave->leaveType->name_ar ?? $leave->leaveType->name }}</td>
-                                                <td>{{ $leave->start_date->format('Y/m/d') }}</td>
-                                                <td>{{ $leave->end_date->format('Y/m/d') }}</td>
-                                                <td>{{ $leave->days_count }}</td>
-                                                <td>
-                                                    <span class="badge bg-{{ $leave->status === 'approved' ? 'success' : ($leave->status === 'rejected' ? 'danger' : 'warning') }}-transparent">
-                                                        {{ $leave->status_name_ar }}
-                                                    </span>
-                                                </td>
-                                                <td>{{ $leave->created_at->format('Y/m/d H:i') }}</td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="7" class="text-center text-muted py-4">
-                                                    لا توجد طلبات إجازة
-                                                </td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+            <div class="content-panel">
+                <div class="content-panel-header">
+                    <h5><i class="ri-sun-line me-1 text-primary"></i>آخر طلبات الإجازة</h5>
+                </div>
+                <div class="leave-table-wrap">
+                    <div class="table-header-row">
+                        <span>الموظف</span>
+                        <span>نوع الإجازة</span>
+                        <span>من</span>
+                        <span>إلى</span>
+                        <span>الأيام</span>
+                        <span>الحالة</span>
+                        <span>تاريخ الطلب</span>
                     </div>
+                    @forelse($recentLeaves as $leave)
+                        @php
+                            $leaveStatusClass = match($leave->status) {
+                                'approved' => 'approved',
+                                'rejected' => 'rejected',
+                                default => 'pending',
+                            };
+                        @endphp
+                        <div class="leave-row">
+                            <span class="item-title">{{ $leave->employee->full_name }}</span>
+                            <span class="item-meta">{{ $leave->leaveType->name_ar ?? $leave->leaveType->name }}</span>
+                            <span class="item-meta">{{ $leave->start_date->format('Y/m/d') }}</span>
+                            <span class="item-meta">{{ $leave->end_date->format('Y/m/d') }}</span>
+                            <span class="item-meta">{{ $leave->days_count }}</span>
+                            <span class="status-pill status-pill--{{ $leaveStatusClass }}">{{ $leave->status_name_ar }}</span>
+                            <span class="item-meta">{{ $leave->created_at->format('Y/m/d H:i') }}</span>
+                        </div>
+                    @empty
+                        <div class="empty-state">
+                            <p class="mb-0">لا توجد طلبات إجازة</p>
+                        </div>
+                    @endforelse
                 </div>
             </div>
 

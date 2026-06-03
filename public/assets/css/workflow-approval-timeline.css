@@ -1,0 +1,12 @@
+.workflow-approval-timeline--compact .workflow-timeline-item {
+    margin-bottom: 0.75rem !important;
+}
+
+.workflow-timeline-marker {
+    width: 1.25rem;
+    line-height: 1.4;
+}
+
+.workflow-timeline-item--current .fw-medium {
+    color: var(--bs-warning);
+}

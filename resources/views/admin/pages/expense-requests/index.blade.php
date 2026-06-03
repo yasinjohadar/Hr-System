@@ -107,8 +107,18 @@
                                         </td>
                                         <td>{{ $request->expense_date->format('Y-m-d') }}</td>
                                         <td>
-                                            <span class="badge bg-{{ $request->status == 'approved' ? 'success' : ($request->status == 'rejected' ? 'danger' : ($request->status == 'paid' ? 'info' : 'warning')) }}">
-                                                {{ $request->status_name_ar }}
+                                            @php
+                                                $progress = $workflowProgressById[$request->id] ?? null;
+                                                $badgeAr = $progress['badge_ar'] ?? $request->status_name_ar;
+                                                $badgeVariant = $progress['badge_variant'] ?? 'warning';
+                                                $badgeBg = match ($badgeVariant) {
+                                                    'success' => 'success',
+                                                    'danger' => 'danger',
+                                                    default => $request->status == 'paid' ? 'info' : 'warning',
+                                                };
+                                            @endphp
+                                            <span class="badge bg-{{ $badgeBg }}">
+                                                {{ $badgeAr }}
                                             </span>
                                         </td>
                                         <td>
@@ -124,12 +134,10 @@
                                             </a>
                                             @endcan
                                             @endif
-                                            @if ($request->status == 'pending')
-                                            @can('expense-request-approve')
+                                            @if ($request->status == 'pending' && ($canApproveNowById[$request->id] ?? false))
                                             <a href="{{ route('admin.expense-requests.approve-form', $request->id) }}" class="btn btn-sm btn-success" title="موافقة">
                                                 <i class="fas fa-check"></i>
                                             </a>
-                                            @endcan
                                             @endif
                                         </td>
                                     </tr>

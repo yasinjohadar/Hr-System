@@ -70,7 +70,7 @@
 
                         <div class="mb-3">
                             <label class="form-label">تعليقات الموافقة</label>
-                            <textarea name="comments" class="form-control" rows="3" placeholder="تعليقات اختيارية..."></textarea>
+                            <textarea name="comments" class="form-control" rows="3" maxlength="2000" placeholder="ملاحظة اختيارية مع الموافقة…"></textarea>
                         </div>
 
                         <div class="text-end">

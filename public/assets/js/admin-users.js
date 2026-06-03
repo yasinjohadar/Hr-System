@@ -237,10 +237,37 @@
         }
     };
 
+    function initializeOptionalUsernameField() {
+        const checkbox = document.getElementById('set_username');
+        const col = document.getElementById('username-field-col');
+        const input = document.getElementById('username-input');
+        if (!col || col.dataset.usernameOptional !== '1') {
+            return;
+        }
+
+        function syncUsernameField() {
+            const enabled = !checkbox || checkbox.checked;
+            col.classList.toggle('d-none', !enabled);
+            if (!input) {
+                return;
+            }
+            input.disabled = !enabled;
+            if (!enabled) {
+                input.value = '';
+            }
+        }
+
+        if (checkbox) {
+            checkbox.addEventListener('change', syncUsernameField);
+        }
+        syncUsernameField();
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         initializeToggleSwitches();
         setupLoginCodeButtons();
         setupLiveSearch();
         setupCopyButtons();
+        initializeOptionalUsernameField();
     });
 })();

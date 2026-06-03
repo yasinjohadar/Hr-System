@@ -1,0 +1,232 @@
+/* بوابة الموظف — السياسات (مسطّح) */
+.employee-policies-page {
+    --pl-primary: var(--primary-color, #5c67f7);
+    --pl-primary-soft: rgba(var(--primary-rgb, 92, 103, 247), 0.12);
+    --pl-success: #10b981;
+    --pl-warning: #f59e0b;
+    --pl-muted: #64748b;
+    --pl-surface: var(--custom-white, #fff);
+    --pl-border: var(--default-border, rgba(15, 23, 42, 0.08));
+    --pl-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    --pl-radius: 0.75rem;
+}
+
+.employee-policies-page .page-hero {
+    background: var(--pl-surface);
+    border: 1px solid var(--pl-border);
+    border-inline-start: 4px solid var(--pl-primary);
+    border-radius: var(--pl-radius);
+    box-shadow: var(--pl-shadow);
+}
+
+.employee-policies-page .page-hero-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: var(--pl-primary-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    color: var(--pl-primary);
+}
+
+.employee-policies-page .page-hero-title { color: var(--default-text-color, #0f172a); }
+.employee-policies-page .page-hero-subtitle { color: var(--pl-muted); font-size: 0.8125rem; }
+
+.employee-policies-page .stat-card {
+    border: 1px solid var(--pl-border);
+    border-radius: var(--pl-radius);
+    background: var(--pl-surface);
+    box-shadow: var(--pl-shadow);
+    padding: 1.25rem;
+    height: 100%;
+}
+
+.employee-policies-page .stat-value { font-size: 1.75rem; font-weight: 700; color: var(--default-text-color, #0f172a); }
+.employee-policies-page .stat-label { font-size: 0.8125rem; color: var(--pl-muted); }
+
+.employee-policies-page .stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+}
+
+.employee-policies-page .stat-icon--primary { background: var(--pl-primary-soft); color: var(--pl-primary); }
+.employee-policies-page .stat-icon--warning { background: rgba(245, 158, 11, 0.12); color: var(--pl-warning); }
+.employee-policies-page .stat-icon--success { background: rgba(16, 185, 129, 0.12); color: var(--pl-success); }
+
+.employee-policies-page .filter-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.25rem; }
+
+.employee-policies-page .filter-pill {
+    border: 1px solid var(--pl-border);
+    background: var(--pl-surface);
+    color: var(--pl-muted);
+    padding: 0.4rem 1rem;
+    border-radius: 99px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.employee-policies-page .filter-pill:hover,
+.employee-policies-page .filter-pill.active {
+    background: var(--pl-primary);
+    border-color: var(--pl-primary);
+    color: #fff;
+}
+
+.employee-policies-page .section-panel {
+    border: 1px solid var(--pl-border);
+    border-radius: var(--pl-radius);
+    background: var(--pl-surface);
+    box-shadow: var(--pl-shadow);
+    margin-bottom: 1.25rem;
+}
+
+.employee-policies-page .section-panel-header {
+    padding: 1.15rem 1.35rem;
+    border-bottom: 1px solid var(--pl-border);
+}
+
+.employee-policies-page .section-panel-body {
+    padding: 1.25rem 1.35rem;
+}
+
+.employee-policies-page .policy-card {
+    border: 1px solid var(--pl-border);
+    border-radius: var(--pl-radius);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    background: #fafbfc;
+}
+
+.employee-policies-page .policy-card:last-child { margin-bottom: 0; }
+
+.employee-policies-page .policy-card--pending {
+    border-inline-start: 3px solid var(--pl-warning);
+    background: var(--pl-surface);
+}
+
+.employee-policies-page .policy-card--acknowledged {
+    border-inline-start: 3px solid var(--pl-success);
+    background: var(--pl-surface);
+}
+
+.employee-policies-page .policy-title {
+    font-weight: 700;
+    font-size: 0.9375rem;
+    color: var(--default-text-color, #0f172a);
+    margin-bottom: 0.35rem;
+}
+
+.employee-policies-page .category-pill {
+    padding: 0.2rem 0.6rem;
+    border-radius: 99px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: rgba(100, 116, 139, 0.12);
+    color: #475569;
+}
+
+.employee-policies-page .policy-meta {
+    font-size: 0.75rem;
+    color: var(--pl-muted);
+    margin-bottom: 0.75rem;
+}
+
+.employee-policies-page .policy-excerpt {
+    font-size: 0.8125rem;
+    color: var(--default-text-color, #475569);
+    line-height: 1.55;
+    margin-bottom: 1rem;
+}
+
+.employee-policies-page .policy-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.employee-policies-page .btn-acknowledge {
+    background: var(--pl-primary);
+    border-color: var(--pl-primary);
+    font-weight: 600;
+    font-size: 0.8125rem;
+    border-radius: 0.5rem;
+}
+
+.employee-policies-page .btn-download {
+    border: 1px solid var(--pl-border);
+    background: var(--pl-surface);
+    color: var(--pl-muted);
+    font-weight: 500;
+    font-size: 0.8125rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.375rem 0.85rem;
+}
+
+.employee-policies-page .btn-download:hover {
+    border-color: var(--pl-primary);
+    color: var(--pl-primary);
+}
+
+.employee-policies-page .ack-badge {
+    padding: 0.35rem 0.75rem;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: rgba(16, 185, 129, 0.15);
+    color: #047857;
+    white-space: nowrap;
+}
+
+.employee-policies-page .ack-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--pl-border);
+}
+
+.employee-policies-page .ack-row:last-child { border-bottom: none; padding-bottom: 0; }
+.employee-policies-page .ack-row:first-child { padding-top: 0; }
+
+.employee-policies-page .empty-state {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--pl-muted);
+    font-size: 0.875rem;
+}
+
+.employee-policies-page .empty-state-block {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    border: 1px dashed var(--pl-border);
+    border-radius: var(--pl-radius);
+}
+
+.employee-policies-page .empty-state-block .empty-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    background: var(--pl-primary-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: var(--pl-primary);
+}
+
+.employee-policies-page .policy-section-hidden { display: none !important; }

@@ -55,6 +55,13 @@ class AttendanceController extends Controller
             $attendancesQuery->where('attendance_date', '>=', Carbon::now()->subDays(30));
         }
 
+        $stats = [
+            'total' => (clone $attendancesQuery)->count(),
+            'present' => (clone $attendancesQuery)->where('status', 'present')->count(),
+            'absent' => (clone $attendancesQuery)->where('status', 'absent')->count(),
+            'late' => (clone $attendancesQuery)->where('status', 'late')->count(),
+        ];
+
         $attendances = $attendancesQuery->orderBy('attendance_date', 'desc')
             ->orderBy('check_in', 'desc')
             ->paginate(50);
@@ -69,10 +76,11 @@ class AttendanceController extends Controller
                 'html_rows' => view('admin.pages.attendances._index_rows', compact('attendances'))->render(),
                 'html_pagination' => view('admin.pages.attendances._index_pagination', compact('attendances'))->render(),
                 'total' => $attendances->total(),
+                'stats' => $stats,
             ]);
         }
 
-        return view("admin.pages.attendances.index", compact("attendances", "employees", "currentStartDate", "currentEndDate"));
+        return view('admin.pages.attendances.index', compact('attendances', 'employees', 'currentStartDate', 'currentEndDate', 'stats'));
     }
 
     /**

@@ -27,15 +27,14 @@
                     <a href="{{ route('admin.expense-requests.index') }}" class="btn btn-secondary btn-sm">
                         <i class="fas fa-arrow-right me-1"></i>العودة للقائمة
                     </a>
-                    @if ($expenseRequest->status == 'pending')
-                        @can('expense-request-approve')
-                            <a href="{{ route('admin.expense-requests.approve-form', $expenseRequest->id) }}" class="btn btn-success btn-sm">
-                                <i class="fas fa-check me-1"></i>موافقة
-                            </a>
-                            <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal">
-                                <i class="fas fa-times me-1"></i>رفض
-                            </button>
-                        @endcan
+                    @php $canApproveNow = $canApproveNow ?? false; @endphp
+                    @if ($expenseRequest->status == 'pending' && $canApproveNow)
+                        <a href="{{ route('admin.expense-requests.approve-form', $expenseRequest->id) }}" class="btn btn-success btn-sm">
+                            <i class="fas fa-check me-1"></i>موافقة
+                        </a>
+                        <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                            <i class="fas fa-times me-1"></i>رفض
+                        </button>
                     @endif
                     @if ($expenseRequest->status == 'approved')
                         @can('expense-request-pay')
@@ -72,10 +71,19 @@
                                 <div class="text-white-75 small mb-1"><i class="fas fa-folder me-1"></i>التصنيف</div>
                                 <div class="fw-semibold">{{ $expenseRequest->category->name_ar ?? $expenseRequest->category->name }}</div>
                             </div>
+                            @php
+                                $displayBadge = $workflowProgress['badge_ar'] ?? $expenseRequest->status_name_ar;
+                                $displayVariant = $workflowProgress['badge_variant'] ?? 'warning';
+                                $badgeBg = match ($displayVariant) {
+                                    'success' => 'success',
+                                    'danger' => 'danger',
+                                    default => $expenseRequest->status == 'paid' ? 'info' : 'warning',
+                                };
+                            @endphp
                             <div class="mb-3">
                                 <div class="text-white-75 small mb-2">الحالة</div>
-                                <span class="badge bg-{{ $expenseRequest->status == 'approved' ? 'success' : ($expenseRequest->status == 'rejected' ? 'danger' : ($expenseRequest->status == 'paid' ? 'info' : 'warning')) }} fs-14 px-3 py-2">
-                                    {{ $expenseRequest->status_name_ar }}
+                                <span class="badge bg-{{ $badgeBg }} fs-14 px-3 py-2">
+                                    {{ $displayBadge }}
                                 </span>
                             </div>
                             <div class="mt-auto pt-3 border-top border-white border-opacity-25">
@@ -88,6 +96,13 @@
                 </div>
 
                 <div class="col-lg-8">
+                    @if ($workflowProgress ?? null)
+                        <div class="card shadow-sm border-0 mb-3">
+                            <div class="card-body">
+                                <x-workflow-approval-timeline :workflow-progress="$workflowProgress" />
+                            </div>
+                        </div>
+                    @endif
                     <div class="card shadow-sm border-0 h-100">
                         <div class="card-header bg-light py-3 border-bottom">
                             <h6 class="mb-0 fw-semibold"><i class="fas fa-circle-info text-primary me-2"></i>تفاصيل الطلب</h6>
@@ -252,7 +267,7 @@
         </div>
     </div>
 
-    @if ($expenseRequest->status == 'pending')
+    @if ($expenseRequest->status == 'pending' && ($canApproveNow ?? false))
     <div class="modal fade" id="rejectModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">

@@ -2,11 +2,15 @@
 
 namespace App\Services;
 
+use App\Models\User;
 use App\Models\Workflow;
 use App\Models\WorkflowInstance;
 use App\Models\WorkflowStep;
+use App\Models\WorkflowStepAction;
 use App\Models\Employee;
+use Illuminate\Database\Eloquent\Model;
 use App\Services\ApprovalService;
+use App\Support\WorkflowEntityType;
 use App\Notifications\ApprovalRequestNotification;
 use App\Events\ApprovalRequestSent;
 use Illuminate\Support\Facades\DB;
@@ -53,6 +57,8 @@ class WorkflowService
             return null;
         }
 
+        $entityType = WorkflowEntityType::normalize($entityType);
+
         // إنشاء instance جديد
         $instance = WorkflowInstance::create([
             'workflow_id' => $workflow->id,
@@ -68,6 +74,45 @@ class WorkflowService
         $this->notifyApprover($firstStep, $employee, $instance);
 
         return $instance;
+    }
+
+    /**
+     * Skip workflow steps that have no resolvable approver (e.g. backfill when department has no manager).
+     */
+    public function advanceToFirstStaffedStep(WorkflowInstance $instance, Employee $employee, $entity = null): WorkflowInstance
+    {
+        $instance->load(['workflow', 'currentStep']);
+        $entity ??= $this->getEntity($instance);
+        $maxHops = $instance->workflow?->steps()->where('is_required', true)->count() ?? 10;
+
+        for ($i = 0; $i < $maxHops; $i++) {
+            $instance->refresh();
+            $currentStep = $instance->currentStep;
+            if (! $currentStep || $instance->status !== 'in_progress') {
+                break;
+            }
+
+            $approver = $this->approvalService->getApproverForStep($currentStep, $employee, $entity);
+            if ($approver) {
+                $this->notifyApprover($currentStep, $employee, $instance);
+                break;
+            }
+
+            Log::warning('Skipping workflow step without approver', [
+                'instance_id' => $instance->id,
+                'step_id' => $currentStep->id,
+                'step_order' => $currentStep->step_order,
+            ]);
+
+            $nextStep = $this->getNextStep($instance->workflow, $currentStep, $entity, $employee);
+            if (! $nextStep) {
+                break;
+            }
+
+            $instance->update(['workflow_step_id' => $nextStep->id]);
+        }
+
+        return $instance->refresh();
     }
 
     /**
@@ -109,6 +154,8 @@ class WorkflowService
             if (!$canApprove) {
                 throw new \Exception("User cannot approve this step");
             }
+
+            $this->recordStepAction($instance, $currentStep, $approver, $approved ? 'approved' : 'rejected', $comments);
 
             if ($approved) {
                 // الموافقة - الانتقال للخطوة التالية
@@ -197,17 +244,21 @@ class WorkflowService
     /**
      * الحصول على class name للكيان
      */
-    private function getModelClass(string $entityType): ?string
+    public function getModelClass(string $entityType): ?string
     {
-        return match($entityType) {
-            'LeaveRequest' => \App\Models\LeaveRequest::class,
-            'ExpenseRequest' => \App\Models\ExpenseRequest::class,
-            'EmployeeJobChange' => \App\Models\EmployeeJobChange::class,
-            'OvertimeRecord' => \App\Models\OvertimeRecord::class,
-            'Payroll' => \App\Models\Payroll::class,
-            'PerformanceReview' => \App\Models\PerformanceReview::class,
-            default => null,
-        };
+        return WorkflowEntityType::resolveModelClass($entityType);
+    }
+
+    public static function findInstanceForEntity(string $entityType, int $entityId, ?string $status = 'in_progress'): ?WorkflowInstance
+    {
+        $query = WorkflowInstance::where('entity_type', WorkflowEntityType::normalize($entityType))
+            ->where('entity_id', $entityId);
+
+        if ($status !== null) {
+            $query->where('status', $status);
+        }
+
+        return $query->with('currentStep')->latest('id')->first();
     }
 
     /**
@@ -233,6 +284,10 @@ class WorkflowService
     {
         if (! method_exists($entity, 'update')) {
             return;
+        }
+
+        if ($entity instanceof \App\Models\Ticket) {
+            $status = $status === 'approved' ? 'open' : ($status === 'rejected' ? 'rejected' : $status);
         }
 
         $updateData = ['status' => $status];
@@ -306,13 +361,17 @@ class WorkflowService
      */
     private function getEntityName($entity, string $entityType): string
     {
+        $short = WorkflowEntityType::shortName($entityType);
+
         try {
-            return match($entityType) {
+            return match ($short) {
                 'LeaveRequest' => "إجازة من {$entity->start_date->format('Y-m-d')} إلى {$entity->end_date->format('Y-m-d')}",
                 'ExpenseRequest' => "مصروف: {$entity->amount} " . ($entity->currency?->code ?? $entity->currency_id ?? 'SAR'),
                 'EmployeeJobChange' => 'تغيير وظيفي: ' . ($entity->change_type_label ?? $entity->change_type ?? ''),
-                'OvertimeRecord' => "ساعات إضافية: " . ($entity->overtime_hours ?? $entity->hours ?? 0) . " ساعة",
-                'PerformanceReview' => "تقييم أداء: " . ($entity->review_period ?? 'غير محدد'),
+                'OvertimeRecord' => 'ساعات إضافية: ' . ($entity->overtime_hours ?? $entity->hours ?? 0) . ' ساعة',
+                'PerformanceReview' => 'تقييم أداء: ' . ($entity->review_period ?? 'غير محدد'),
+                'Ticket' => 'تذكرة: ' . ($entity->title ?? ''),
+                'ProjectTimeEntry' => 'وقت مشروع: ' . ($entity->hours ?? 0) . ' ساعة',
                 default => 'طلب موافقة',
             };
         } catch (\Exception $e) {
@@ -322,11 +381,122 @@ class WorkflowService
     }
 
     /**
+     * Record an approval/rejection action for the current workflow step.
+     */
+    public function recordStepAction(
+        WorkflowInstance $instance,
+        WorkflowStep $step,
+        User $user,
+        string $action,
+        ?string $comments = null
+    ): WorkflowStepAction {
+        return WorkflowStepAction::create([
+            'workflow_instance_id' => $instance->id,
+            'workflow_step_id' => $step->id,
+            'user_id' => $user->id,
+            'action' => $action,
+            'comments' => $comments,
+            'acted_at' => now(),
+        ]);
+    }
+
+    /**
+     * Build timeline data for UI (all workflow types).
+     *
+     * @return array{instance: WorkflowInstance, steps: array<int, array>}
+     */
+    public function getWorkflowTimeline(WorkflowInstance $instance): array
+    {
+        $instance->load([
+            'workflow.steps' => fn ($q) => $q->orderBy('step_order'),
+            'currentStep',
+            'stepActions.user',
+            'stepActions.step',
+        ]);
+
+        $entity = $this->getEntity($instance);
+        $employee = $this->getEmployeeFromEntity($entity);
+        $actionsByStepId = $instance->stepActions->keyBy('workflow_step_id');
+        $currentStep = $instance->currentStep;
+
+        $steps = [];
+        foreach ($instance->workflow->steps as $step) {
+            $action = $actionsByStepId->get($step->id);
+            $expectedApprover = $employee
+                ? $this->approvalService->getApproverForStep($step, $employee, $entity)
+                : null;
+
+            $status = $this->resolveStepUiStatus($instance, $step, $currentStep, $action);
+
+            $steps[] = [
+                'step' => $step,
+                'status' => $status,
+                'expected_approver' => $expectedApprover,
+                'action' => $action,
+                'action_user' => $action?->user,
+                'acted_at' => $action?->acted_at,
+                'comments' => $action?->comments,
+            ];
+        }
+
+        return [
+            'instance' => $instance,
+            'steps' => $steps,
+        ];
+    }
+
+    /**
+     * Flash message after approve/reject reflecting intermediate vs final state.
+     */
+    public function approvalFlashMessage(WorkflowInstance $instance, bool $approved): string
+    {
+        $instance->refresh();
+        $instance->load('currentStep');
+
+        if (! $approved || $instance->status === 'rejected') {
+            return 'تم رفض الطلب.';
+        }
+
+        if ($instance->status === 'approved') {
+            return 'تم اعتماد الطلب نهائياً.';
+        }
+
+        $nextLabel = $instance->currentStep?->name_ar
+            ?? $instance->currentStep?->name
+            ?? 'الموافق التالي';
+
+        return "تمت موافقتك. الطلب بانتظار: {$nextLabel}";
+    }
+
+    /**
+     * Find the latest workflow instance for an entity (in progress preferred).
+     */
+    public static function findLatestInstanceForEntity(string $entityType, int $entityId): ?WorkflowInstance
+    {
+        $normalized = WorkflowEntityType::normalize($entityType);
+
+        $inProgress = WorkflowInstance::where('entity_type', $normalized)
+            ->where('entity_id', $entityId)
+            ->where('status', 'in_progress')
+            ->latest('id')
+            ->first();
+
+        if ($inProgress) {
+            return $inProgress;
+        }
+
+        return WorkflowInstance::where('entity_type', $normalized)
+            ->where('entity_id', $entityId)
+            ->latest('id')
+            ->first();
+    }
+
+    /**
      * الحصول على حالة سير العمل الحالية
      */
     public function getWorkflowStatus(WorkflowInstance $instance): array
     {
-        $workflow = $instance->workflow;
+        $timeline = $this->getWorkflowTimeline($instance);
         $currentStep = $instance->currentStep;
         $entity = $this->getEntity($instance);
         $employee = $this->getEmployeeFromEntity($entity);
@@ -340,31 +510,51 @@ class WorkflowService
             'all_steps' => [],
         ];
 
-        if ($currentStep && $employee) {
-            $nextApprover = $this->approvalService->getApproverForStep($currentStep, $employee);
-            $status['next_approver'] = $nextApprover;
+        if ($employee && $currentStep && $instance->status === 'in_progress') {
+            $status['next_approver'] = $this->approvalService->getApproverForStep($currentStep, $employee, $entity);
+        }
 
-            // الحصول على جميع الخطوات
-            $allSteps = $workflow->steps()->orderBy('step_order')->get();
-            foreach ($allSteps as $step) {
-                $stepData = [
-                    'step' => $step,
-                    'approver' => $this->approvalService->getApproverForStep($step, $employee),
-                    'status' => $step->step_order < $currentStep->step_order ? 'completed' : 
-                               ($step->step_order == $currentStep->step_order ? 'current' : 'pending'),
-                ];
+        foreach ($timeline['steps'] as $stepData) {
+            $legacy = [
+                'step' => $stepData['step'],
+                'approver' => $stepData['expected_approver'],
+                'status' => $stepData['status'],
+                'action' => $stepData['action'],
+                'action_user' => $stepData['action_user'],
+                'acted_at' => $stepData['acted_at'],
+                'comments' => $stepData['comments'],
+            ];
+            $status['all_steps'][] = $legacy;
 
-                $status['all_steps'][] = $stepData;
-
-                if ($stepData['status'] === 'completed') {
-                    $status['completed_steps'][] = $stepData;
-                } elseif ($stepData['status'] === 'pending') {
-                    $status['pending_steps'][] = $stepData;
-                }
+            if ($stepData['status'] === 'completed') {
+                $status['completed_steps'][] = $legacy;
+            } elseif ($stepData['status'] === 'pending') {
+                $status['pending_steps'][] = $legacy;
             }
         }
 
         return $status;
+    }
+
+    private function resolveStepUiStatus(
+        WorkflowInstance $instance,
+        WorkflowStep $step,
+        ?WorkflowStep $currentStep,
+        ?WorkflowStepAction $action
+    ): string {
+        if ($action) {
+            return 'completed';
+        }
+
+        if ($instance->status === 'in_progress' && $currentStep && $currentStep->id === $step->id) {
+            return 'current';
+        }
+
+        if ($instance->status === 'in_progress' && $currentStep && $step->step_order < $currentStep->step_order) {
+            return 'completed';
+        }
+
+        return 'pending';
     }
 
     /**

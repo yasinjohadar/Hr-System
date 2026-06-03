@@ -101,15 +101,26 @@ class User extends Authenticatable
     }
 
     /**
+     * هل يمكن للمستخدم الدخول إلى بوابة الموظف (دور employee + ملف موظف مربوط).
+     */
+    public function canAccessEmployeePortal(): bool
+    {
+        return $this->hasRole('employee') && $this->employee()->exists();
+    }
+
+    /**
      * أقسام يديرها المستخدم (كمدير قسم) — مع الأقسام الفرعية
      */
     public function getManagedDepartmentIds(): array
     {
-        if (! $this->isDepartmentHead()) {
+        if ($this->hasRole('admin')) {
             return [];
         }
 
         $directIds = \App\Models\Department::where('manager_id', $this->id)->pluck('id')->all();
+        if (empty($directIds)) {
+            return [];
+        }
 
         // إضافة الأقسام الفرعية بشكل متكرر
         $allIds = $directIds;

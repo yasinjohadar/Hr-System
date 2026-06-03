@@ -11,8 +11,8 @@
                 <div class="modal-body">
                     <p>هل أنت متأكد من رفض طلب الإجازة للموظف <strong>{{ $request->employee->full_name ?? $request->employee->first_name . ' ' . $request->employee->last_name }}</strong>؟</p>
                     <div class="mb-3">
-                        <label for="rejection_reason{{ $request->id }}" class="form-label">سبب الرفض <span class="text-danger">*</span></label>
-                        <textarea class="form-control" name="rejection_reason" id="rejection_reason{{ $request->id }}" rows="3" required></textarea>
+                        <label for="rejection_reason{{ $request->id }}" class="form-label">سبب الرفض / ملاحظة (اختياري)</label>
+                        <textarea class="form-control" name="rejection_reason" id="rejection_reason{{ $request->id }}" rows="3" maxlength="2000" placeholder="اذكر سبب الرفض إن رغبت…"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">

@@ -1,0 +1,286 @@
+/* التغييرات الوظيفية — قائمة الطلبات (مسطّح) */
+.admin-job-changes-page {
+    --jc-primary: var(--primary-color, #5c67f7);
+    --jc-primary-soft: rgba(var(--primary-rgb, 92, 103, 247), 0.12);
+    --jc-success: #10b981;
+    --jc-warning: #f59e0b;
+    --jc-danger: #ef4444;
+    --jc-info: #0ea5e9;
+    --jc-muted: #64748b;
+    --jc-surface: var(--custom-white, #fff);
+    --jc-border: var(--default-border, rgba(15, 23, 42, 0.08));
+    --jc-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    --jc-radius: 0.75rem;
+    --jc-grid-cols: 42px minmax(140px, 1.2fr) minmax(90px, 0.75fr) minmax(95px, 0.8fr) minmax(100px, 0.85fr) minmax(110px, 0.95fr) auto;
+}
+
+.admin-job-changes-page .page-hero {
+    background: var(--jc-surface);
+    border: 1px solid var(--jc-border);
+    border-inline-start: 4px solid var(--jc-primary);
+    border-radius: var(--jc-radius);
+    box-shadow: var(--jc-shadow);
+}
+
+.admin-job-changes-page .page-hero-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: var(--jc-primary-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    color: var(--jc-primary);
+    flex-shrink: 0;
+}
+
+.admin-job-changes-page .page-hero-title { color: var(--default-text-color, #0f172a); }
+.admin-job-changes-page .page-hero-subtitle { color: var(--jc-muted); font-size: 0.8125rem; }
+
+.admin-job-changes-page .btn-hero-primary {
+    background: var(--jc-primary);
+    border-color: var(--jc-primary);
+    color: #fff;
+    font-weight: 600;
+    padding: 0.5rem 1.15rem;
+    border-radius: 0.5rem;
+}
+
+.admin-job-changes-page .btn-hero-primary:hover {
+    filter: brightness(1.05);
+    color: #fff;
+}
+
+.admin-job-changes-page .stat-card {
+    border: 1px solid var(--jc-border);
+    border-radius: var(--jc-radius);
+    background: var(--jc-surface);
+    box-shadow: var(--jc-shadow);
+    padding: 1.15rem 1.25rem;
+    height: 100%;
+}
+
+.admin-job-changes-page .stat-value { font-size: 1.5rem; font-weight: 700; line-height: 1.2; }
+.admin-job-changes-page .stat-label { font-size: 0.75rem; color: var(--jc-muted); margin-top: 0.2rem; }
+
+.admin-job-changes-page .stat-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.admin-job-changes-page .stat-icon--primary { background: var(--jc-primary-soft); color: var(--jc-primary); }
+.admin-job-changes-page .stat-icon--warning { background: rgba(245, 158, 11, 0.12); color: var(--jc-warning); }
+.admin-job-changes-page .stat-icon--success { background: rgba(16, 185, 129, 0.12); color: var(--jc-success); }
+.admin-job-changes-page .stat-icon--danger { background: rgba(239, 68, 68, 0.12); color: var(--jc-danger); }
+
+.admin-job-changes-page .filters-panel {
+    border: 1px solid var(--jc-border);
+    border-radius: var(--jc-radius);
+    background: var(--jc-surface);
+    box-shadow: var(--jc-shadow);
+    padding: 1.15rem 1.35rem;
+    margin-bottom: 1rem;
+}
+
+.admin-job-changes-page .filters-panel .form-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--jc-muted);
+    margin-bottom: 0.3rem;
+}
+
+.admin-job-changes-page .filters-panel .form-control,
+.admin-job-changes-page .filters-panel .form-select {
+    font-size: 0.8125rem;
+    border-radius: 0.5rem;
+    border-color: var(--jc-border);
+}
+
+.admin-job-changes-page .btn-filter-submit {
+    background: var(--jc-primary);
+    border-color: var(--jc-primary);
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    padding: 0.45rem 1.1rem;
+    border-radius: 0.5rem;
+}
+
+.admin-job-changes-page .btn-filter-clear {
+    border: 1px solid var(--jc-border);
+    background: var(--jc-surface);
+    color: var(--jc-danger);
+    font-weight: 600;
+    font-size: 0.8125rem;
+    padding: 0.45rem 1.1rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+}
+
+.admin-job-changes-page .btn-filter-clear:hover {
+    background: rgba(239, 68, 68, 0.08);
+    color: var(--jc-danger);
+}
+
+.admin-job-changes-page .content-panel {
+    border: 1px solid var(--jc-border);
+    border-radius: var(--jc-radius);
+    background: var(--jc-surface);
+    box-shadow: var(--jc-shadow);
+    overflow: hidden;
+}
+
+.admin-job-changes-page .content-panel-header {
+    padding: 1rem 1.35rem;
+    border-bottom: 1px solid var(--jc-border);
+}
+
+.admin-job-changes-page .changes-table-header,
+.admin-job-changes-page .changes-table-row {
+    display: grid;
+    grid-template-columns: var(--jc-grid-cols);
+    gap: 0.5rem 0.75rem;
+    align-items: center;
+    padding: 0.7rem 1.35rem;
+}
+
+.admin-job-changes-page .changes-table-header {
+    background: #f8fafc;
+    border-bottom: 1px solid var(--jc-border);
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--jc-muted);
+}
+
+.admin-job-changes-page .changes-table-row {
+    border-bottom: 1px solid var(--jc-border);
+    font-size: 0.8125rem;
+    transition: background 0.15s;
+}
+
+.admin-job-changes-page .changes-table-row:last-child { border-bottom: none; }
+.admin-job-changes-page .changes-table-row:hover { background: rgba(var(--primary-rgb, 92, 103, 247), 0.04); }
+
+.admin-job-changes-page .row-index {
+    font-weight: 600;
+    color: var(--jc-muted);
+    font-size: 0.75rem;
+}
+
+.admin-job-changes-page .employee-link {
+    font-weight: 700;
+    color: var(--default-text-color, #0f172a);
+    text-decoration: none;
+}
+
+.admin-job-changes-page .employee-link:hover { color: var(--jc-primary); }
+
+.admin-job-changes-page .type-pill,
+.admin-job-changes-page .status-pill {
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    border-radius: 99px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.admin-job-changes-page .type-pill--transfer { background: rgba(14, 165, 233, 0.12); color: #0369a1; }
+.admin-job-changes-page .type-pill--promotion { background: rgba(16, 185, 129, 0.12); color: #047857; }
+.admin-job-changes-page .type-pill--salary_change { background: var(--jc-primary-soft); color: var(--jc-primary); }
+.admin-job-changes-page .type-pill--demotion { background: rgba(245, 158, 11, 0.12); color: #b45309; }
+
+.admin-job-changes-page .status-pill--pending { background: rgba(245, 158, 11, 0.15); color: #b45309; }
+.admin-job-changes-page .status-pill--approved { background: rgba(16, 185, 129, 0.15); color: #047857; }
+.admin-job-changes-page .status-pill--rejected { background: rgba(239, 68, 68, 0.15); color: #b91c1c; }
+
+.admin-job-changes-page .cell-muted { color: var(--jc-muted); font-size: 0.8125rem; }
+
+.admin-job-changes-page .row-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    justify-content: flex-end;
+}
+
+.admin-job-changes-page .btn-action {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    border: 1px solid var(--jc-border);
+    background: var(--jc-surface);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+
+.admin-job-changes-page .btn-action--view { color: var(--jc-primary); }
+.admin-job-changes-page .btn-action--view:hover { background: var(--jc-primary); border-color: var(--jc-primary); color: #fff; }
+
+.admin-job-changes-page .btn-action--edit { color: var(--jc-warning); }
+.admin-job-changes-page .btn-action--edit:hover { background: var(--jc-warning); border-color: var(--jc-warning); color: #fff; }
+
+.admin-job-changes-page .btn-action--approve { color: var(--jc-success); }
+.admin-job-changes-page .btn-action--approve:hover { background: var(--jc-success); border-color: var(--jc-success); color: #fff; }
+
+.admin-job-changes-page .btn-action--reject { color: var(--jc-danger); }
+.admin-job-changes-page .btn-action--reject:hover { background: var(--jc-danger); border-color: var(--jc-danger); color: #fff; }
+
+.admin-job-changes-page .empty-state {
+    text-align: center;
+    padding: 2.5rem 1.5rem;
+    color: var(--jc-muted);
+    font-size: 0.875rem;
+}
+
+.admin-job-changes-page .pagination-wrap {
+    padding: 1rem 1.35rem;
+    border-top: 1px solid var(--jc-border);
+}
+
+@media (max-width: 991.98px) {
+    .admin-job-changes-page .changes-table-header { display: none; }
+
+    .admin-job-changes-page .changes-table-row {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+        padding: 1rem 1.15rem;
+    }
+
+    .admin-job-changes-page .changes-mobile-field {
+        display: grid;
+        grid-template-columns: 6.5rem 1fr;
+        gap: 0.35rem 0.75rem;
+        align-items: baseline;
+    }
+
+    .admin-job-changes-page .changes-mobile-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--jc-muted);
+    }
+
+    .admin-job-changes-page .row-actions { justify-content: flex-start; padding-top: 0.35rem; }
+}
+
+@media (min-width: 992px) {
+    .admin-job-changes-page .changes-mobile-field { display: contents; }
+    .admin-job-changes-page .changes-mobile-label { display: none; }
+}
+
+@media (min-width: 992px) and (max-width: 1199.98px) {
+    .admin-job-changes-page .changes-table-scroll { overflow-x: auto; }
+    .admin-job-changes-page .changes-table-header,
+    .admin-job-changes-page .changes-table-row { min-width: 880px; }
+}

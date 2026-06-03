@@ -1,0 +1,213 @@
+/* بوابة الموظف — سجلات وقت المشاريع (مسطّح) */
+.employee-project-time-page {
+    --pt-primary: var(--primary-color, #5c67f7);
+    --pt-primary-soft: rgba(var(--primary-rgb, 92, 103, 247), 0.12);
+    --pt-success: #10b981;
+    --pt-muted: #64748b;
+    --pt-surface: var(--custom-white, #fff);
+    --pt-border: var(--default-border, rgba(15, 23, 42, 0.08));
+    --pt-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    --pt-radius: 0.75rem;
+}
+
+.employee-project-time-page .page-hero {
+    background: var(--pt-surface);
+    border: 1px solid var(--pt-border);
+    border-inline-start: 4px solid var(--pt-primary);
+    border-radius: var(--pt-radius);
+    box-shadow: var(--pt-shadow);
+}
+
+.employee-project-time-page .page-hero-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: var(--pt-primary-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    color: var(--pt-primary);
+}
+
+.employee-project-time-page .page-hero-title { color: var(--default-text-color, #0f172a); }
+.employee-project-time-page .page-hero-subtitle { color: var(--pt-muted); font-size: 0.8125rem; }
+
+.employee-project-time-page .btn-hero-link {
+    border: 1px solid var(--pt-border);
+    background: var(--pt-surface);
+    color: var(--pt-primary);
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.employee-project-time-page .btn-hero-link:hover {
+    background: var(--pt-primary);
+    border-color: var(--pt-primary);
+    color: #fff;
+}
+
+.employee-project-time-page .stat-card {
+    border: 1px solid var(--pt-border);
+    border-radius: var(--pt-radius);
+    background: var(--pt-surface);
+    box-shadow: var(--pt-shadow);
+    padding: 1.25rem;
+    height: 100%;
+}
+
+.employee-project-time-page .stat-value { font-size: 1.75rem; font-weight: 700; color: var(--default-text-color, #0f172a); }
+.employee-project-time-page .stat-label { font-size: 0.8125rem; color: var(--pt-muted); }
+
+.employee-project-time-page .stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+}
+
+.employee-project-time-page .stat-icon--primary { background: var(--pt-primary-soft); color: var(--pt-primary); }
+.employee-project-time-page .stat-icon--success { background: rgba(16, 185, 129, 0.12); color: var(--pt-success); }
+
+.employee-project-time-page .filter-panel {
+    border: 1px solid var(--pt-border);
+    border-radius: var(--pt-radius);
+    background: var(--pt-surface);
+    box-shadow: var(--pt-shadow);
+    padding: 1.25rem 1.35rem;
+    margin-bottom: 1.25rem;
+}
+
+.employee-project-time-page .filter-panel .form-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--default-text-color, #334155);
+}
+
+.employee-project-time-page .filter-panel .form-control,
+.employee-project-time-page .filter-panel .form-select {
+    border-radius: 0.5rem;
+    border-color: var(--pt-border);
+    min-height: 42px;
+}
+
+.employee-project-time-page .btn-filter {
+    background: var(--pt-primary);
+    border-color: var(--pt-primary);
+    font-weight: 600;
+    min-height: 42px;
+    border-radius: 0.5rem;
+}
+
+.employee-project-time-page .btn-filter-reset {
+    border: 1px solid var(--pt-border);
+    background: var(--pt-surface);
+    color: var(--pt-muted);
+    font-weight: 500;
+    min-height: 42px;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.employee-project-time-page .content-panel {
+    border: 1px solid var(--pt-border);
+    border-radius: var(--pt-radius);
+    background: var(--pt-surface);
+    box-shadow: var(--pt-shadow);
+}
+
+.employee-project-time-page .content-panel-header {
+    padding: 1.15rem 1.35rem;
+    border-bottom: 1px solid var(--pt-border);
+}
+
+.employee-project-time-page .time-entry-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.15rem 1.35rem;
+    border-bottom: 1px solid var(--pt-border);
+    transition: background 0.15s;
+}
+
+.employee-project-time-page .time-entry-card:last-child { border-bottom: none; }
+.employee-project-time-page .time-entry-card:hover { background: rgba(var(--primary-rgb, 92, 103, 247), 0.04); }
+
+.employee-project-time-page .entry-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: var(--pt-primary-soft);
+    color: var(--pt-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.employee-project-time-page .entry-date {
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: var(--default-text-color, #0f172a);
+    white-space: nowrap;
+}
+
+.employee-project-time-page .entry-project a {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--pt-primary);
+    text-decoration: none;
+}
+
+.employee-project-time-page .entry-project a:hover { text-decoration: underline; }
+
+.employee-project-time-page .entry-task {
+    font-size: 0.75rem;
+    color: var(--pt-muted);
+}
+
+.employee-project-time-page .hours-chip {
+    padding: 0.4rem 0.9rem;
+    border-radius: 99px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    background: rgba(16, 185, 129, 0.12);
+    color: #047857;
+    white-space: nowrap;
+}
+
+.employee-project-time-page .entry-desc {
+    font-size: 0.8125rem;
+    color: var(--pt-muted);
+    flex: 1;
+    min-width: 120px;
+}
+
+.employee-project-time-page .empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+}
+
+.employee-project-time-page .empty-state .empty-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    background: var(--pt-primary-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: var(--pt-primary);
+}

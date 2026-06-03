@@ -30,22 +30,16 @@ class CheckApprovalPermission
             abort(404, 'Entity not found');
         }
 
-        // تحديد نوع الكيان بناءً على workflowType
-        $entityType = match($workflowType) {
-            'leave_request' => 'LeaveRequest',
-            'expense_request' => 'ExpenseRequest',
-            'payroll' => 'Payroll',
-            default => null,
+        $modelClass = match ($workflowType) {
+            'leave_request' => \App\Models\LeaveRequest::class,
+            'expense_request' => \App\Models\ExpenseRequest::class,
+            'employee_job_change' => \App\Models\EmployeeJobChange::class,
+            'payroll' => \App\Models\Payroll::class,
+            default => config("approval_workflows.types.{$workflowType}.model"),
         };
 
-        if (!$entityType) {
+        if (! $modelClass || ! class_exists($modelClass)) {
             abort(400, 'Invalid workflow type');
-        }
-
-        // الحصول على الكيان
-        $modelClass = $this->getModelClass($entityType);
-        if (!$modelClass) {
-            abort(404, 'Model not found');
         }
 
         $entity = $modelClass::find($entityId);
@@ -59,46 +53,11 @@ class CheckApprovalPermission
             abort(404, 'Employee not found');
         }
 
-        // البحث عن workflow instance
-        $instance = \App\Models\WorkflowInstance::where('entity_type', $entityType)
-            ->where('entity_id', $entityId)
-            ->where('status', '!=', 'rejected')
-            ->where('status', '!=', 'approved')
-            ->first();
-
-        if ($instance) {
-            $currentStep = $instance->currentStep;
-            if ($currentStep) {
-                $canApprove = $this->approvalService->canUserApprove(
-                    auth()->user(),
-                    $workflowType,
-                    $employee,
-                    $currentStep->step_order
-                );
-
-                if (!$canApprove) {
-                    abort(403, 'ليس لديك صلاحية الموافقة على هذا الطلب');
-                }
-            }
-        } else {
-            // إذا لم يكن هناك workflow، التحقق من الصلاحيات العامة
-            $permission = $workflowType . '-approve';
-            if (!auth()->user()->hasPermissionTo($permission) && !auth()->user()->hasPermissionTo($permission . '-all')) {
-                abort(403, 'ليس لديك صلاحية الموافقة');
-            }
+        if (! $this->approvalService->canActOnEntity(auth()->user(), $entity)) {
+            abort(403, 'ليس لديك صلاحية الموافقة على هذا الطلب في المرحلة الحالية');
         }
 
         return $next($request);
-    }
-
-    private function getModelClass(string $entityType): ?string
-    {
-        return match($entityType) {
-            'LeaveRequest' => \App\Models\LeaveRequest::class,
-            'ExpenseRequest' => \App\Models\ExpenseRequest::class,
-            'Payroll' => \App\Models\Payroll::class,
-            default => null,
-        };
     }
 
     private function getEmployeeFromEntity($entity): ?\App\Models\Employee

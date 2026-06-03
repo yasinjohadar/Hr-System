@@ -14,12 +14,16 @@ class ProjectTimeEntry extends Model
         'worked_date',
         'hours',
         'description',
+        'status',
+        'approved_at',
+        'approved_by',
         'created_by',
     ];
 
     protected $casts = [
         'worked_date' => 'date',
         'hours' => 'decimal:2',
+        'approved_at' => 'datetime',
     ];
 
     public function project(): BelongsTo

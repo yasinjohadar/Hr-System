@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\DepartmentController;
+use App\Http\Controllers\Admin\DepartmentHeadController;
 use App\Http\Controllers\Admin\BranchController;
 use App\Http\Controllers\Admin\CountryController;
 use App\Http\Controllers\Admin\CurrencyController;
@@ -128,7 +129,15 @@ Route::middleware(['auth', 'check.user.active', 'ensure.admin', 'two.factor'])->
     Route::post('policies/{policy}/acknowledge', [PolicyController::class, 'acknowledge'])->name('policies.acknowledge');
     Route::resource('policies', PolicyController::class);
     Route::resource('departments', DepartmentController::class);
-    
+
+    Route::get('department-heads/{id}/capabilities', [DepartmentHeadController::class, 'capabilities'])
+        ->name('department-heads.capabilities');
+    Route::delete('department-heads/{userId}/departments/{departmentId}', [DepartmentHeadController::class, 'removeDepartment'])
+        ->name('department-heads.remove-department');
+    Route::post('department-heads/{id}/apply-role-template', [DepartmentHeadController::class, 'applyRoleTemplate'])
+        ->name('department-heads.apply-role-template');
+    Route::resource('department-heads', DepartmentHeadController::class);
+
     // Routes للفروع
     Route::resource('branches', BranchController::class);
     

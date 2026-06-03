@@ -1,0 +1,213 @@
+/* بوابة الموظف — التذاكر (مسطّح) */
+.employee-tickets-page {
+    --tc-primary: var(--primary-color, #5c67f7);
+    --tc-primary-soft: rgba(var(--primary-rgb, 92, 103, 247), 0.12);
+    --tc-success: #10b981;
+    --tc-warning: #f59e0b;
+    --tc-danger: #ef4444;
+    --tc-muted: #64748b;
+    --tc-surface: var(--custom-white, #fff);
+    --tc-border: var(--default-border, rgba(15, 23, 42, 0.08));
+    --tc-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    --tc-radius: 0.75rem;
+}
+
+.employee-tickets-page .page-hero {
+    background: var(--tc-surface);
+    border: 1px solid var(--tc-border);
+    border-inline-start: 4px solid var(--tc-primary);
+    border-radius: var(--tc-radius);
+    box-shadow: var(--tc-shadow);
+}
+
+.employee-tickets-page .page-hero-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: var(--tc-primary-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    color: var(--tc-primary);
+}
+
+.employee-tickets-page .page-hero-title { color: var(--default-text-color, #0f172a); }
+.employee-tickets-page .page-hero-subtitle { color: var(--tc-muted); font-size: 0.8125rem; }
+
+.employee-tickets-page .btn-hero-primary {
+    background: var(--tc-primary);
+    border-color: var(--tc-primary);
+    font-weight: 600;
+    padding: 0.5rem 1.15rem;
+    border-radius: 0.5rem;
+}
+
+.employee-tickets-page .stat-card {
+    border: 1px solid var(--tc-border);
+    border-radius: var(--tc-radius);
+    background: var(--tc-surface);
+    box-shadow: var(--tc-shadow);
+    padding: 1.25rem;
+    height: 100%;
+}
+
+.employee-tickets-page .stat-value { font-size: 1.75rem; font-weight: 700; color: var(--default-text-color, #0f172a); }
+.employee-tickets-page .stat-label { font-size: 0.8125rem; color: var(--tc-muted); }
+
+.employee-tickets-page .stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+}
+
+.employee-tickets-page .stat-icon--primary { background: var(--tc-primary-soft); color: var(--tc-primary); }
+.employee-tickets-page .stat-icon--warning { background: rgba(245, 158, 11, 0.12); color: var(--tc-warning); }
+.employee-tickets-page .stat-icon--success { background: rgba(16, 185, 129, 0.12); color: var(--tc-success); }
+.employee-tickets-page .stat-icon--muted { background: rgba(100, 116, 139, 0.12); color: var(--tc-muted); }
+
+.employee-tickets-page .content-panel {
+    border: 1px solid var(--tc-border);
+    border-radius: var(--tc-radius);
+    background: var(--tc-surface);
+    box-shadow: var(--tc-shadow);
+}
+
+.employee-tickets-page .content-panel-header {
+    padding: 1.15rem 1.35rem;
+    border-bottom: 1px solid var(--tc-border);
+}
+
+.employee-tickets-page .filter-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.employee-tickets-page .filter-pill {
+    border: 1px solid var(--tc-border);
+    background: var(--tc-surface);
+    color: var(--tc-muted);
+    padding: 0.4rem 1rem;
+    border-radius: 99px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.employee-tickets-page .filter-pill:hover,
+.employee-tickets-page .filter-pill.active {
+    background: var(--tc-primary);
+    border-color: var(--tc-primary);
+    color: #fff;
+}
+
+.employee-tickets-page .ticket-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.15rem 1.35rem;
+    border-bottom: 1px solid var(--tc-border);
+    transition: background 0.15s;
+}
+
+.employee-tickets-page .ticket-card:last-child { border-bottom: none; }
+.employee-tickets-page .ticket-card:hover { background: rgba(var(--primary-rgb, 92, 103, 247), 0.04); }
+
+.employee-tickets-page .ticket-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: var(--tc-primary-soft);
+    color: var(--tc-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.employee-tickets-page .ticket-code {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--tc-muted);
+    font-family: monospace;
+}
+
+.employee-tickets-page .ticket-title {
+    font-weight: 700;
+    font-size: 0.9375rem;
+    color: var(--default-text-color, #0f172a);
+    margin-bottom: 0.15rem;
+}
+
+.employee-tickets-page .category-pill {
+    padding: 0.25rem 0.65rem;
+    border-radius: 99px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: var(--tc-primary-soft);
+    color: var(--tc-primary);
+}
+
+.employee-tickets-page .priority-pill {
+    padding: 0.3rem 0.75rem;
+    border-radius: 99px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.employee-tickets-page .priority-pill--low { background: rgba(100, 116, 139, 0.12); color: #475569; }
+.employee-tickets-page .priority-pill--medium { background: rgba(14, 165, 233, 0.12); color: #0369a1; }
+.employee-tickets-page .priority-pill--high { background: rgba(245, 158, 11, 0.15); color: #b45309; }
+.employee-tickets-page .priority-pill--urgent { background: rgba(239, 68, 68, 0.15); color: #b91c1c; }
+
+.employee-tickets-page .status-pill {
+    padding: 0.35rem 0.85rem;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.employee-tickets-page .status-pill--open { background: rgba(245, 158, 11, 0.15); color: #b45309; }
+.employee-tickets-page .status-pill--in_progress { background: rgba(var(--primary-rgb, 92, 103, 247), 0.15); color: var(--tc-primary); }
+.employee-tickets-page .status-pill--resolved { background: rgba(16, 185, 129, 0.15); color: #047857; }
+.employee-tickets-page .status-pill--closed { background: rgba(100, 116, 139, 0.15); color: #475569; }
+.employee-tickets-page .status-pill--cancelled { background: rgba(239, 68, 68, 0.15); color: #b91c1c; }
+
+.employee-tickets-page .assignee-text {
+    font-size: 0.8125rem;
+    color: var(--tc-muted);
+    white-space: nowrap;
+}
+
+.employee-tickets-page .role-badge {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 99px;
+    background: rgba(14, 165, 233, 0.12);
+    color: #0369a1;
+    font-weight: 600;
+}
+
+.employee-tickets-page .empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+}
+
+.employee-tickets-page .empty-state .empty-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    background: var(--tc-primary-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: var(--tc-primary);
+}

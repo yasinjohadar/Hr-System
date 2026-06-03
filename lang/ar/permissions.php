@@ -31,6 +31,9 @@ return [
     'department-delete' => 'حذف قسم',
     'department-show' => 'عرض تفاصيل قسم',
 
+    'department-head-list' => 'عرض رؤساء الأقسام',
+    'department-head-manage' => 'إدارة رؤساء الأقسام',
+
     'position-list' => 'عرض قائمة المناصب',
     'position-create' => 'إضافة منصب',
     'position-edit' => 'تعديل منصب',

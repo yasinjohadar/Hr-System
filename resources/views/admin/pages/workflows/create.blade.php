@@ -25,7 +25,7 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">الاسم <span class="text-danger">*</span></label>
-                                <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" 
+                                <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
                                        value="{{ old('name') }}" required>
                                 @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
@@ -40,11 +40,13 @@
                             <div class="col-md-6">
                                 <label class="form-label">النوع <span class="text-danger">*</span></label>
                                 <select name="type" class="form-select @error('type') is-invalid @enderror" required>
-                                    <option value="leave_request" {{ old('type') == 'leave_request' ? 'selected' : '' }}>طلب إجازة</option>
-                                    <option value="expense_request" {{ old('type') == 'expense_request' ? 'selected' : '' }}>طلب مصروف</option>
-                                    <option value="task_approval" {{ old('type') == 'task_approval' ? 'selected' : '' }}>موافقة مهمة</option>
-                                    <option value="performance_review" {{ old('type') == 'performance_review' ? 'selected' : '' }}>تقييم الأداء</option>
-                                    <option value="custom" {{ old('type') == 'custom' ? 'selected' : '' }}>مخصص</option>
+                                    @foreach (\App\Models\Workflow::allowedTypes() as $typeKey)
+                                        @php
+                                            $label = config("approval_workflows.types.{$typeKey}.label_ar")
+                                                ?? (new \App\Models\Workflow(['type' => $typeKey]))->type_name_ar;
+                                        @endphp
+                                        <option value="{{ $typeKey }}" {{ old('type') == $typeKey ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
                                 </select>
                                 @error('type')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
@@ -54,11 +56,22 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" name="is_active" value="1" 
+                                    <input class="form-check-input" type="checkbox" name="is_active" value="1"
                                            id="is_active" {{ old('is_active', true) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="is_active">نشط</label>
                                 </div>
                             </div>
+
+                            <div class="col-12">
+                                @include('admin.pages.workflows.partials.workflow-steps-editor', [
+                                    'editorSteps' => $editorSteps ?? [],
+                                    'roles' => $roles,
+                                    'users' => $users,
+                                    'defaultTemplate' => $defaultTemplate,
+                                    'hasActiveInstances' => $hasActiveInstances ?? false,
+                                ])
+                            </div>
+
                             <div class="col-12">
                                 <button type="submit" class="btn btn-primary">حفظ</button>
                                 <a href="{{ route('admin.workflows.index') }}" class="btn btn-secondary">إلغاء</a>
@@ -70,4 +83,3 @@
         </div>
     </div>
 @stop
-

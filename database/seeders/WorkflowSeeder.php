@@ -87,6 +87,24 @@ class WorkflowSeeder extends Seeder
                 'created_by' => $createdBy,
                 'steps' => $stepTemplate($execId, $gmId),
             ],
+            [
+                'name' => 'Ticket Request Workflow',
+                'name_ar' => 'سير عمل تذاكر الموظفين',
+                'description' => 'موافقة رئيس القسم على التذاكر قبل فتحها',
+                'type' => 'ticket_request',
+                'is_active' => true,
+                'created_by' => $createdBy,
+                'steps' => $stepTemplate($execId, $gmId),
+            ],
+            [
+                'name' => 'Project Time Entry Workflow',
+                'name_ar' => 'سير عمل وقت المشروع',
+                'description' => 'اعتماد سجلات وقت العمل على المشاريع',
+                'type' => 'project_time_entry',
+                'is_active' => true,
+                'created_by' => $createdBy,
+                'steps' => $stepTemplate($execId, $gmId),
+            ],
         ];
 
         foreach ($workflows as $workflowData) {

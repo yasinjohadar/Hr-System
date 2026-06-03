@@ -16,7 +16,7 @@
                         هل تريد الموافقة على طلب الإجازة للموظف
                         <strong>{{ $request->employee->full_name ?? $request->employee->first_name . ' ' . $request->employee->last_name }}</strong>؟
                     </p>
-                    <p class="small text-muted mb-0">
+                    <p class="small text-muted mb-3">
                         <span class="badge bg-info-subtle text-dark border">{{ $request->leaveType->name_ar ?? $request->leaveType->name }}</span>
                         <span class="mx-1">·</span>
                         {{ $request->start_date->format('Y-m-d') }}
@@ -25,6 +25,10 @@
                         <span class="mx-1">·</span>
                         {{ $request->days_count }} يوم
                     </p>
+                    <div class="text-start">
+                        <label for="approve_comments{{ $request->id }}" class="form-label small text-muted">ملاحظة (اختياري)</label>
+                        <textarea name="comments" id="approve_comments{{ $request->id }}" class="form-control form-control-sm" rows="2" maxlength="2000" placeholder="أضف ملاحظة مع الموافقة…"></textarea>
+                    </div>
                 </div>
                 <div class="modal-footer border-0 justify-content-center gap-2 pb-4">
                     <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">إلغاء</button>

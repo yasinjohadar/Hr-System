@@ -17,7 +17,7 @@
 
             <div class="card custom-card">
                 <div class="card-body">
-                    <form method="POST" action="{{ route('users.update', $user->id) }}" enctype="multipart/form-data">
+                    <form method="POST" action="{{ route('users.update', $user->id) }}" enctype="multipart/form-data" autocomplete="off">
                         @csrf
                         @method('PUT')
                         @include('admin.pages.users.partials.form', ['isEdit' => true, 'user' => $user, 'roles' => $roles])

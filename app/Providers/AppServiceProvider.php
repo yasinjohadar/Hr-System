@@ -15,7 +15,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $sidebarHelpers = app_path('Support/sidebar_helpers.php');
+        if (is_file($sidebarHelpers)) {
+            require_once $sidebarHelpers;
+        }
     }
 
     /**

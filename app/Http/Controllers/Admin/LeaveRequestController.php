@@ -8,6 +8,9 @@ use App\Models\Employee;
 use App\Models\LeaveBalance;
 use App\Services\WorkflowService;
 use App\Services\ApprovalService;
+use App\Services\EmployeeRequestSubmissionService;
+use App\Services\WorkflowProgressPresenter;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Admin\Concerns\ScopesByDepartment;
@@ -61,7 +64,24 @@ class LeaveRequestController extends Controller
             $leaveRequestsQuery->where('end_date', '<=', $request->input('end_date'));
         }
 
+        $stats = [
+            'total' => (clone $leaveRequestsQuery)->count(),
+            'pending' => (clone $leaveRequestsQuery)->where('status', 'pending')->count(),
+            'approved' => (clone $leaveRequestsQuery)->where('status', 'approved')->count(),
+            'rejected' => (clone $leaveRequestsQuery)->where('status', 'rejected')->count(),
+        ];
+
         $leaveRequests = $leaveRequestsQuery->orderBy('created_at', 'desc')->paginate(20);
+
+        $approvalService = app(ApprovalService::class);
+        $canApproveNowById = $approvalService->canActOnEntitiesMap(
+            Auth::user(),
+            $leaveRequests->getCollection()
+        );
+
+        $workflowProgressById = app(WorkflowProgressPresenter::class)->mapForEntities(
+            $leaveRequests->getCollection()
+        );
 
         $employees = Employee::where('is_active', true)->with('user')->get();
         // رئيس القسم: قائمة موظفين لأقسامه فقط
@@ -71,13 +91,14 @@ class LeaveRequestController extends Controller
 
         if ($request->ajax() || $request->boolean('ajax')) {
             return response()->json([
-                'html_rows' => view('admin.pages.leave-requests._index_rows', compact('leaveRequests'))->render(),
+                'html_rows' => view('admin.pages.leave-requests._index_rows', compact('leaveRequests', 'canApproveNowById', 'workflowProgressById'))->render(),
                 'html_pagination' => view('admin.pages.leave-requests._index_pagination', compact('leaveRequests'))->render(),
                 'total' => $leaveRequests->total(),
+                'stats' => $stats,
             ]);
         }
 
-        return view('admin.pages.leave-requests.index', compact('leaveRequests', 'employees', 'leaveTypes'));
+        return view('admin.pages.leave-requests.index', compact('leaveRequests', 'employees', 'leaveTypes', 'stats', 'canApproveNowById', 'workflowProgressById'));
     }
 
     /**
@@ -137,24 +158,35 @@ class LeaveRequestController extends Controller
             return back()->withInput()->withErrors(['error' => 'رصيد الإجازة غير كافي. المتبقي: ' . $balance->remaining_days . ' يوم']);
         }
 
-        $leaveRequest = LeaveRequest::create([
-            'employee_id' => $request->employee_id,
-            'leave_type_id' => $request->leave_type_id,
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
-            'days_count' => $daysCount,
-            'reason' => $request->reason,
-            'notes' => $request->notes,
-            'status' => 'pending',
-            'created_by' => auth()->id(),
-        ]);
-
-        // بدء سير العمل التلقائي
         $employee = Employee::findOrFail($request->employee_id);
-        $workflowService = app(WorkflowService::class);
-        $workflowService->startWorkflow('leave_request', $employee, 'LeaveRequest', $leaveRequest->id);
 
-        return redirect()->route("admin.leave-requests.index")->with("success", "تم إضافة طلب الإجازة بنجاح وتم إرساله للموافقة");
+        try {
+            DB::beginTransaction();
+            $leaveRequest = LeaveRequest::create([
+                'employee_id' => $request->employee_id,
+                'leave_type_id' => $request->leave_type_id,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+                'days_count' => $daysCount,
+                'reason' => $request->reason,
+                'notes' => $request->notes,
+                'status' => 'pending',
+                'created_by' => auth()->id(),
+            ]);
+
+            app(EmployeeRequestSubmissionService::class)->afterRequestCreated(
+                'leave_request',
+                $employee,
+                $leaveRequest
+            );
+            DB::commit();
+        } catch (\RuntimeException $e) {
+            DB::rollBack();
+
+            return back()->withInput()->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('admin.leave-requests.index')->with('success', 'تم إضافة طلب الإجازة بنجاح وتم إرساله للموافقة');
     }
 
     /**
@@ -166,7 +198,10 @@ class LeaveRequestController extends Controller
 
         $this->authorizeManagedEmployeeId((int) $leaveRequest->employee_id, 'غير مصرح لك بعرض هذا الطلب.');
 
-        return view("admin.pages.leave-requests.show", compact("leaveRequest"));
+        $canApproveNow = app(ApprovalService::class)->canActOnEntity(Auth::user(), $leaveRequest);
+        $workflowProgress = app(WorkflowProgressPresenter::class)->resolveForEntity($leaveRequest);
+
+        return view('admin.pages.leave-requests.show', compact('leaveRequest', 'canApproveNow', 'workflowProgress'));
     }
 
     /**
@@ -299,29 +334,29 @@ class LeaveRequestController extends Controller
             return back()->with('error', 'لا يمكن الموافقة على هذا الطلب');
         }
 
+        $request->validate([
+            'comments' => 'nullable|string|max:2000',
+        ]);
+
         // التحقق من صلاحيات الموافقة
         $workflowService = app(WorkflowService::class);
         $approvalService = app(ApprovalService::class);
         
-        // البحث عن workflow instance
-        $instance = \App\Models\WorkflowInstance::where('entity_type', 'LeaveRequest')
-            ->where('entity_id', $leaveRequest->id)
-            ->where('status', '!=', 'rejected')
-            ->where('status', '!=', 'approved')
-            ->first();
+        $instance = WorkflowService::findInstanceForEntity(LeaveRequest::class, $leaveRequest->id);
 
         if ($instance) {
-            // استخدام نظام سير العمل
+            $instance->load('currentStep');
             $currentStep = $instance->currentStep;
             if ($currentStep) {
-                $canApprove = $approvalService->canUserApprove(
+                $canApprove = $approvalService->canActOnCurrentStep(
                     auth()->user(),
                     'leave_request',
                     $employee,
-                    $currentStep->step_order
+                    $currentStep->step_order,
+                    $leaveRequest
                 );
 
-                if (!$canApprove) {
+                if (! $canApprove) {
                     return back()->with('error', 'ليس لديك صلاحية الموافقة على هذا الطلب');
                 }
 
@@ -329,29 +364,19 @@ class LeaveRequestController extends Controller
                 $approved = $workflowService->processApproval($instance, auth()->user(), true, $request->comments ?? null);
 
                 if ($approved) {
-                    // إذا اكتمل سير العمل، تحديث الرصيد
                     $instance->refresh();
                     if ($instance->status === 'approved') {
                         $this->updateLeaveBalance($leaveRequest);
                     }
 
-                    return back()->with('success', 'تم الموافقة على طلب الإجازة بنجاح');
+                    return back()->with('success', $workflowService->approvalFlashMessage($instance, true));
                 } else {
                     return back()->with('error', 'حدث خطأ أثناء معالجة الموافقة');
                 }
             }
         }
 
-        // النظام القديم (fallback) - للموافقة المباشرة
-        $this->updateLeaveBalance($leaveRequest);
-        
-        $leaveRequest->update([
-            'status' => 'approved',
-            'approved_by' => auth()->id(),
-            'approved_at' => now(),
-        ]);
-
-        return back()->with('success', 'تم الموافقة على طلب الإجازة بنجاح');
+        return back()->with('error', 'لا يوجد مسار موافقة نشط لهذا الطلب. يرجى التواصل مع الإدارة.');
     }
 
     /**
@@ -388,60 +413,42 @@ class LeaveRequestController extends Controller
 
         $this->authorizeManagedEmployeeId((int) $leaveRequest->employee_id, 'غير مصرح لك برفض هذا الطلب.');
 
-        // البحث عن workflow instance
-        $instance = \App\Models\WorkflowInstance::where('entity_type', 'LeaveRequest')
-            ->where('entity_id', $leaveRequest->id)
-            ->where('status', '!=', 'rejected')
-            ->where('status', '!=', 'approved')
-            ->first();
+        $request->validate([
+            'rejection_reason' => 'nullable|string|max:2000',
+        ]);
+
+        $instance = WorkflowService::findInstanceForEntity(LeaveRequest::class, $leaveRequest->id);
 
         if ($instance) {
             $workflowService = app(WorkflowService::class);
             $approvalService = app(ApprovalService::class);
-            
+            $instance->load('currentStep');
             $currentStep = $instance->currentStep;
             if ($currentStep) {
-                $canApprove = $approvalService->canUserApprove(
+                $canApprove = $approvalService->canActOnCurrentStep(
                     auth()->user(),
                     'leave_request',
                     $employee,
-                    $currentStep->step_order
+                    $currentStep->step_order,
+                    $leaveRequest
                 );
 
-                if (!$canApprove) {
+                if (! $canApprove) {
                     return back()->with('error', 'ليس لديك صلاحية رفض هذا الطلب');
                 }
 
-                // معالجة الرفض من خلال سير العمل
                 $rejected = $workflowService->processApproval($instance, auth()->user(), false, $request->rejection_reason ?? null);
 
                 if ($rejected) {
-                    return back()->with('success', 'تم رفض طلب الإجازة');
+                    $instance->refresh();
+
+                    return back()->with('success', $workflowService->approvalFlashMessage($instance, false));
                 } else {
                     return back()->with('error', 'حدث خطأ أثناء معالجة الرفض');
                 }
             }
         }
 
-        // النظام القديم (fallback)
-
-        if ($leaveRequest->status != 'pending') {
-            return back()->with('error', 'لا يمكن رفض هذا الطلب');
-        }
-
-        $request->validate([
-            'rejection_reason' => 'required|string|max:500',
-        ], [
-            'rejection_reason.required' => 'سبب الرفض مطلوب',
-        ]);
-
-        $leaveRequest->update([
-            'status' => 'rejected',
-            'approved_by' => auth()->id(),
-            'approved_at' => now(),
-            'rejection_reason' => $request->rejection_reason,
-        ]);
-
-        return back()->with('success', 'تم رفض طلب الإجازة بنجاح');
+        return back()->with('error', 'لا يوجد مسار موافقة نشط لهذا الطلب.');
     }
 }

@@ -1,0 +1,216 @@
+/* بوابة الموظف — المخالفات (مسطّح) */
+.employee-violations-page {
+    --vl-primary: var(--primary-color, #5c67f7);
+    --vl-primary-soft: rgba(var(--primary-rgb, 92, 103, 247), 0.12);
+    --vl-success: #10b981;
+    --vl-warning: #f59e0b;
+    --vl-danger: #ef4444;
+    --vl-muted: #64748b;
+    --vl-surface: var(--custom-white, #fff);
+    --vl-border: var(--default-border, rgba(15, 23, 42, 0.08));
+    --vl-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    --vl-radius: 0.75rem;
+}
+
+.employee-violations-page .page-hero {
+    background: var(--vl-surface);
+    border: 1px solid var(--vl-border);
+    border-inline-start: 4px solid var(--vl-danger);
+    border-radius: var(--vl-radius);
+    box-shadow: var(--vl-shadow);
+}
+
+.employee-violations-page .page-hero-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: rgba(239, 68, 68, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    color: var(--vl-danger);
+}
+
+.employee-violations-page .page-hero-title { color: var(--default-text-color, #0f172a); }
+.employee-violations-page .page-hero-subtitle { color: var(--vl-muted); font-size: 0.8125rem; }
+
+.employee-violations-page .stat-card {
+    border: 1px solid var(--vl-border);
+    border-radius: var(--vl-radius);
+    background: var(--vl-surface);
+    box-shadow: var(--vl-shadow);
+    padding: 1.25rem;
+    height: 100%;
+}
+
+.employee-violations-page .stat-value { font-size: 1.75rem; font-weight: 700; color: var(--default-text-color, #0f172a); }
+.employee-violations-page .stat-label { font-size: 0.8125rem; color: var(--vl-muted); }
+
+.employee-violations-page .stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+}
+
+.employee-violations-page .stat-icon--primary { background: var(--vl-primary-soft); color: var(--vl-primary); }
+.employee-violations-page .stat-icon--warning { background: rgba(245, 158, 11, 0.12); color: var(--vl-warning); }
+.employee-violations-page .stat-icon--danger { background: rgba(239, 68, 68, 0.12); color: var(--vl-danger); }
+.employee-violations-page .stat-icon--success { background: rgba(16, 185, 129, 0.12); color: var(--vl-success); }
+
+.employee-violations-page .content-panel {
+    border: 1px solid var(--vl-border);
+    border-radius: var(--vl-radius);
+    background: var(--vl-surface);
+    box-shadow: var(--vl-shadow);
+}
+
+.employee-violations-page .content-panel-header {
+    padding: 1.15rem 1.35rem;
+    border-bottom: 1px solid var(--vl-border);
+}
+
+.employee-violations-page .filter-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.employee-violations-page .filter-pill {
+    border: 1px solid var(--vl-border);
+    background: var(--vl-surface);
+    color: var(--vl-muted);
+    padding: 0.4rem 1rem;
+    border-radius: 99px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.employee-violations-page .filter-pill:hover,
+.employee-violations-page .filter-pill.active {
+    background: var(--vl-primary);
+    border-color: var(--vl-primary);
+    color: #fff;
+}
+
+.employee-violations-page .violation-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.15rem 1.35rem;
+    border-bottom: 1px solid var(--vl-border);
+    transition: background 0.15s;
+}
+
+.employee-violations-page .violation-card:last-child { border-bottom: none; }
+.employee-violations-page .violation-card:hover { background: rgba(239, 68, 68, 0.03); }
+.employee-violations-page .violation-card.severity-critical { border-inline-start: 3px solid var(--vl-danger); }
+
+.employee-violations-page .violation-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--vl-danger);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.employee-violations-page .violation-type {
+    font-weight: 700;
+    font-size: 0.9375rem;
+    color: var(--default-text-color, #0f172a);
+}
+
+.employee-violations-page .violation-code {
+    font-size: 0.7rem;
+    color: var(--vl-muted);
+    font-family: monospace;
+}
+
+.employee-violations-page .violation-date {
+    font-size: 0.8125rem;
+    color: var(--vl-muted);
+    white-space: nowrap;
+}
+
+.employee-violations-page .action-text {
+    font-size: 0.8125rem;
+    color: var(--default-text-color, #334155);
+    max-width: 140px;
+}
+
+.employee-violations-page .severity-pill,
+.employee-violations-page .status-pill {
+    padding: 0.35rem 0.85rem;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.employee-violations-page .severity-pill--low { background: rgba(100, 116, 139, 0.12); color: #475569; }
+.employee-violations-page .severity-pill--medium { background: rgba(14, 165, 233, 0.12); color: #0369a1; }
+.employee-violations-page .severity-pill--high { background: rgba(245, 158, 11, 0.15); color: #b45309; }
+.employee-violations-page .severity-pill--critical { background: rgba(239, 68, 68, 0.15); color: #b91c1c; }
+
+.employee-violations-page .status-pill--pending { background: rgba(245, 158, 11, 0.15); color: #b45309; }
+.employee-violations-page .status-pill--investigating { background: rgba(14, 165, 233, 0.15); color: #0369a1; }
+.employee-violations-page .status-pill--confirmed { background: rgba(239, 68, 68, 0.15); color: #b91c1c; }
+.employee-violations-page .status-pill--dismissed { background: rgba(16, 185, 129, 0.15); color: #047857; }
+.employee-violations-page .status-pill--resolved { background: rgba(100, 116, 139, 0.15); color: #475569; }
+
+.employee-violations-page .btn-view-violation {
+    border: 1px solid var(--vl-border);
+    background: var(--vl-surface);
+    color: var(--vl-primary);
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.employee-violations-page .btn-view-violation:hover {
+    background: var(--vl-primary);
+    border-color: var(--vl-primary);
+    color: #fff;
+}
+
+.employee-violations-page .detail-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid var(--vl-border);
+    font-size: 0.875rem;
+}
+
+.employee-violations-page .detail-row:last-child { border-bottom: none; }
+.employee-violations-page .detail-row strong { color: var(--vl-muted); font-weight: 500; }
+
+.employee-violations-page .empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+}
+
+.employee-violations-page .empty-state .empty-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    background: rgba(16, 185, 129, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: var(--vl-success);
+}

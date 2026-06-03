@@ -267,11 +267,11 @@ class ReportController extends Controller
             'approved' => $leaveRequests->where('status', 'approved')->count(),
             'pending' => $leaveRequests->where('status', 'pending')->count(),
             'rejected' => $leaveRequests->where('status', 'rejected')->count(),
-            'total_days' => $leaveRequests->sum('number_of_days'),
+            'total_days' => $leaveRequests->sum('days_count'),
             'by_type' => $leaveRequests->groupBy('leave_type_id')->map(function ($items) {
                 return [
                     'count' => $items->count(),
-                    'days' => $items->sum('number_of_days'),
+                    'days' => $items->sum('days_count'),
                 ];
             }),
             'by_month' => $leaveRequests->groupBy(function ($item) {

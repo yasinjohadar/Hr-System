@@ -10,6 +10,9 @@ use App\Models\Employee;
 use App\Models\Currency;
 use App\Services\WorkflowService;
 use App\Services\ApprovalService;
+use App\Services\EmployeeRequestSubmissionService;
+use App\Services\WorkflowProgressPresenter;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -61,11 +64,21 @@ class ExpenseRequestController extends Controller
         }
 
         $expenseRequests = $query->latest()->paginate(15);
+
+        $canApproveNowById = app(ApprovalService::class)->canActOnEntitiesMap(
+            Auth::user(),
+            $expenseRequests->getCollection()
+        );
+
+        $workflowProgressById = app(WorkflowProgressPresenter::class)->mapForEntities(
+            $expenseRequests->getCollection()
+        );
+
         $employees = Employee::where('is_active', true)->get();
         $employees = collect($this->departmentScope()->filterEmployeeCollection($employees));
         $categories = ExpenseCategory::where('is_active', true)->get();
 
-        return view('admin.pages.expense-requests.index', compact('expenseRequests', 'employees', 'categories'));
+        return view('admin.pages.expense-requests.index', compact('expenseRequests', 'employees', 'categories', 'canApproveNowById', 'workflowProgressById'));
     }
 
     /**
@@ -125,12 +138,22 @@ class ExpenseRequestController extends Controller
             $data['receipt_file_size'] = $file->getSize();
         }
 
-        $expenseRequest = ExpenseRequest::create($data);
-
-        // بدء سير العمل التلقائي
         $employee = Employee::findOrFail($request->employee_id);
-        $workflowService = app(WorkflowService::class);
-        $workflowService->startWorkflow('expense_request', $employee, 'ExpenseRequest', $expenseRequest->id);
+
+        try {
+            DB::beginTransaction();
+            $expenseRequest = ExpenseRequest::create($data);
+            app(EmployeeRequestSubmissionService::class)->afterRequestCreated(
+                'expense_request',
+                $employee,
+                $expenseRequest
+            );
+            DB::commit();
+        } catch (\RuntimeException $e) {
+            DB::rollBack();
+
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('admin.expense-requests.index')->with('success', 'تم إضافة طلب المصروف بنجاح وتم إرساله للموافقة.');
     }
@@ -151,7 +174,10 @@ class ExpenseRequestController extends Controller
 
         $this->authorizeManagedEmployeeId((int) $expenseRequest->employee_id, 'غير مصرح لك بعرض هذا الطلب.');
 
-        return view('admin.pages.expense-requests.show', compact('expenseRequest'));
+        $canApproveNow = app(ApprovalService::class)->canActOnEntity(Auth::user(), $expenseRequest);
+        $workflowProgress = app(WorkflowProgressPresenter::class)->resolveForEntity($expenseRequest);
+
+        return view('admin.pages.expense-requests.show', compact('expenseRequest', 'canApproveNow', 'workflowProgress'));
     }
 
     /**
@@ -260,7 +286,11 @@ class ExpenseRequestController extends Controller
         if ($expenseRequest->status !== 'pending') {
             return redirect()->back()->with('error', 'لا يمكن الموافقة على طلب في هذه الحالة.');
         }
-        
+
+        if (! app(ApprovalService::class)->canActOnEntity(Auth::user(), $expenseRequest)) {
+            return redirect()->back()->with('error', 'ليس لديك صلاحية الموافقة على هذا الطلب في المرحلة الحالية.');
+        }
+
         return view('admin.pages.expense-requests.approve', compact('expenseRequest'));
     }
 
@@ -279,15 +309,11 @@ class ExpenseRequestController extends Controller
         }
 
         $request->validate([
-            'comments' => 'nullable|string',
+            'comments' => 'nullable|string|max:2000',
         ]);
 
         // البحث عن workflow instance
-        $instance = \App\Models\WorkflowInstance::where('entity_type', 'ExpenseRequest')
-            ->where('entity_id', $expenseRequest->id)
-            ->where('status', '!=', 'rejected')
-            ->where('status', '!=', 'approved')
-            ->first();
+        $instance = WorkflowService::findInstanceForEntity(ExpenseRequest::class, $expenseRequest->id);
 
         if ($instance) {
             // استخدام نظام سير العمل
@@ -296,14 +322,15 @@ class ExpenseRequestController extends Controller
             
             $currentStep = $instance->currentStep;
             if ($currentStep) {
-                $canApprove = $approvalService->canUserApprove(
+                $canApprove = $approvalService->canActOnCurrentStep(
                     auth()->user(),
                     'expense_request',
                     $employee,
-                    $currentStep->step_order
+                    $currentStep->step_order,
+                    $expenseRequest
                 );
 
-                if (!$canApprove) {
+                if (! $canApprove) {
                     return redirect()->back()->with('error', 'ليس لديك صلاحية الموافقة على هذا الطلب');
                 }
 
@@ -311,44 +338,20 @@ class ExpenseRequestController extends Controller
                 $approved = $workflowService->processApproval($instance, auth()->user(), true, $request->comments ?? null);
 
                 if ($approved) {
-                    // إنشاء سجل الموافقة
-                    ExpenseApproval::create([
-                        'expense_request_id' => $expenseRequest->id,
-                        'approver_id' => auth()->id(),
-                        'approval_level' => $currentStep->step_order,
-                        'status' => 'approved',
-                        'comments' => $request->comments,
-                        'approved_at' => now(),
-                    ]);
-
-                    // التحقق من اكتمال سير العمل
                     $instance->refresh();
                     if ($instance->status === 'approved') {
                         $expenseRequest->update(['status' => 'approved']);
                     }
 
-                    return redirect()->route('admin.expense-requests.index')->with('success', 'تم الموافقة على طلب المصروف بنجاح.');
+                    return redirect()->route('admin.expense-requests.index')
+                        ->with('success', $workflowService->approvalFlashMessage($instance, true));
                 } else {
                     return redirect()->back()->with('error', 'حدث خطأ أثناء معالجة الموافقة');
                 }
             }
         }
 
-        // النظام القديم (fallback) - للموافقة المباشرة
-        ExpenseApproval::create([
-            'expense_request_id' => $expenseRequest->id,
-            'approver_id' => auth()->id(),
-            'approval_level' => 1,
-            'status' => 'approved',
-            'comments' => $request->comments,
-            'approved_at' => now(),
-        ]);
-
-        $expenseRequest->update([
-            'status' => 'approved',
-        ]);
-
-        return redirect()->route('admin.expense-requests.index')->with('success', 'تم الموافقة على طلب المصروف بنجاح.');
+        return redirect()->back()->with('error', 'لا يوجد مسار موافقة نشط لهذا الطلب.');
     }
 
     /**
@@ -362,11 +365,7 @@ class ExpenseRequestController extends Controller
         $this->authorizeManagedEmployeeId((int) $expenseRequest->employee_id, 'غير مصرح لك برفض هذا الطلب.');
 
         // البحث عن workflow instance
-        $instance = \App\Models\WorkflowInstance::where('entity_type', 'ExpenseRequest')
-            ->where('entity_id', $expenseRequest->id)
-            ->where('status', '!=', 'rejected')
-            ->where('status', '!=', 'approved')
-            ->first();
+        $instance = WorkflowService::findInstanceForEntity(ExpenseRequest::class, $expenseRequest->id);
 
         if ($instance) {
             $workflowService = app(WorkflowService::class);
@@ -374,14 +373,15 @@ class ExpenseRequestController extends Controller
             
             $currentStep = $instance->currentStep;
             if ($currentStep) {
-                $canApprove = $approvalService->canUserApprove(
+                $canApprove = $approvalService->canActOnCurrentStep(
                     auth()->user(),
                     'expense_request',
                     $employee,
-                    $currentStep->step_order
+                    $currentStep->step_order,
+                    $expenseRequest
                 );
 
-                if (!$canApprove) {
+                if (! $canApprove) {
                     return redirect()->back()->with('error', 'ليس لديك صلاحية رفض هذا الطلب');
                 }
 
@@ -389,49 +389,15 @@ class ExpenseRequestController extends Controller
                 $rejected = $workflowService->processApproval($instance, auth()->user(), false, $request->rejection_reason ?? null);
 
                 if ($rejected) {
-                    // إنشاء سجل الرفض
-                    ExpenseApproval::create([
-                        'expense_request_id' => $expenseRequest->id,
-                        'approver_id' => auth()->id(),
-                        'approval_level' => $currentStep->step_order,
-                        'status' => 'rejected',
-                        'comments' => $request->rejection_reason,
-                        'rejected_at' => now(),
-                    ]);
+                    $instance->refresh();
 
-                    $expenseRequest->update(['status' => 'rejected']);
-                    return redirect()->route('admin.expense-requests.index')->with('success', 'تم رفض طلب المصروف.');
+                    return redirect()->route('admin.expense-requests.index')
+                        ->with('success', $workflowService->approvalFlashMessage($instance, false));
                 }
             }
         }
 
-        // النظام القديم (fallback)
-
-        if ($expenseRequest->status !== 'pending') {
-            return redirect()->back()->with('error', 'لا يمكن رفض طلب في هذه الحالة.');
-        }
-
-        $request->validate([
-            'rejection_reason' => 'required|string',
-        ]);
-
-        // إنشاء سجل الموافقة (رفض)
-        ExpenseApproval::create([
-            'expense_request_id' => $expenseRequest->id,
-            'approver_id' => auth()->id(),
-            'approval_level' => 1,
-            'status' => 'rejected',
-            'comments' => $request->rejection_reason,
-            'rejected_at' => now(),
-        ]);
-
-        // تحديث حالة الطلب
-        $expenseRequest->update([
-            'status' => 'rejected',
-            'rejection_reason' => $request->rejection_reason,
-        ]);
-
-        return redirect()->back()->with('success', 'تم رفض طلب المصروف.');
+        return redirect()->back()->with('error', 'لا يوجد مسار موافقة نشط لهذا الطلب.');
     }
 
     /**

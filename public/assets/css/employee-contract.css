@@ -1,0 +1,247 @@
+/* بوابة الموظف — العقد (مسطّح) */
+.employee-contract-page {
+    --ct-primary: var(--primary-color, #5c67f7);
+    --ct-primary-soft: rgba(var(--primary-rgb, 92, 103, 247), 0.12);
+    --ct-success: #10b981;
+    --ct-warning: #f59e0b;
+    --ct-danger: #ef4444;
+    --ct-muted: #64748b;
+    --ct-surface: var(--custom-white, #fff);
+    --ct-border: var(--default-border, rgba(15, 23, 42, 0.08));
+    --ct-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    --ct-radius: 0.75rem;
+}
+
+.employee-contract-page .page-hero {
+    background: var(--ct-surface);
+    border: 1px solid var(--ct-border);
+    border-inline-start: 4px solid var(--ct-primary);
+    border-radius: var(--ct-radius);
+    box-shadow: var(--ct-shadow);
+}
+
+.employee-contract-page .page-hero-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: var(--ct-primary-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    color: var(--ct-primary);
+}
+
+.employee-contract-page .page-hero-title { color: var(--default-text-color, #0f172a); }
+.employee-contract-page .page-hero-subtitle { color: var(--ct-muted); font-size: 0.8125rem; }
+
+.employee-contract-page .stat-card {
+    border: 1px solid var(--ct-border);
+    border-radius: var(--ct-radius);
+    background: var(--ct-surface);
+    box-shadow: var(--ct-shadow);
+    padding: 1.25rem;
+    height: 100%;
+}
+
+.employee-contract-page .stat-value { font-size: 1.75rem; font-weight: 700; color: var(--default-text-color, #0f172a); }
+.employee-contract-page .stat-label { font-size: 0.8125rem; color: var(--ct-muted); }
+
+.employee-contract-page .stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+}
+
+.employee-contract-page .stat-icon--primary { background: var(--ct-primary-soft); color: var(--ct-primary); }
+.employee-contract-page .stat-icon--success { background: rgba(16, 185, 129, 0.12); color: var(--ct-success); }
+.employee-contract-page .stat-icon--warning { background: rgba(245, 158, 11, 0.12); color: var(--ct-warning); }
+.employee-contract-page .stat-icon--muted { background: rgba(100, 116, 139, 0.12); color: var(--ct-muted); }
+
+.employee-contract-page .current-contract-panel {
+    border: 1px solid var(--ct-border);
+    border-radius: var(--ct-radius);
+    background: var(--ct-surface);
+    box-shadow: var(--ct-shadow);
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+}
+
+.employee-contract-page .current-contract-panel.is-expiring-soon {
+    border-inline-start: 4px solid var(--ct-warning);
+}
+
+.employee-contract-page .current-contract-header {
+    padding: 1.25rem 1.35rem;
+    border-bottom: 1px solid var(--ct-border);
+    background: #f8fafc;
+}
+
+.employee-contract-page .current-contract-body {
+    padding: 1.35rem;
+}
+
+.employee-contract-page .contract-type-badge {
+    display: inline-block;
+    padding: 0.4rem 1rem;
+    border-radius: 99px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    background: var(--ct-primary-soft);
+    color: var(--ct-primary);
+    margin-bottom: 1rem;
+}
+
+.employee-contract-page .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.employee-contract-page .info-item label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--ct-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.25rem;
+}
+
+.employee-contract-page .info-item .value {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--default-text-color, #0f172a);
+}
+
+.employee-contract-page .days-remaining {
+    padding: 1rem;
+    border-radius: var(--ct-radius);
+    background: #f8fafc;
+    border: 1px solid var(--ct-border);
+    margin-bottom: 1.25rem;
+}
+
+.employee-contract-page .days-remaining .days-num {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--ct-primary);
+}
+
+.employee-contract-page .days-remaining.is-warning .days-num { color: var(--ct-warning); }
+.employee-contract-page .days-remaining.is-danger .days-num { color: var(--ct-danger); }
+
+.employee-contract-page .days-bar {
+    height: 8px;
+    border-radius: 99px;
+    background: #e2e8f0;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.employee-contract-page .days-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: var(--ct-primary);
+}
+
+.employee-contract-page .status-pill {
+    padding: 0.35rem 0.85rem;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.employee-contract-page .status-pill--active { background: rgba(16, 185, 129, 0.15); color: #047857; }
+.employee-contract-page .status-pill--expired { background: rgba(100, 116, 139, 0.15); color: #475569; }
+.employee-contract-page .status-pill--renewed { background: rgba(var(--primary-rgb, 92, 103, 247), 0.15); color: var(--ct-primary); }
+.employee-contract-page .status-pill--terminated { background: rgba(239, 68, 68, 0.15); color: #b91c1c; }
+
+.employee-contract-page .btn-download-contract {
+    background: var(--ct-primary);
+    border-color: var(--ct-primary);
+    font-weight: 600;
+    border-radius: 0.5rem;
+}
+
+.employee-contract-page .content-panel {
+    border: 1px solid var(--ct-border);
+    border-radius: var(--ct-radius);
+    background: var(--ct-surface);
+    box-shadow: var(--ct-shadow);
+}
+
+.employee-contract-page .content-panel-header {
+    padding: 1.15rem 1.35rem;
+    border-bottom: 1px solid var(--ct-border);
+}
+
+.employee-contract-page .filter-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.employee-contract-page .filter-pill {
+    border: 1px solid var(--ct-border);
+    background: var(--ct-surface);
+    color: var(--ct-muted);
+    padding: 0.4rem 1rem;
+    border-radius: 99px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.employee-contract-page .filter-pill:hover,
+.employee-contract-page .filter-pill.active {
+    background: var(--ct-primary);
+    border-color: var(--ct-primary);
+    color: #fff;
+}
+
+.employee-contract-page .history-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.1rem 1.35rem;
+    border-bottom: 1px solid var(--ct-border);
+}
+
+.employee-contract-page .history-card:last-child { border-bottom: none; }
+.employee-contract-page .history-card.is-current { background: rgba(var(--primary-rgb, 92, 103, 247), 0.04); }
+
+.employee-contract-page .history-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: var(--ct-primary-soft);
+    color: var(--ct-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+}
+
+.employee-contract-page .empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    border: 1px dashed var(--ct-border);
+    border-radius: var(--ct-radius);
+}
+
+.employee-contract-page .empty-state .empty-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    background: var(--ct-primary-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: var(--ct-primary);
+}

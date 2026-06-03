@@ -11,6 +11,14 @@
                 </div>
             </div>
             <div class="d-flex flex-wrap gap-2">
+                @if(auth()->user()->hasRole('department_head') && auth()->user()->canAccessEmployeePortal())
+                    <a href="{{ route('employee.dashboard') }}" target="_blank" rel="noopener noreferrer"
+                        class="btn btn-light btn-sm"
+                        title="يفتح بوابة الموظف في تبويب جديد لتبقى لوحة الإدارة مفتوحة">
+                        <i class="ri-user-3-line me-1"></i>بوابة الموظف
+                        <i class="ri-external-link-line ms-1 opacity-75"></i>
+                    </a>
+                @endif
                 <button type="button" class="btn btn-light btn-sm" onclick="refreshAdminDashboard(event)">
                     <i class="ri-refresh-line me-1"></i>تحديث
                 </button>

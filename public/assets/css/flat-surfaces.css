@@ -1,0 +1,43 @@
+/**
+ * أسطح مسطّحة — إلغاء تدرجات الألوان في واجهة التطبيق
+ */
+.bg-primary-gradient {
+    background: var(--primary-color) !important;
+    background-image: none !important;
+}
+
+.bg-secondary-gradient {
+    background: rgb(var(--secondary-rgb)) !important;
+    background-image: none !important;
+}
+
+.bg-success-gradient {
+    background: rgb(var(--success-rgb)) !important;
+    background-image: none !important;
+}
+
+.bg-warning-gradient {
+    background: rgb(var(--warning-rgb)) !important;
+    background-image: none !important;
+}
+
+.bg-info-gradient {
+    background: rgb(var(--info-rgb)) !important;
+    background-image: none !important;
+}
+
+.bg-danger-gradient {
+    background: rgb(var(--danger-rgb)) !important;
+    background-image: none !important;
+}
+
+.bg-orange-gradient,
+.bg-purple-gradient,
+.bg-teal-gradient {
+    background-image: none !important;
+}
+
+.progress-bar.bg-primary-gradient,
+.progress-bar.bg-danger-gradient {
+    background-image: none !important;
+}

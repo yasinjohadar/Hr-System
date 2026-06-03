@@ -29,11 +29,13 @@
                         <div class="col-md-3">
                             <select name="type" class="form-select">
                                 <option value="">كل الأنواع</option>
-                                <option value="leave_request" {{ request('type') == 'leave_request' ? 'selected' : '' }}>طلب إجازة</option>
-                                <option value="expense_request" {{ request('type') == 'expense_request' ? 'selected' : '' }}>طلب مصروف</option>
-                                <option value="task_approval" {{ request('type') == 'task_approval' ? 'selected' : '' }}>موافقة مهمة</option>
-                                <option value="performance_review" {{ request('type') == 'performance_review' ? 'selected' : '' }}>تقييم الأداء</option>
-                                <option value="custom" {{ request('type') == 'custom' ? 'selected' : '' }}>مخصص</option>
+                                @foreach (\App\Models\Workflow::allowedTypes() as $typeKey)
+                                    @php
+                                        $label = config("approval_workflows.types.{$typeKey}.label_ar")
+                                            ?? (new \App\Models\Workflow(['type' => $typeKey]))->type_name_ar;
+                                    @endphp
+                                    <option value="{{ $typeKey }}" {{ request('type') == $typeKey ? 'selected' : '' }}>{{ $label }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="col-md-3">

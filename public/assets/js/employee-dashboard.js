@@ -128,7 +128,7 @@
 
         amountEl.innerHTML =
             payroll.net_salary +
-            ' <small class="fs-14 text-white-50">' +
+            ' <small class="kpi-stat-unit">' +
             payroll.currency +
             '</small>';
         metaEl.textContent = payroll.month_label;

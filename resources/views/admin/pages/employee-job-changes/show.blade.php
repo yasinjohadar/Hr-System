@@ -73,10 +73,20 @@
 
                 <!-- تفاصيل الطلب -->
                 <div class="col-xl-8">
+                    @if ($workflowProgress ?? null)
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <x-workflow-approval-timeline :workflow-progress="$workflowProgress" />
+                            </div>
+                        </div>
+                    @endif
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">تفاصيل الطلب</h5>
-                            <span class="badge bg-{{ $employeeJobChange->status_color }} fs-6">{{ $employeeJobChange->status_label }}</span>
+                            @php
+                                $displayBadge = ($workflowProgress ?? null)['badge_ar'] ?? $employeeJobChange->status_label;
+                            @endphp
+                            <span class="badge bg-{{ $employeeJobChange->status_color }} fs-6">{{ $displayBadge }}</span>
                         </div>
                         <div class="card-body">
                             <div class="row mb-3">

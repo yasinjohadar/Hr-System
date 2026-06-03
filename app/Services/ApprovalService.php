@@ -7,6 +7,10 @@ use App\Models\Department;
 use App\Models\User;
 use App\Models\WorkflowStep;
 use App\Models\ApprovalDelegation;
+use App\Models\WorkflowInstance;
+use App\Support\WorkflowEntityType;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
 class ApprovalService
@@ -160,17 +164,10 @@ class ApprovalService
     }
 
     /**
-     * التحقق من أن المستخدم الحالي يمكنه الموافقة على طلب معين
-     * 
-     * @param User $user المستخدم الحالي
-     * @param string $workflowType نوع سير العمل
-     * @param Employee $employee الموظف صاحب الطلب
-     * @param int $approvalLevel مستوى الموافقة المطلوب
-     * @return bool
+     * Whether the user may approve/reject at a specific workflow step (strict: no approve-all bypass).
      */
-    public function canUserApprove(User $user, string $workflowType, Employee $employee, int $approvalLevel = 1, $entity = null): bool
+    public function canActOnCurrentStep(User $user, string $workflowType, Employee $employee, int $approvalLevel = 1, $entity = null): bool
     {
-        // التحقق من تعارض المصالح
         if ($this->hasConflictOfInterest($user, $employee)) {
             return false;
         }
@@ -179,7 +176,7 @@ class ApprovalService
             ->where('is_active', true)
             ->first();
 
-        if (!$workflow) {
+        if (! $workflow) {
             return false;
         }
 
@@ -187,38 +184,125 @@ class ApprovalService
             ->where('step_order', $approvalLevel)
             ->first();
 
-        if (!$step) {
+        if (! $step) {
             return false;
         }
 
-        // تقييم الشروط الديناميكية
-        if ($entity && !$this->evaluateStepConditions($step, $entity)) {
+        if ($entity && ! $this->evaluateStepConditions($step, $entity)) {
             return false;
         }
 
-        $requiredApprover = $this->getApproverForStep($step, $employee);
+        $requiredApprover = $this->getApproverForStep($step, $employee, $entity);
 
-        if (!$requiredApprover) {
+        if (! $requiredApprover) {
             return false;
         }
 
-        // التحقق من أن المستخدم هو الموافق المطلوب
         if ($requiredApprover->id === $user->id) {
             return true;
         }
 
-        // التحقق من التفويض
         $delegation = ApprovalDelegation::getActiveDelegationForUser($requiredApprover, $workflowType);
-        if ($delegation && $delegation->delegate_id === $user->id) {
-            return true;
+
+        return $delegation && $delegation->delegate_id === $user->id;
+    }
+
+    /**
+     * Whether the user may act on the entity's current in-progress workflow step.
+     */
+    public function canActOnEntity(User $user, Model $entity): bool
+    {
+        $workflowType = $this->workflowTypeForEntity($entity);
+        if (! $workflowType) {
+            return false;
         }
 
-        $approveAll = $this->approveAllPermissionForWorkflow($workflowType);
-        if ($approveAll && $user->hasPermissionTo($approveAll)) {
-            return true;
+        $employee = $this->getEmployeeFromEntity($entity);
+        if (! $employee) {
+            return false;
         }
 
-        return false;
+        $instance = WorkflowInstance::where('entity_type', WorkflowEntityType::normalize($entity::class))
+            ->where('entity_id', (int) $entity->getKey())
+            ->where('status', 'in_progress')
+            ->with('currentStep')
+            ->latest('id')
+            ->first();
+
+        if (! $instance) {
+            return false;
+        }
+
+        $currentStep = $instance->currentStep;
+        if (! $currentStep) {
+            return false;
+        }
+
+        return $this->canActOnCurrentStep(
+            $user,
+            $workflowType,
+            $employee,
+            $currentStep->step_order,
+            $entity
+        );
+    }
+
+    /**
+     * Map entity id => whether the user can act now (for list UIs).
+     *
+     * @param  Collection<int, Model>  $entities
+     * @return array<int, bool>
+     */
+    public function canActOnEntitiesMap(User $user, Collection $entities): array
+    {
+        $map = [];
+        foreach ($entities as $entity) {
+            $map[(int) $entity->getKey()] = $this->canActOnEntity($user, $entity);
+        }
+
+        return $map;
+    }
+
+    /**
+     * التحقق من أن المستخدم الحالي يمكنه الموافقة على طلب معين (تسلسل صارم، بدون approve-all).
+     */
+    public function canUserApprove(User $user, string $workflowType, Employee $employee, int $approvalLevel = 1, $entity = null): bool
+    {
+        return $this->canActOnCurrentStep($user, $workflowType, $employee, $approvalLevel, $entity);
+    }
+
+    /**
+     * Resolve workflow type key from a request model.
+     */
+    public function workflowTypeForEntity(Model $entity): ?string
+    {
+        foreach (config('approval_workflows.types', []) as $type => $config) {
+            if (($config['model'] ?? null) === $entity::class) {
+                return $type;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return Employee|null
+     */
+    public function getEmployeeFromEntity(Model $entity): ?Employee
+    {
+        if ($entity->relationLoaded('employee') && $entity->employee instanceof Employee) {
+            return $entity->employee;
+        }
+
+        if (method_exists($entity, 'employee')) {
+            return $entity->employee;
+        }
+
+        if (isset($entity->employee_id)) {
+            return Employee::find($entity->employee_id);
+        }
+
+        return null;
     }
 
     /**

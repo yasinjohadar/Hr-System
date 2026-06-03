@@ -4,218 +4,202 @@
     التسلسل الإداري
 @stop
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('assets/css/employee-hierarchy.css') }}">
+@endpush
+
 @section('content')
-    <div class="main-content app-content">
-        <div class="container-fluid">
-            <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
-                <div>
-                    <h5 class="page-title fs-21 mb-1">التسلسل الإداري</h5>
-                    <p class="text-muted fs-13 mb-0">هيكل الإدارة والتابعية</p>
+    <div class="main-content app-content employee-hierarchy-page">
+        <div class="container-fluid pt-4">
+
+            <div class="card page-hero mb-4">
+                <div class="card-body py-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="page-hero-icon">
+                            <i class="ri-organization-chart"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-1 page-hero-title fw-bold">التسلسل الإداري</h4>
+                            <p class="mb-0 page-hero-subtitle">هيكل الإدارة والتابعية داخل المؤسسة</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="row">
-                <!-- My Info -->
-                <div class="col-xl-4 col-lg-12 mb-4">
-                    <div class="card custom-card">
-                        <div class="card-header bg-primary text-white">
-                            <h6 class="card-title fw-semibold mb-0">
-                                <i class="ri-user-line me-1"></i>معلوماتي
-                            </h6>
+            <div class="row g-3 mb-4">
+                <div class="col-sm-4">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-value">{{ $stats['manager_levels'] }}</div>
+                                <div class="stat-label">مستويات إدارية</div>
+                            </div>
+                            <div class="stat-icon stat-icon--primary"><i class="ri-user-star-line"></i></div>
                         </div>
-                        <div class="card-body text-center">
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-value">{{ $stats['departments'] }}</div>
+                                <div class="stat-label">أقسام في التسلسل</div>
+                            </div>
+                            <div class="stat-icon stat-icon--success"><i class="ri-building-line"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-value">{{ $stats['has_direct_manager'] ? 'نعم' : '—' }}</div>
+                                <div class="stat-label">مدير مباشر</div>
+                            </div>
+                            <div class="stat-icon stat-icon--info"><i class="ri-arrow-up-line"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-xl-4">
+                    <div class="section-card">
+                        <div class="section-card-header">
+                            <i class="ri-user-line me-1 text-primary"></i>معلوماتي
+                        </div>
+                        <div class="section-card-body text-center">
                             @if ($employee->photo)
-                                <img src="{{ asset('storage/' . $employee->photo) }}" alt="صورة الموظف" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid var(--primary-color);">
+                                <img src="{{ asset('storage/' . $employee->photo) }}" alt="" class="profile-avatar mb-3">
                             @else
-                                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 100px; height: 100px; font-size: 40px;">
+                                <div class="profile-avatar--placeholder mb-3 mx-auto">
                                     {{ substr($employee->first_name, 0, 1) }}
                                 </div>
                             @endif
-                            <h5 class="mb-1 fw-semibold">{{ $employee->full_name }}</h5>
-                            <p class="text-muted mb-2">{{ $employee->employee_code }}</p>
-                            <p class="mb-3">
-                                <span class="badge bg-primary-transparent">{{ $employee->position->title ?? '-' }}</span>
-                            </p>
-                            <div class="text-start border-top pt-3">
-                                <div class="mb-2">
-                                    <small class="text-muted d-block">القسم</small>
-                                    <span class="fw-medium">{{ $employee->department->name ?? '-' }}</span>
+                            <h5 class="fw-bold mb-1">{{ $employee->full_name }}</h5>
+                            <p class="text-muted fs-13 mb-2 font-monospace">{{ $employee->employee_code }}</p>
+                            <span class="badge bg-primary-transparent text-primary mb-3">{{ $employee->position->title ?? '—' }}</span>
+                            <div class="text-start mt-2">
+                                <div class="profile-detail-row">
+                                    <span class="profile-detail-label">القسم</span>
+                                    <span class="profile-detail-value">{{ $employee->department->name ?? '—' }}</span>
                                 </div>
-                                <div class="mb-2">
-                                    <small class="text-muted d-block">الفرع</small>
-                                    <span class="fw-medium">{{ $employee->branch->name ?? '-' }}</span>
+                                <div class="profile-detail-row">
+                                    <span class="profile-detail-label">الفرع</span>
+                                    <span class="profile-detail-value">{{ $employee->branch->name ?? '—' }}</span>
                                 </div>
-                                <div class="mb-2">
-                                    <small class="text-muted d-block">تاريخ التوظيف</small>
-                                    <span class="fw-medium">{{ $employee->hire_date->format('Y/m/d') }}</span>
+                                <div class="profile-detail-row">
+                                    <span class="profile-detail-label">تاريخ التوظيف</span>
+                                    <span class="profile-detail-value">{{ $employee->hire_date->format('Y/m/d') }}</span>
                                 </div>
-                                <div>
-                                    <small class="text-muted d-block">سنوات الخدمة</small>
-                                    <span class="fw-medium">{{ $employee->hire_date->diffInYears(now()) }} سنة و {{ $employee->hire_date->diffInMonths(now()) % 12 }} شهر</span>
+                                <div class="profile-detail-row">
+                                    <span class="profile-detail-label">سنوات الخدمة</span>
+                                    <span class="profile-detail-value">
+                                        {{ $yearsOfService }} {{ $yearsOfService === 1 ? 'سنة' : 'سنوات' }}
+                                        @if ($monthsOfService > 0)
+                                            و {{ $monthsOfService }} {{ $monthsOfService === 1 ? 'شهر' : 'أشهر' }}
+                                        @endif
+                                    </span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Management Hierarchy -->
-                <div class="col-xl-4 col-lg-12 mb-4">
-                    <div class="card custom-card">
-                        <div class="card-header bg-success text-white">
-                            <h6 class="card-title fw-semibold mb-0">
-                                <i class="ri-arrow-up-circle-line me-1"></i>التسلسل الإداري
-                            </h6>
+                <div class="col-xl-4">
+                    <div class="section-card">
+                        <div class="section-card-header">
+                            <i class="ri-git-branch-line me-1 text-primary"></i>التسلسل الإداري
                         </div>
-                        <div class="card-body p-0">
-                            <!-- أنا -->
-                            <div class="p-3 border-bottom bg-light">
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar avatar-md bg-primary avatar-rounded me-3">
-                                        {{ substr($employee->first_name, 0, 1) }}
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-0 fw-semibold">{{ $employee->full_name }}</h6>
-                                        <small class="text-muted">{{ $employee->position->title ?? '-' }}</small>
-                                    </div>
+                        <div class="section-card-body py-2 px-3">
+                            <div class="chain-item">
+                                <div class="chain-avatar chain-avatar--self">{{ substr($employee->first_name, 0, 1) }}</div>
+                                <div>
+                                    <div class="chain-role">أنت</div>
+                                    <div class="chain-name">{{ $employee->full_name }}</div>
+                                    <div class="chain-meta">{{ $employee->position->title ?? '—' }}</div>
                                 </div>
                             </div>
 
-                            <!-- المدير المباشر -->
-                            @if($directManager)
-                                <div class="p-3 border-bottom">
-                                    <div class="d-flex align-items-center">
-                                        <div class="text-center me-3">
-                                            <div class="avatar avatar-md bg-success avatar-rounded">
-                                                {{ substr($directManager->first_name, 0, 1) }}
-                                            </div>
-                                            <div class="mt-1">
-                                                <i class="ri-arrow-up-line text-success"></i>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <small class="text-muted d-block">المدير المباشر</small>
-                                            <h6 class="mb-0 fw-semibold">{{ $directManager->full_name }}</h6>
-                                            <small class="text-muted">{{ $directManager->position->title ?? '-' }}</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            @else
-                                <div class="p-3 border-bottom text-muted text-center">
-                                    <small>لا يوجد مدير مباشر محدد</small>
-                                </div>
-                            @endif
-
-                            <!-- رئيس القسم -->
-                            @if($departmentManager)
-                                <div class="p-3 border-bottom">
-                                    <div class="d-flex align-items-center">
-                                        <div class="text-center me-3">
-                                            <div class="avatar avatar-md bg-info avatar-rounded">
-                                                {{ substr($departmentManager->name, 0, 1) }}
-                                            </div>
-                                            <div class="mt-1">
-                                                <i class="ri-arrow-up-line text-info"></i>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <small class="text-muted d-block">رئيس القسم</small>
-                                            <h6 class="mb-0 fw-semibold">{{ $departmentManager->name }}</h6>
-                                            <small class="text-muted">{{ $departmentManager->email ?? '-' }}</small>
-                                        </div>
+                            @if ($directManager)
+                                <div class="chain-item">
+                                    <div class="chain-avatar chain-avatar--manager">{{ substr($directManager->first_name, 0, 1) }}</div>
+                                    <div>
+                                        <div class="chain-role">المدير المباشر</div>
+                                        <div class="chain-name">{{ $directManager->full_name }}</div>
+                                        <div class="chain-meta">{{ $directManager->position->title ?? '—' }}</div>
                                     </div>
                                 </div>
                             @endif
 
-                            <!-- باقي السلسلة -->
-                            @if(count($managerChain) > 1)
-                                @foreach($managerChain as $index => $manager)
-                                    @if($manager->id !== $directManager?->id)
-                                        <div class="p-3 border-bottom">
-                                            <div class="d-flex align-items-center">
-                                                <div class="text-center me-3">
-                                                    <div class="avatar avatar-md bg-warning avatar-rounded">
-                                                        {{ substr($manager->first_name, 0, 1) }}
-                                                    </div>
-                                                    <div class="mt-1">
-                                                        <i class="ri-arrow-up-line text-warning"></i>
-                                                    </div>
+                            @if ($departmentManager && (! $directManager || $departmentManager->id !== $directManager->user_id))
+                                <div class="chain-item">
+                                    <div class="chain-avatar chain-avatar--dept">{{ mb_substr($departmentManager->name, 0, 1) }}</div>
+                                    <div>
+                                        <div class="chain-role">رئيس القسم</div>
+                                        <div class="chain-name">{{ $departmentManager->name }}</div>
+                                        <div class="chain-meta">{{ $departmentManager->email ?? '—' }}</div>
+                                    </div>
+                                </div>
+                            @endif
+
+                            @if (count($managerChain) > 1)
+                                @foreach ($managerChain as $index => $manager)
+                                    @if ($manager->id !== $directManager?->id)
+                                        <div class="chain-item">
+                                            <div class="chain-avatar chain-avatar--other">{{ substr($manager->first_name, 0, 1) }}</div>
+                                            <div>
+                                                <div class="chain-role">
+                                                    @if ($index === 0) مدير
+                                                    @else مستوى {{ $index + 1 }}
+                                                    @endif
                                                 </div>
-                                                <div>
-                                                    <small class="text-muted d-block">
-                                                        @if($index === 0) المدير المباشر
-                                                        @elseif($index === 1) رئيس القسم
-                                                        @else المستوى {{ $index + 1 }}
-                                                        @endif
-                                                    </small>
-                                                    <h6 class="mb-0 fw-semibold">{{ $manager->full_name }}</h6>
-                                                    <small class="text-muted">{{ $manager->position->title ?? '-' }}</small>
-                                                </div>
+                                                <div class="chain-name">{{ $manager->full_name }}</div>
+                                                <div class="chain-meta">{{ $manager->position->title ?? '—' }}</div>
                                             </div>
                                         </div>
                                     @endif
                                 @endforeach
                             @endif
+
+                            @if (! $directManager && ! $departmentManager && count($managerChain) <= 1)
+                                <div class="chain-empty">
+                                    <i class="ri-information-line d-block mb-2 fs-20"></i>
+                                    لا يوجد مدير مباشر محدد
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>
 
-                <!-- Department Hierarchy -->
-                <div class="col-xl-4 col-lg-12 mb-4">
-                    <div class="card custom-card">
-                        <div class="card-header bg-info text-white">
-                            <h6 class="card-title fw-semibold mb-0">
-                                <i class="ri-building-line me-1"></i>هيكل القسم
-                            </h6>
+                <div class="col-xl-4">
+                    <div class="section-card mb-4">
+                        <div class="section-card-header">
+                            <i class="ri-building-4-line me-1 text-primary"></i>هيكل القسم
                         </div>
-                        <div class="card-body p-0">
-                            @forelse($departmentHierarchy as $index => $dept)
-                                <div class="p-3 {{ $index > 0 ? 'border-bottom' : '' }}" style="{{ $index > 0 ? 'padding-left: ' . (20 + $index * 20) . 'px !important;' : '' }}">
-                                    <div class="d-flex align-items-center">
-                                        @if($index > 0)
-                                            <div class="me-2 text-muted">
-                                                <i class="ri-corner-down-right-line"></i>
-                                            </div>
+                        <div class="section-card-body py-2 px-3">
+                            @forelse ($departmentHierarchy as $index => $dept)
+                                @php
+                                    $isLast = $index === count($departmentHierarchy) - 1;
+                                @endphp
+                                <div class="dept-tree-item" data-level="{{ min($index, 3) }}">
+                                    @if ($index > 0)
+                                        <i class="ri-corner-down-right-line text-muted"></i>
+                                    @endif
+                                    <div class="dept-icon {{ $isLast ? 'dept-icon--current' : '' }}">
+                                        <i class="ri-building-line"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold fs-13">{{ $dept['name'] }}</div>
+                                        <small class="text-muted">{{ $dept['code'] }}</small>
+                                        @if ($dept['manager'])
+                                            <br><small class="text-primary">رئيس: {{ $dept['manager']->name }}</small>
                                         @endif
-                                        <div class="avatar avatar-sm bg-{{ $index === 0 ? 'primary' : ($index === count($departmentHierarchy) - 1 ? 'success' : 'info') }}-transparent avatar-rounded me-3">
-                                            <i class="ri-building-line text-{{ $index === 0 ? 'primary' : ($index === count($departmentHierarchy) - 1 ? 'success' : 'info') }}"></i>
-                                        </div>
-                                        <div>
-                                            <h6 class="mb-0 fw-semibold">{{ $dept['name'] }}</h6>
-                                            <small class="text-muted">{{ $dept['code'] }}</small>
-                                            @if($dept['manager'])
-                                                <br><small class="text-primary">رئيس: {{ $dept['manager']->name }}</small>
-                                            @endif
-                                        </div>
                                     </div>
                                 </div>
                             @empty
-                                <div class="text-center text-muted py-4">
-                                    لا توجد معلومات عن القسم
-                                </div>
+                                <div class="chain-empty">لا توجد معلومات عن القسم</div>
                             @endforelse
-                        </div>
-                    </div>
-
-                    <!-- Quick Stats -->
-                    <div class="card custom-card mt-4">
-                        <div class="card-body text-center">
-                            <h6 class="fw-semibold mb-3">ملخص سريع</h6>
-                            <div class="row">
-                                <div class="col-6 mb-3">
-                                    <div class="avatar avatar-lg bg-primary-transparent avatar-rounded mb-2">
-                                        <i class="ri-user-line text-primary"></i>
-                                    </div>
-                                    <h5 class="mb-0 fw-semibold">{{ count($managerChain) }}</h5>
-                                    <small class="text-muted">مستويات إدارية</small>
-                                </div>
-                                <div class="col-6 mb-3">
-                                    <div class="avatar avatar-lg bg-success-transparent avatar-rounded mb-2">
-                                        <i class="ri-building-line text-success"></i>
-                                    </div>
-                                    <h5 class="mb-0 fw-semibold">{{ count($departmentHierarchy) }}</h5>
-                                    <small class="text-muted">أقسام في التسلسل</small>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>

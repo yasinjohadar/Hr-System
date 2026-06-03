@@ -28,42 +28,10 @@
                 </div>
 
                 <div class="col-xl-4">
-                    @if($instance && $workflowStatus)
+                    @if($workflowProgress ?? null)
                         <div class="card">
-                            <div class="card-header">
-                                <h5 class="card-title mb-0">سير العمل</h5>
-                            </div>
                             <div class="card-body">
-                                <div class="timeline">
-                                    @foreach($workflowStatus['all_steps'] as $stepData)
-                                        <div class="timeline-item {{ $stepData['status'] === 'completed' ? 'completed' : ($stepData['status'] === 'current' ? 'current' : 'pending') }}">
-                                            <div class="timeline-marker"></div>
-                                            <div class="timeline-content">
-                                                <h6>{{ $stepData['step']->name_ar ?? $stepData['step']->name }}</h6>
-                                                @if($stepData['approver'])
-                                                    <p class="text-muted mb-1">
-                                                        <small>الموافق: {{ $stepData['approver']->name }}</small>
-                                                    </p>
-                                                @endif
-                                                <span class="badge bg-{{ $stepData['status'] === 'completed' ? 'success' : ($stepData['status'] === 'current' ? 'primary' : 'secondary') }}">
-                                                    @if($stepData['status'] === 'completed')
-                                                        مكتمل
-                                                    @elseif($stepData['status'] === 'current')
-                                                        قيد الانتظار
-                                                    @else
-                                                        معلق
-                                                    @endif
-                                                </span>
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-
-                                @if($workflowStatus['next_approver'])
-                                    <div class="alert alert-info mt-3">
-                                        <strong>الموافق التالي:</strong> {{ $workflowStatus['next_approver']->name }}
-                                    </div>
-                                @endif
+                                <x-workflow-approval-timeline :workflow-progress="$workflowProgress" />
                             </div>
                         </div>
                     @endif
@@ -73,45 +41,39 @@
                             <h5 class="card-title mb-0">الإجراءات</h5>
                         </div>
                         <div class="card-body">
-                            @if($type === 'leave')
-                                @can('leave-request-approve')
+                            @if(($canApproveNow ?? false) && $type === 'leave')
                                 <form action="{{ route('admin.leave-requests.approve', $entity->id) }}" method="POST" class="mb-2">
                                     @csrf
+                                    <div class="mb-2">
+                                        <label class="form-label small">ملاحظة (اختياري)</label>
+                                        <textarea name="comments" class="form-control" rows="2" maxlength="2000" placeholder="ملاحظة مع الموافقة…"></textarea>
+                                    </div>
                                     <button type="submit" class="btn btn-success w-100" onclick="return confirm('هل أنت متأكد من الموافقة على هذا الطلب؟')">
                                         <i class="fas fa-check me-2"></i>موافقة
                                     </button>
                                 </form>
-                                @endcan
-
-                                @can('leave-request-approve')
                                 <form action="{{ route('admin.leave-requests.reject', $entity->id) }}" method="POST">
                                     @csrf
                                     <div class="mb-2">
-                                        <textarea name="rejection_reason" class="form-control" rows="3" placeholder="سبب الرفض" required></textarea>
+                                        <textarea name="rejection_reason" class="form-control" rows="3" maxlength="2000" placeholder="سبب الرفض / ملاحظة (اختياري)"></textarea>
                                     </div>
                                     <button type="submit" class="btn btn-danger w-100" onclick="return confirm('هل أنت متأكد من رفض هذا الطلب؟')">
                                         <i class="fas fa-times me-2"></i>رفض
                                     </button>
                                 </form>
-                                @endcan
-                            @elseif($type === 'expense')
-                                @can('expense-request-approve')
-                                <a href="{{ route('admin.expense-requests.show-approve-form', $entity->id) }}" class="btn btn-success w-100 mb-2">
+                            @elseif(($canApproveNow ?? false) && $type === 'expense')
+                                <a href="{{ route('admin.expense-requests.approve-form', $entity->id) }}" class="btn btn-success w-100 mb-2">
                                     <i class="fas fa-check me-2"></i>موافقة
                                 </a>
-                                @endcan
-
-                                @can('expense-request-approve')
                                 <form action="{{ route('admin.expense-requests.reject', $entity->id) }}" method="POST">
                                     @csrf
                                     <div class="mb-2">
-                                        <textarea name="rejection_reason" class="form-control" rows="3" placeholder="سبب الرفض" required></textarea>
+                                        <textarea name="rejection_reason" class="form-control" rows="3" maxlength="2000" placeholder="سبب الرفض / ملاحظة (اختياري)"></textarea>
                                     </div>
                                     <button type="submit" class="btn btn-danger w-100" onclick="return confirm('هل أنت متأكد من رفض هذا الطلب؟')">
                                         <i class="fas fa-times me-2"></i>رفض
                                     </button>
                                 </form>
-                                @endcan
                             @endif
                         </div>
                     </div>

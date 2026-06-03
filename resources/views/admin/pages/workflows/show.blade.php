@@ -4,8 +4,12 @@
     تفاصيل سير العمل
 @stop
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('assets/css/admin-workflows.css') }}">
+@endpush
+
 @section('content')
-    <div class="main-content app-content">
+    <div class="main-content app-content admin-workflows-show">
         <div class="container-fluid">
             <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
                 <div class="my-auto">
@@ -23,21 +27,21 @@
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-md-8">
+            <div class="row g-4">
+                <div class="col-lg-8">
                     <div class="card">
                         <div class="card-header">
                             <h5 class="card-title mb-0">معلومات سير العمل</h5>
                         </div>
                         <div class="card-body">
-                            <table class="table table-bordered">
+                            <table class="table table-bordered mb-0">
                                 <tr>
                                     <th width="200">الاسم</th>
                                     <td>{{ $workflow->name_ar ?? $workflow->name }}</td>
                                 </tr>
                                 <tr>
                                     <th>الكود</th>
-                                    <td>{{ $workflow->code ?? '-' }}</td>
+                                    <td>{{ $workflow->code ?? '—' }}</td>
                                 </tr>
                                 <tr>
                                     <th>النوع</th>
@@ -45,7 +49,7 @@
                                 </tr>
                                 <tr>
                                     <th>الوصف</th>
-                                    <td>{{ $workflow->description ?? '-' }}</td>
+                                    <td>{{ $workflow->description ?? '—' }}</td>
                                 </tr>
                                 <tr>
                                     <th>الحالة</th>
@@ -67,8 +71,55 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">تسلسل الموافقات</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            @if ($workflow->steps->isEmpty())
+                                <div class="p-4 text-muted">لا توجد خطوات معرّفة. <a href="{{ route('admin.workflows.edit', $workflow->id) }}">أضف الخطوات من التعديل</a>.</div>
+                            @else
+                                <div class="table-responsive">
+                                    <table class="table table-bordered steps-table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>الترتيب</th>
+                                                <th>الخطوة</th>
+                                                <th>نوع الموافق</th>
+                                                <th>التفاصيل</th>
+                                                <th>إلزامية</th>
+                                                <th>رفض</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($workflow->steps->sortBy('step_order') as $step)
+                                                <tr>
+                                                    <td>{{ $step->step_order }}</td>
+                                                    <td>{{ $step->name_ar ?? $step->name }}</td>
+                                                    <td>{{ $step->approver_type_name_ar }}</td>
+                                                    <td>
+                                                        @if ($step->approver_type === 'role' && $step->role)
+                                                            دور: {{ $step->role->name }}
+                                                        @elseif ($step->approver_type === 'user' && $step->approver)
+                                                            {{ $step->approver->name }}
+                                                        @else
+                                                            —
+                                                        @endif
+                                                    </td>
+                                                    <td>{{ $step->is_required ? 'نعم' : 'لا' }}</td>
+                                                    <td>{{ $step->can_reject ? 'نعم' : 'لا' }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 @stop
-

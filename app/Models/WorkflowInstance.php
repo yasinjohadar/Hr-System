@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class WorkflowInstance extends Model
 {
@@ -40,6 +41,11 @@ class WorkflowInstance extends Model
     public function initiator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'initiated_by');
+    }
+
+    public function stepActions(): HasMany
+    {
+        return $this->hasMany(WorkflowStepAction::class)->orderBy('acted_at');
     }
 
     public function entity()
