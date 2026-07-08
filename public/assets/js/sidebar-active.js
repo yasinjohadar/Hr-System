@@ -1,6 +1,10 @@
 (function () {
     'use strict';
 
+    function markSidebarReady() {
+        document.documentElement.classList.add('sidebar-nav-ready');
+    }
+
     function normalizePath(href) {
         if (!href || href === 'javascript:void(0);' || href === '#' || href === '') {
             return null;
@@ -28,59 +32,19 @@
         return false;
     }
 
-    function isSubmenuToggle(anchor) {
-        const href = anchor.getAttribute('href');
-        return !href || href === 'javascript:void(0);' || href === '#';
-    }
-
     function openParentSlide(item) {
-        const parentSlide = item.closest('.slide.has-sub');
-        if (!parentSlide) {
-            return;
-        }
-        parentSlide.classList.add('open', 'has-active');
-    }
+        let menu = item.closest('.slide-menu');
 
-    function closeSiblingMenus(currentSlide) {
-        const parentUl = currentSlide.parentElement;
-        if (!parentUl) {
-            return;
-        }
-        parentUl.querySelectorAll(':scope > .slide.has-sub.open').forEach(function (sibling) {
-            if (sibling !== currentSlide) {
-                sibling.classList.remove('open');
+        while (menu) {
+            menu.style.display = 'block';
+
+            const parentSlide = menu.closest('.slide.has-sub');
+            if (parentSlide) {
+                parentSlide.classList.add('open', 'has-active');
             }
-        });
-    }
 
-    function initSubmenuToggles() {
-        document.addEventListener(
-            'click',
-            function (e) {
-                const toggle = e.target.closest('.app-sidebar .slide.has-sub > .side-menu__item');
-                if (!toggle || !isSubmenuToggle(toggle)) {
-                    return;
-                }
-
-                e.preventDefault();
-                e.stopImmediatePropagation();
-
-                const parentSlide = toggle.closest('.slide.has-sub');
-                if (!parentSlide) {
-                    return;
-                }
-
-                const willOpen = !parentSlide.classList.contains('open');
-
-                if (willOpen) {
-                    closeSiblingMenus(parentSlide);
-                    parentSlide.classList.add('open');
-                } else {
-                    parentSlide.classList.remove('open');
-                }
-            },
-            true
-        );
+            menu = menu.parentElement?.closest('.slide-menu');
+        }
     }
 
     function markActiveLinks() {
@@ -113,8 +77,8 @@
 
     function init() {
         markActiveLinks();
-        initSubmenuToggles();
         scrollToActiveItem();
+        markSidebarReady();
     }
 
     if (document.readyState === 'loading') {

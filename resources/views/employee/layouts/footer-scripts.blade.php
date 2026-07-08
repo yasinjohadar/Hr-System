@@ -46,3 +46,4 @@
 
 <!-- Custom JS -->
 <script src="{{ asset('assets/js/custom.js') }}"></script>
+<script src="{{ asset('assets/js/admin-confirm.js') }}"></script>

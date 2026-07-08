@@ -5,39 +5,55 @@
 @stop
 
 @section('content')
-    <div class="main-content app-content admin-users">
-        <div class="container-fluid">
+    <div class="main-content app-content">
+        <div class="container-fluid admin-page-shell">
             @include('admin.pages.users.partials.alerts')
 
-            @include('admin.pages.users.partials.page-hero', [
-                'heroTitle' => 'إنشاء مستخدم جديد',
-                'heroSubtitle' => 'إضافة حساب جديد مع الأدوار والصلاحيات',
-                'heroActions' => '<a href="' . route('users.index') . '" class="btn btn-outline-light btn-sm"><i class="ri-arrow-right-line me-1"></i>العودة للقائمة</a>',
-            ])
-
-            <div class="card custom-card">
-                <div class="card-body">
-                    <form method="POST" action="{{ route('users.store') }}" enctype="multipart/form-data" autocomplete="off">
-                        @csrf
-                        @include('admin.pages.users.partials.form', ['isEdit' => false, 'roles' => $roles])
-
-                        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                            <a href="{{ route('users.index') }}" class="btn btn-outline-secondary">إلغاء</a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="ri-save-line me-1"></i>حفظ المستخدم
-                            </button>
-                        </div>
-                    </form>
+            <div class="admin-page-banner">
+                <div class="admin-page-banner-main">
+                    <span class="admin-page-banner-icon"><i class="ri-user-add-line"></i></span>
+                    <div class="admin-page-banner-text">
+                        <h1>إنشاء مستخدم جديد</h1>
+                        <p>إضافة حساب جديد مع الأدوار والصلاحيات</p>
+                    </div>
                 </div>
+                <div class="admin-page-banner-actions">
+                    <a href="{{ route('users.index') }}" class="admin-btn admin-btn-light">
+                        <i class="ri-arrow-right-line"></i>
+                        العودة للقائمة
+                    </a>
+                </div>
+            </div>
+
+            <div class="admin-page-card">
+                <form method="POST" action="{{ route('users.store') }}" enctype="multipart/form-data"
+                    class="admin-form" id="user-form" autocomplete="off">
+                    @csrf
+
+                    @include('admin.pages.users.partials.form', ['isEdit' => false, 'roles' => $roles])
+
+                    <div class="admin-form-footer">
+                        <a href="{{ route('users.index') }}" class="admin-btn admin-btn-secondary">
+                            <i class="ri-close-line"></i>
+                            إلغاء
+                        </a>
+                        <button type="submit" class="admin-btn admin-btn-primary">
+                            <i class="ri-save-line"></i>
+                            حفظ المستخدم
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 @stop
 
-@push('styles')
-    <link rel="stylesheet" href="{{ asset('assets/css/admin-users.css') }}">
-@endpush
-
 @push('scripts')
-    <script src="{{ asset('assets/js/admin-users.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (window.AdminTables?.initAdminForm) {
+            AdminTables.initAdminForm(document.getElementById('user-form'));
+        }
+    });
+</script>
 @endpush

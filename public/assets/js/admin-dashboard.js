@@ -31,7 +31,7 @@
                 type: 'area',
                 height: 300,
                 toolbar: { show: false },
-                fontFamily: 'inherit',
+                fontFamily: 'Cairo, sans-serif',
                 zoom: { enabled: false },
             },
             colors: ['#22c55e', '#ef4444'],

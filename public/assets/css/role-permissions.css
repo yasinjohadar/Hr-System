@@ -1,0 +1,436 @@
+/* منتقي صلاحيات الأدوار — بطاقات حسب النوع */
+
+#rolePermissionsPicker.role-perms {
+    --rp-border: #e2e8f0;
+    --rp-bg: #ffffff;
+    --rp-bg-muted: #f8fafc;
+    --rp-text: #0f172a;
+    --rp-text-muted: #64748b;
+    --rp-accent: #7c3aed;
+    --rp-accent-soft: #ede9fe;
+}
+
+#rolePermissionsPicker .role-perms__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem;
+    margin-bottom: 1.15rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--rp-border);
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(124, 58, 237, 0.04), transparent);
+}
+
+#rolePermissionsPicker .role-perms__search {
+    flex: 1 1 240px;
+    min-width: 200px;
+}
+
+#rolePermissionsPicker .role-perms__cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 1.1rem;
+    align-items: start;
+    margin-top: 0.35rem;
+}
+
+#rolePermissionsPicker .role-perms__card {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--rp-border);
+    border-radius: 16px;
+    background: var(--rp-bg);
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05);
+    overflow: clip;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+#rolePermissionsPicker .role-perms__card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+}
+
+#rolePermissionsPicker .role-perms__card.is-hidden {
+    display: none !important;
+}
+
+#rolePermissionsPicker .role-perms__card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1rem 1.05rem 0.85rem;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+    background: linear-gradient(135deg, var(--rpc-head-start, #f5f3ff), var(--rpc-head-end, #fff));
+}
+
+#rolePermissionsPicker .role-perms__card-head-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    min-width: 0;
+}
+
+#rolePermissionsPicker .role-perms__card-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+    background: var(--rpc-icon-bg, rgba(124, 58, 237, 0.12));
+    color: var(--rpc-icon-color, #7c3aed);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.65);
+}
+
+#rolePermissionsPicker .role-perms__card-title {
+    margin: 0 0 0.2rem;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--rp-text);
+    line-height: 1.4;
+}
+
+#rolePermissionsPicker .role-perms__card-sub {
+    margin: 0;
+    font-size: 0.74rem;
+    color: var(--rp-text-muted);
+}
+
+#rolePermissionsPicker .role-perms__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 3.2rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 0.28rem 0.6rem;
+    border-radius: 999px;
+    background: var(--rpc-badge-bg, var(--rp-accent-soft));
+    color: var(--rpc-badge-color, var(--rp-accent));
+    white-space: nowrap;
+}
+
+#rolePermissionsPicker .role-perms__card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0.65rem 1.05rem;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.05);
+    background: var(--rp-bg-muted);
+}
+
+#rolePermissionsPicker .role-perms__card-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.32rem 0.7rem;
+    border: 1px solid var(--rp-border);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--rp-text-muted);
+    font-size: 0.76rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#rolePermissionsPicker .role-perms__card-action:hover {
+    border-color: var(--rpc-icon-color, #7c3aed);
+    color: var(--rpc-icon-color, #7c3aed);
+    background: var(--rpc-icon-bg, rgba(124, 58, 237, 0.08));
+}
+
+#rolePermissionsPicker .role-perms__card-body {
+    padding: 0.85rem 1.05rem 1.05rem;
+    max-height: 340px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: var(--rp-bg);
+}
+
+#rolePermissionsPicker .role-perms__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+#rolePermissionsPicker .role-perms__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    margin: 0;
+    padding: 0.7rem 0.8rem;
+    border: 1px solid #e8edf3;
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    width: 100%;
+    min-width: 0;
+}
+
+#rolePermissionsPicker .role-perms__item:hover {
+    border-color: var(--rpc-icon-color, #c4b5fd);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+#rolePermissionsPicker .role-perms__item.is-hidden {
+    display: none !important;
+}
+
+#rolePermissionsPicker .role-perms__item:has(.role-perms__checkbox:checked) {
+    background: var(--rpc-checked-bg, #f5f3ff);
+    border-color: var(--rpc-checked-border, #c4b5fd);
+}
+
+#rolePermissionsPicker .role-perms__checkbox {
+    width: 1.05rem;
+    height: 1.05rem;
+    margin-top: 0.2rem;
+    flex-shrink: 0;
+    cursor: pointer;
+    accent-color: var(--rpc-icon-color, #7c3aed);
+    order: 1;
+}
+
+#rolePermissionsPicker .role-perms__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    flex: 1;
+    min-width: 0;
+    order: 2;
+    overflow: hidden;
+}
+
+#rolePermissionsPicker .role-perms__name {
+    display: block;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+#rolePermissionsPicker .role-perms__key {
+    display: inline-block;
+    align-self: flex-start;
+    max-width: 100%;
+    font-size: 0.66rem;
+    font-weight: 600;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    color: #64748b;
+    direction: ltr;
+    text-align: left;
+    unicode-bidi: plaintext;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    line-height: 1.4;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    background: rgba(15, 23, 42, 0.05);
+    border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+#rolePermissionsPicker .role-perms__item:has(.role-perms__checkbox:checked) .role-perms__name {
+    color: var(--rpc-icon-color, #5b21b6);
+}
+
+#rolePermissionsPicker .role-perms__item:has(.role-perms__checkbox:checked) .role-perms__key {
+    color: var(--rpc-badge-color, #7c3aed);
+}
+
+#rolePermissionsPicker .role-perms__empty {
+    text-align: center;
+    font-size: 0.84rem;
+    color: #94a3b8;
+    padding: 1.5rem;
+    border: 1px dashed var(--rp-border);
+    border-radius: 12px;
+    background: var(--rp-bg-muted);
+}
+
+#rolePermissionsPicker .role-perms__toolbar .admin-btn {
+    white-space: nowrap;
+}
+
+/* ثيمات البطاقات */
+#rolePermissionsPicker .role-perms__card--purple {
+    --rpc-head-start: #f5f3ff;
+    --rpc-head-end: #fff;
+    --rpc-icon-bg: rgba(124, 58, 237, 0.12);
+    --rpc-icon-color: #7c3aed;
+    --rpc-badge-bg: #ede9fe;
+    --rpc-badge-color: #6d28d9;
+    --rpc-checked-bg: #f5f3ff;
+    --rpc-checked-border: #c4b5fd;
+}
+
+#rolePermissionsPicker .role-perms__card--blue {
+    --rpc-head-start: #eff6ff;
+    --rpc-icon-bg: rgba(37, 99, 235, 0.12);
+    --rpc-icon-color: #2563eb;
+    --rpc-badge-bg: #dbeafe;
+    --rpc-badge-color: #1d4ed8;
+    --rpc-checked-bg: #eff6ff;
+    --rpc-checked-border: #93c5fd;
+}
+
+#rolePermissionsPicker .role-perms__card--teal {
+    --rpc-head-start: #f0fdfa;
+    --rpc-icon-bg: rgba(13, 148, 136, 0.12);
+    --rpc-icon-color: #0d9488;
+    --rpc-badge-bg: #ccfbf1;
+    --rpc-badge-color: #0f766e;
+    --rpc-checked-bg: #f0fdfa;
+    --rpc-checked-border: #5eead4;
+}
+
+#rolePermissionsPicker .role-perms__card--amber {
+    --rpc-head-start: #fffbeb;
+    --rpc-icon-bg: rgba(217, 119, 6, 0.12);
+    --rpc-icon-color: #d97706;
+    --rpc-badge-bg: #fef3c7;
+    --rpc-badge-color: #b45309;
+    --rpc-checked-bg: #fffbeb;
+    --rpc-checked-border: #fcd34d;
+}
+
+#rolePermissionsPicker .role-perms__card--rose {
+    --rpc-head-start: #fff1f2;
+    --rpc-icon-bg: rgba(225, 29, 72, 0.1);
+    --rpc-icon-color: #e11d48;
+    --rpc-badge-bg: #ffe4e6;
+    --rpc-badge-color: #be123c;
+    --rpc-checked-bg: #fff1f2;
+    --rpc-checked-border: #fda4af;
+}
+
+#rolePermissionsPicker .role-perms__card--cyan {
+    --rpc-head-start: #ecfeff;
+    --rpc-icon-bg: rgba(8, 145, 178, 0.12);
+    --rpc-icon-color: #0891b2;
+    --rpc-badge-bg: #cffafe;
+    --rpc-badge-color: #0e7490;
+    --rpc-checked-bg: #ecfeff;
+    --rpc-checked-border: #67e8f9;
+}
+
+#rolePermissionsPicker .role-perms__card--indigo {
+    --rpc-head-start: #eef2ff;
+    --rpc-icon-bg: rgba(79, 70, 229, 0.12);
+    --rpc-icon-color: #4f46e5;
+    --rpc-badge-bg: #e0e7ff;
+    --rpc-badge-color: #4338ca;
+    --rpc-checked-bg: #eef2ff;
+    --rpc-checked-border: #a5b4fc;
+}
+
+#rolePermissionsPicker .role-perms__card--emerald {
+    --rpc-head-start: #ecfdf5;
+    --rpc-icon-bg: rgba(5, 150, 105, 0.12);
+    --rpc-icon-color: #059669;
+    --rpc-badge-bg: #d1fae5;
+    --rpc-badge-color: #047857;
+    --rpc-checked-bg: #ecfdf5;
+    --rpc-checked-border: #6ee7b7;
+}
+
+@media (max-width: 767.98px) {
+    #rolePermissionsPicker .role-perms__toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    #rolePermissionsPicker .role-perms__toolbar .admin-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    #rolePermissionsPicker .role-perms__cards {
+        grid-template-columns: 1fr;
+    }
+
+    #rolePermissionsPicker .role-perms__card-body {
+        max-height: none;
+    }
+}
+
+[data-theme-mode="dark"] #rolePermissionsPicker .role-perms__toolbar {
+    background: linear-gradient(180deg, rgba(124, 58, 237, 0.12), rgba(20, 26, 38, 0.6));
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme-mode="dark"] #rolePermissionsPicker .role-perms__card {
+    background: #161d2b;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme-mode="dark"] #rolePermissionsPicker .role-perms__card-head {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), #1c2433) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+    border-inline-start: 3px solid var(--rpc-icon-color, #7c3aed);
+}
+
+[data-theme-mode="dark"] #rolePermissionsPicker .role-perms__card-sub {
+    color: rgba(255, 255, 255, 0.55);
+}
+
+[data-theme-mode="dark"] #rolePermissionsPicker .role-perms__card-title,
+[data-theme-mode="dark"] #rolePermissionsPicker .role-perms__name {
+    color: rgba(255, 255, 255, 0.92);
+}
+
+[data-theme-mode="dark"] #rolePermissionsPicker .role-perms__card-body {
+    background: #161d2b;
+}
+
+[data-theme-mode="dark"] #rolePermissionsPicker .role-perms__card-actions {
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme-mode="dark"] #rolePermissionsPicker .role-perms__card-action {
+    background: #1f2937;
+    border-color: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.75);
+}
+
+[data-theme-mode="dark"] #rolePermissionsPicker .role-perms__card-action:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--rpc-icon-color, #c4b5fd);
+}
+
+[data-theme-mode="dark"] #rolePermissionsPicker .role-perms__item {
+    background: #1f2937;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme-mode="dark"] #rolePermissionsPicker .role-perms__item:has(.role-perms__checkbox:checked) {
+    background: rgba(124, 58, 237, 0.14);
+    border-color: rgba(167, 139, 250, 0.35);
+}
+
+[data-theme-mode="dark"] #rolePermissionsPicker .role-perms__key {
+    color: rgba(255, 255, 255, 0.62);
+    background: rgba(0, 0, 0, 0.22);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme-mode="dark"] #rolePermissionsPicker .role-perms__item:has(.role-perms__checkbox:checked) .role-perms__key {
+    color: var(--rpc-badge-color, #c4b5fd);
+    background: rgba(124, 58, 237, 0.15);
+    border-color: rgba(167, 139, 250, 0.25);
+}
+
+[data-theme-mode="dark"] #rolePermissionsPicker .role-perms__empty {
+    background: rgba(255, 255, 255, 0.02);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.5);
+}

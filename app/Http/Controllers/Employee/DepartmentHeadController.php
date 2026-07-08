@@ -80,7 +80,7 @@ class DepartmentHeadController extends Controller
             ->get();
 
         // الاجتماعات القادمة
-        $upcomingMeetings = [];
+        $upcomingMeetings = collect();
         if ($employee) {
             $upcomingMeetings = Meeting::where(function($q) use ($employee) {
                     $q->where('organizer_id', $employee->id)
@@ -155,23 +155,8 @@ class DepartmentHeadController extends Controller
 
         $pendingApprovals = $this->getPendingApprovals($user, $employeeIds);
 
-        $approvedCount = LeaveRequest::whereIn('employee_id', $employeeIds)
-                ->where('status', 'approved')
-                ->whereMonth('approved_at', now()->month)
-                ->count()
-            + ExpenseRequest::whereIn('employee_id', $employeeIds)
-                ->where('status', 'approved')
-                ->whereMonth('approved_at', now()->month)
-                ->count();
-
-        $rejectedCount = LeaveRequest::whereIn('employee_id', $employeeIds)
-                ->where('status', 'rejected')
-                ->whereMonth('updated_at', now()->month)
-                ->count()
-            + ExpenseRequest::whereIn('employee_id', $employeeIds)
-                ->where('status', 'rejected')
-                ->whereMonth('updated_at', now()->month)
-                ->count();
+        $approvedCount = $this->countMonthlyApproved($employeeIds);
+        $rejectedCount = $this->countMonthlyRejected($employeeIds);
 
         return view('employee.pages.department-head.approvals', compact('pendingApprovals', 'approvedCount', 'rejectedCount'));
     }
@@ -361,5 +346,47 @@ class DepartmentHeadController extends Controller
             }
         }
         return $tree;
+    }
+
+    protected function countMonthlyApproved(array $employeeIds): int
+    {
+        if ($employeeIds === []) {
+            return 0;
+        }
+
+        $month = now()->month;
+        $year = now()->year;
+
+        return LeaveRequest::whereIn('employee_id', $employeeIds)
+                ->where('status', 'approved')
+                ->whereMonth('approved_at', $month)
+                ->whereYear('approved_at', $year)
+                ->count()
+            + ExpenseRequest::whereIn('employee_id', $employeeIds)
+                ->where('status', 'approved')
+                ->whereMonth('updated_at', $month)
+                ->whereYear('updated_at', $year)
+                ->count();
+    }
+
+    protected function countMonthlyRejected(array $employeeIds): int
+    {
+        if ($employeeIds === []) {
+            return 0;
+        }
+
+        $month = now()->month;
+        $year = now()->year;
+
+        return LeaveRequest::whereIn('employee_id', $employeeIds)
+                ->where('status', 'rejected')
+                ->whereMonth('updated_at', $month)
+                ->whereYear('updated_at', $year)
+                ->count()
+            + ExpenseRequest::whereIn('employee_id', $employeeIds)
+                ->where('status', 'rejected')
+                ->whereMonth('updated_at', $month)
+                ->whereYear('updated_at', $year)
+                ->count();
     }
 }

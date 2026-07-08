@@ -24,6 +24,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 
 class DashboardController extends Controller
 {
@@ -84,21 +85,204 @@ class DashboardController extends Controller
      */
     private function buildDashboardPayload(): array
     {
+        $stats = $this->getGeneralStats();
+        $attendanceStats = $this->getAttendanceStats();
+        $leaveStats = $this->getLeaveStats();
+        $salaryStats = $this->getSalaryStats();
+        $menaKpis = $this->getMenaKpis();
+
         return [
-            'stats' => $this->getGeneralStats(),
-            'attendanceStats' => $this->getAttendanceStats(),
-            'leaveStats' => $this->getLeaveStats(),
-            'salaryStats' => $this->getSalaryStats(),
+            'stats' => $stats,
+            'attendanceStats' => $attendanceStats,
+            'leaveStats' => $leaveStats,
+            'salaryStats' => $salaryStats,
             'urgentTasks' => $this->getUrgentTasks(),
             'importantNotifications' => $this->getImportantNotifications(),
             'chartData' => ['attendance' => $this->getAttendanceChartData()],
-            'menaKpis' => $this->getMenaKpis(),
+            'menaKpis' => $menaKpis,
             'announcements' => Announcement::visible()
                 ->orderByDesc('publish_date')
                 ->orderByDesc('created_at')
                 ->limit(5)
                 ->get(['id', 'title', 'content', 'publish_date', 'expiry_date', 'created_at']),
+            'dashboardWidgets' => $this->buildDashboardWidgets($stats, $attendanceStats, $leaveStats, $salaryStats),
+            'secondaryWidgets' => $this->buildSecondaryWidgets($stats, $attendanceStats, $menaKpis),
+            'todaySummary' => $this->buildTodaySummary($attendanceStats, $leaveStats, $salaryStats, $menaKpis),
+            'quickShortcuts' => $this->buildQuickShortcuts(),
         ];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildDashboardWidgets(array $stats, array $attendanceStats, array $leaveStats, array $salaryStats): array
+    {
+        return [
+            [
+                'title' => 'إجمالي الموظفين',
+                'value' => $stats['total_employees'] ?? 0,
+                'subtext' => '+' . ($stats['new_employees_this_month'] ?? 0) . ' هذا الشهر',
+                'icon' => 'ri-team-line',
+                'theme' => 'blue',
+                'route' => 'admin.employees.index',
+            ],
+            [
+                'title' => 'حضور اليوم',
+                'value' => $attendanceStats['today_present'] ?? 0,
+                'subtext' => 'غائب: ' . ($attendanceStats['today_absent'] ?? 0) . ' · متأخر: ' . ($attendanceStats['today_late'] ?? 0),
+                'icon' => 'ri-calendar-check-line',
+                'theme' => 'green',
+                'route' => 'admin.attendances.index',
+            ],
+            [
+                'title' => 'إجازات معلقة',
+                'value' => $leaveStats['pending_requests'] ?? 0,
+                'subtext' => 'في إجازة اليوم: ' . ($leaveStats['approved_today'] ?? 0),
+                'icon' => 'ri-sun-line',
+                'theme' => 'orange',
+                'route' => 'admin.leave-requests.index',
+                'route_params' => ['status' => 'pending'],
+            ],
+            [
+                'title' => 'رواتب الشهر',
+                'value' => (int) round($salaryStats['total_this_month'] ?? 0),
+                'subtext' => 'مدفوعة: ' . ($salaryStats['paid_count'] ?? 0),
+                'icon' => 'ri-money-dollar-circle-line',
+                'theme' => 'purple',
+                'route' => 'admin.salaries.index',
+                'suffix' => ' ر.س',
+            ],
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildSecondaryWidgets(array $stats, array $attendanceStats, array $menaKpis): array
+    {
+        $widgets = [
+            [
+                'title' => 'الأقسام',
+                'value' => $stats['total_departments'] ?? 0,
+                'icon' => 'ri-building-line',
+                'color' => 'blue',
+                'route' => 'admin.departments.index',
+            ],
+            [
+                'title' => 'المناصب',
+                'value' => $stats['total_positions'] ?? 0,
+                'icon' => 'ri-briefcase-line',
+                'color' => 'green',
+                'route' => 'admin.positions.index',
+            ],
+            [
+                'title' => 'الفروع',
+                'value' => $stats['total_branches'] ?? 0,
+                'icon' => 'ri-map-pin-line',
+                'color' => 'cyan',
+                'route' => 'admin.branches.index',
+            ],
+            [
+                'title' => 'معدل الحضور الشهري',
+                'value' => ($attendanceStats['monthly_attendance_rate'] ?? 0) . '%',
+                'icon' => 'ri-line-chart-line',
+                'color' => 'orange',
+                'route' => 'admin.attendances.index',
+            ],
+            [
+                'title' => 'عطل رسمية (السنة)',
+                'value' => $menaKpis['public_holidays_this_year'] ?? 0,
+                'icon' => 'ri-calendar-event-line',
+                'color' => 'purple',
+                'route' => 'admin.public-holidays.index',
+            ],
+            [
+                'title' => 'مستندات تنتهي خلال 30 يوماً',
+                'value' => $menaKpis['documents_expiring_30d'] ?? 0,
+                'icon' => 'ri-file-text-line',
+                'color' => 'yellow',
+                'route' => 'admin.employee-documents.index',
+            ],
+            [
+                'title' => 'شهادات تنتهي خلال 30 يوماً',
+                'value' => $menaKpis['certificates_expiring_30d'] ?? 0,
+                'icon' => 'ri-award-line',
+                'color' => 'pink',
+                'route' => 'admin.employee-certificates.index',
+            ],
+            [
+                'title' => 'إجازات معلقة',
+                'value' => $menaKpis['pending_leave_requests'] ?? 0,
+                'icon' => 'ri-time-line',
+                'color' => 'red',
+                'route' => 'admin.leave-requests.index',
+                'route_params' => ['status' => 'pending'],
+            ],
+        ];
+
+        return array_values(array_filter($widgets, fn ($item) => Route::has($item['route'])));
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildTodaySummary(array $attendanceStats, array $leaveStats, array $salaryStats, array $menaKpis): array
+    {
+        return [
+            [
+                'label' => 'حضور اليوم',
+                'value' => $attendanceStats['today_present'] ?? 0,
+                'icon' => 'ri-user-follow-line',
+                'color' => 'green',
+            ],
+            [
+                'label' => 'غياب اليوم',
+                'value' => $attendanceStats['today_absent'] ?? 0,
+                'icon' => 'ri-user-unfollow-line',
+                'color' => 'red',
+            ],
+            [
+                'label' => 'متأخرون اليوم',
+                'value' => $attendanceStats['today_late'] ?? 0,
+                'icon' => 'ri-time-line',
+                'color' => 'orange',
+            ],
+            [
+                'label' => 'إجازات معلقة',
+                'value' => $leaveStats['pending_requests'] ?? 0,
+                'icon' => 'ri-sun-line',
+                'color' => 'yellow',
+            ],
+            [
+                'label' => 'رواتب مدفوعة',
+                'value' => $salaryStats['paid_count'] ?? 0,
+                'icon' => 'ri-wallet-3-line',
+                'color' => 'blue',
+            ],
+            [
+                'label' => 'مستندات تنتهي قريباً',
+                'value' => $menaKpis['documents_expiring_30d'] ?? 0,
+                'icon' => 'ri-file-warning-line',
+                'color' => 'pink',
+            ],
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, string>>
+     */
+    private function buildQuickShortcuts(): array
+    {
+        return array_values(array_filter([
+            ['title' => 'إضافة موظف', 'desc' => 'تسجيل موظف جديد', 'route' => 'admin.employees.create', 'icon' => 'ri-user-add-line', 'color' => 'blue'],
+            ['title' => 'طلب إجازة', 'desc' => 'إنشاء طلب إجازة', 'route' => 'admin.leave-requests.create', 'icon' => 'ri-calendar-event-line', 'color' => 'green'],
+            ['title' => 'إضافة راتب', 'desc' => 'تسجيل راتب شهري', 'route' => 'admin.salaries.create', 'icon' => 'ri-wallet-3-line', 'color' => 'orange'],
+            ['title' => 'تذكرة جديدة', 'desc' => 'فتح تذكرة دعم', 'route' => 'admin.tickets.create', 'icon' => 'ri-customer-service-2-line', 'color' => 'pink'],
+            ['title' => 'اجتماع جديد', 'desc' => 'جدولة اجتماع', 'route' => 'admin.meetings.create', 'icon' => 'ri-video-add-line', 'color' => 'purple'],
+            ['title' => 'التقارير', 'desc' => 'عرض التقارير', 'route' => 'admin.reports.index', 'icon' => 'ri-pie-chart-line', 'color' => 'indigo'],
+            ['title' => 'الحضور', 'desc' => 'سجل الحضور', 'route' => 'admin.attendances.index', 'icon' => 'ri-calendar-check-line', 'color' => 'teal'],
+            ['title' => 'الموظفون', 'desc' => 'إدارة الموظفين', 'route' => 'admin.employees.index', 'icon' => 'ri-team-line', 'color' => 'cyan'],
+        ], fn ($item) => Route::has($item['route'])));
     }
 
     public static function clearCache(): void

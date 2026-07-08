@@ -162,10 +162,14 @@
                                                     href="{{ route('users.edit', $user->id) }}">
                                                     <i class="fa-solid fa-pen-to-square"></i> تعديل
                                                 </a>
-                                                <a class="btn btn-danger btn-sm me-1" data-bs-toggle="modal"
-                                                    data-bs-target="#delete{{ $user->id }}">
+                                                <button type="button" class="btn btn-danger btn-sm me-1"
+                                                    data-delete-url="{{ route('users.destroy', $user->id) }}"
+                                                    data-delete-title="حذف المستخدم"
+                                                    data-delete-message="هل أنت متأكد من حذف المستخدم {{ $user->name }}؟"
+                                                    data-delete-hint="لا يمكن التراجع عن هذا الإجراء بعد الحذف."
+                                                    data-delete-confirm="حذف المستخدم">
                                                     <i class="fa-solid fa-trash-can"></i> حذف
-                                                </a>
+                                                </button>
                                                 <a href="#" class="btn btn-warning btn-sm" data-bs-toggle="modal"
                                                     data-bs-target="#change_password{{$user->id}}">
                                                     <i class="fa-solid fa-key"></i> تعديل كلمة السر
@@ -173,7 +177,6 @@
                                             </td>
                                         </tr>
 
-                                        @include('admin.pages.users.delete')
                                         @include('admin.pages.users.change_password')
                                     @empty
                                         <tr>

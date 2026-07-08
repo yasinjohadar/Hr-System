@@ -1,7 +1,7 @@
 <div class="modal fade" id="delete{{ $user->id }}" tabindex="-1" aria-labelledby="deleteLabel{{ $user->id }}" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" style="max-width:520px;">
         <div class="modal-content border-0" style="border-radius:5px;box-shadow:0 4px 20px rgba(0,0,0,.08);">
-            <form method="POST" action="{{ route('users.destroy', 'test') }}">
+            <form method="POST" action="{{ route('users.destroy', $user->id) }}">
                 @csrf
                 @method('DELETE')
                 <input type="hidden" name="id" value="{{ $user->id }}">

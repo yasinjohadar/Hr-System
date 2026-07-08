@@ -1,140 +1,125 @@
-/* إدارة الفريق — الموافقات (مسطّح) */
+/* إدارة الفريق — الموافقات */
+
 .admin-team-approvals-page {
-    --ta-primary: var(--primary-color, #5c67f7);
-    --ta-primary-soft: rgba(var(--primary-rgb, 92, 103, 247), 0.12);
     --ta-success: #10b981;
     --ta-warning: #f59e0b;
     --ta-danger: #ef4444;
     --ta-info: #0ea5e9;
     --ta-muted: #64748b;
-    --ta-surface: var(--custom-white, #fff);
-    --ta-border: var(--default-border, rgba(15, 23, 42, 0.08));
-    --ta-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
-    --ta-radius: 0.75rem;
 }
 
-.admin-team-approvals-page .page-hero {
-    background: var(--ta-surface);
-    border: 1px solid var(--ta-border);
-    border-inline-start: 4px solid var(--ta-primary);
-    border-radius: var(--ta-radius);
-    box-shadow: var(--ta-shadow);
+.admin-team-approvals-page .team-approvals-stats {
+    border-radius: 16px;
+    border: 1px solid var(--default-border, rgba(0, 0, 0, 0.08));
+    background: var(--custom-white, #fff);
+    box-shadow: 0 4px 24px rgba(15, 23, 42, 0.05);
+    padding: 1.15rem 1.25rem;
+    border-bottom: none;
 }
 
-.admin-team-approvals-page .page-hero-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 12px;
-    background: var(--ta-primary-soft);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.75rem;
-    color: var(--ta-primary);
-    flex-shrink: 0;
+.admin-team-approvals-page .team-approvals-panel {
+    overflow: visible;
 }
 
-.admin-team-approvals-page .page-hero-title { color: var(--default-text-color, #0f172a); }
-.admin-team-approvals-page .page-hero-subtitle { color: var(--ta-muted); font-size: 0.8125rem; }
-
-.admin-team-approvals-page .btn-hero-outline {
-    border: 1px solid var(--ta-border);
-    background: var(--ta-surface);
-    color: var(--ta-primary);
-    font-weight: 600;
-    padding: 0.5rem 1.15rem;
-    border-radius: 0.5rem;
+.admin-team-approvals-page .team-approvals-toolbar {
+    align-items: flex-start;
 }
 
-.admin-team-approvals-page .btn-hero-outline:hover {
-    background: var(--ta-primary-soft);
-    border-color: var(--ta-primary);
+.admin-team-approvals-page .team-approvals-toolbar__title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--default-text-color, #0f172a);
 }
 
-.admin-team-approvals-page .stat-card {
-    border: 1px solid var(--ta-border);
-    border-radius: var(--ta-radius);
-    background: var(--ta-surface);
-    box-shadow: var(--ta-shadow);
-    padding: 1.25rem;
-    height: 100%;
+.admin-team-approvals-page .team-approvals-toolbar__subtitle {
+    font-size: 0.82rem;
+    color: var(--ta-muted);
+    margin-top: 0.2rem;
 }
 
-.admin-team-approvals-page .stat-value { font-size: 1.75rem; font-weight: 700; line-height: 1.2; }
-.admin-team-approvals-page .stat-label { font-size: 0.8125rem; color: var(--ta-muted); margin-top: 0.15rem; }
-
-.admin-team-approvals-page .stat-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.35rem;
-    flex-shrink: 0;
-}
-
-.admin-team-approvals-page .stat-icon--warning { background: rgba(245, 158, 11, 0.12); color: var(--ta-warning); }
-.admin-team-approvals-page .stat-icon--success { background: rgba(16, 185, 129, 0.12); color: var(--ta-success); }
-.admin-team-approvals-page .stat-icon--danger { background: rgba(239, 68, 68, 0.12); color: var(--ta-danger); }
-
-.admin-team-approvals-page .stat-value--warning { color: var(--ta-warning); }
-.admin-team-approvals-page .stat-value--success { color: var(--ta-success); }
-.admin-team-approvals-page .stat-value--danger { color: var(--ta-danger); }
-
-.admin-team-approvals-page .content-panel {
-    border: 1px solid var(--ta-border);
-    border-radius: var(--ta-radius);
-    background: var(--ta-surface);
-    box-shadow: var(--ta-shadow);
-}
-
-.admin-team-approvals-page .content-panel-header {
-    padding: 1.15rem 1.35rem;
-    border-bottom: 1px solid var(--ta-border);
+.admin-team-approvals-page .team-approval-filters {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
+    gap: 0.45rem;
 }
 
-.admin-team-approvals-page .content-panel-header h5 {
-    font-size: 0.9375rem;
-    font-weight: 700;
-    margin: 0;
-}
-
-.admin-team-approvals-page .filter-pills { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-
-.admin-team-approvals-page .filter-pill {
-    border: 1px solid var(--ta-border);
-    background: var(--ta-surface);
+.admin-team-approvals-page .team-approval-filter {
+    border: 1px solid var(--default-border, #e2e8f0);
+    background: var(--custom-white, #fff);
     color: var(--ta-muted);
-    padding: 0.35rem 0.85rem;
+    padding: 0.4rem 0.9rem;
     border-radius: 99px;
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
 }
 
-.admin-team-approvals-page .filter-pill:hover,
-.admin-team-approvals-page .filter-pill.active {
-    background: var(--ta-primary);
-    border-color: var(--ta-primary);
+.admin-team-approvals-page .team-approval-filter:hover,
+.admin-team-approvals-page .team-approval-filter.active {
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    border-color: transparent;
     color: #fff;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
 }
 
-.admin-team-approvals-page .approval-card {
-    padding: 1.25rem 1.35rem;
-    border-bottom: 1px solid var(--ta-border);
-    transition: background 0.15s;
+.admin-team-approvals-page .team-approvals-list {
+    padding: 0.35rem 0;
 }
 
-.admin-team-approvals-page .approval-card:last-child { border-bottom: none; }
-.admin-team-approvals-page .approval-card:hover { background: rgba(var(--primary-rgb, 92, 103, 247), 0.04); }
-.admin-team-approvals-page .approval-card.is-hidden { display: none; }
+.admin-team-approvals-page .team-approval-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.15rem 1.25rem;
+    border-bottom: 1px solid var(--default-border, rgba(0, 0, 0, 0.06));
+    transition: background 0.15s ease;
+}
+
+.admin-team-approvals-page .team-approval-card:last-child {
+    border-bottom: none;
+}
+
+.admin-team-approvals-page .team-approval-card:hover {
+    background: rgba(59, 130, 246, 0.04);
+}
+
+.admin-team-approvals-page .team-approval-card.is-hidden {
+    display: none;
+}
+
+@media (min-width: 992px) {
+    .admin-team-approvals-page .team-approval-card {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+}
+
+.admin-team-approvals-page .team-approval-card__main {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.admin-team-approvals-page .team-approval-card__body {
+    min-width: 0;
+    flex: 1;
+}
+
+.admin-team-approvals-page .team-approval-card__name {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--default-text-color, #0f172a);
+}
+
+.admin-team-approvals-page .team-approval-card__actions {
+    flex-shrink: 0;
+}
 
 .admin-team-approvals-page .approval-icon {
     width: 48px;
@@ -154,58 +139,67 @@
 .admin-team-approvals-page .approval-icon--project_time { background: rgba(99, 102, 241, 0.12); color: #4f46e5; }
 .admin-team-approvals-page .approval-icon--default { background: rgba(100, 116, 139, 0.12); color: #64748b; }
 
-.admin-team-approvals-page .approval-title { font-weight: 700; font-size: 0.9375rem; color: var(--default-text-color, #0f172a); }
-.admin-team-approvals-page .approval-meta { font-size: 0.8125rem; color: var(--ta-muted); }
-.admin-team-approvals-page .approval-body { font-size: 0.8125rem; color: var(--default-text-color, #0f172a); margin-top: 0.5rem; }
+.admin-team-approvals-page .approval-meta {
+    font-size: 0.8rem;
+    color: var(--ta-muted);
+    line-height: 1.5;
+}
+
+.admin-team-approvals-page .approval-body {
+    font-size: 0.84rem;
+    color: var(--default-text-color, #0f172a);
+    margin-top: 0.55rem;
+    line-height: 1.55;
+}
 
 .admin-team-approvals-page .type-pill {
     display: inline-block;
-    padding: 0.2rem 0.6rem;
+    padding: 0.18rem 0.55rem;
     border-radius: 99px;
     font-size: 0.7rem;
     font-weight: 600;
     margin-inline-end: 0.35rem;
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
 }
 
 .admin-team-approvals-page .type-pill--leave { background: rgba(16, 185, 129, 0.12); color: #047857; }
 .admin-team-approvals-page .type-pill--expense { background: rgba(14, 165, 233, 0.12); color: #0369a1; }
 
-.admin-team-approvals-page .btn-view-details {
-    border: 1px solid var(--ta-border);
-    background: var(--ta-surface);
-    color: var(--ta-primary);
-    font-weight: 600;
-    font-size: 0.8125rem;
-    padding: 0.45rem 1rem;
-    border-radius: 0.5rem;
-    text-decoration: none;
-    white-space: nowrap;
-    transition: all 0.2s;
-}
-
-.admin-team-approvals-page .btn-view-details:hover {
-    background: var(--ta-primary);
-    border-color: var(--ta-primary);
-    color: #fff;
-}
-
-.admin-team-approvals-page .empty-state {
-    text-align: center;
+.admin-team-approvals-page .team-approvals-empty {
     padding: 3rem 1.5rem;
+    flex-direction: column;
+    gap: 0.35rem;
 }
 
-.admin-team-approvals-page .empty-state .empty-icon {
-    font-size: 2.75rem;
+.admin-team-approvals-page .team-approvals-empty i {
+    font-size: 2.5rem;
     color: var(--ta-success);
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.35rem;
 }
 
-.admin-team-approvals-page .empty-state h5 { font-weight: 700; margin-bottom: 0.35rem; }
-.admin-team-approvals-page .empty-state p { font-size: 0.8125rem; color: var(--ta-muted); margin: 0; }
-
-.admin-team-approvals-page .empty-filtered {
+.admin-team-approvals-page .team-approvals-empty-filtered {
     padding: 2rem;
     text-align: center;
     color: var(--ta-muted);
-    font-size: 0.8125rem;
+    font-size: 0.85rem;
+}
+
+.admin-report-stat-rose .admin-report-stat-icon {
+    background: rgba(225, 29, 72, 0.1);
+    color: #e11d48;
+}
+
+[data-theme-mode="dark"] .admin-team-approvals-page .team-approvals-stats,
+[data-theme-mode="dark"] .admin-team-approvals-page .team-approval-filter {
+    background: #1e293b;
+    border-color: rgba(148, 163, 184, 0.2);
+}
+
+[data-theme-mode="dark"] .admin-team-approvals-page .team-approval-card:hover {
+    background: rgba(59, 130, 246, 0.08);
+}
+
+[data-theme-mode="dark"] .admin-team-approvals-page .team-approvals-toolbar__title {
+    color: rgba(255, 255, 255, 0.92);
 }

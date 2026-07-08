@@ -51,11 +51,25 @@ class UserController extends Controller
      */
 public function index(Request $request)
     {
-        $users = $this->filteredUsersQuery($request, useQueryParam: true)->paginate(10);
+        $users = $this->filteredUsersQuery($request, useQueryParam: true)
+            ->latest('id')
+            ->paginate(10)
+            ->withQueryString();
+        $sessions = $this->latestSessionsMap();
+
+        if ($request->ajax()) {
+            return response()->json([
+                'body' => view('admin.partials.users-table-body', compact('users', 'sessions'))->render(),
+                'extra' => view('admin.partials.users-table-footer', compact('users'))->render(),
+                'from' => $users->firstItem(),
+                'to' => $users->lastItem(),
+                'total' => $users->total(),
+            ]);
+        }
 
         return view('admin.pages.users.index', [
             'users' => $users,
-            'sessions' => $this->latestSessionsMap(),
+            'sessions' => $sessions,
             'userStats' => $this->userStats(),
         ]);
     }

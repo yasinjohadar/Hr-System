@@ -14,7 +14,7 @@
 
 @section('content')
     <div class="main-content app-content dh-capabilities">
-        <div class="container-fluid pb-4">
+        <div class="container-fluid admin-page-shell pb-4">
 
             {{-- Hero --}}
             <div class="card dh-hero mb-4">
@@ -68,7 +68,10 @@
                                 <a href="{{ route('admin.department-heads.show', $head->id) }}" class="btn btn-light btn-sm">ملف رئيس القسم</a>
                                 @can('department-head-manage')
                                 <form action="{{ route('admin.department-heads.apply-role-template', $head->id) }}" method="POST" class="d-inline"
-                                      onsubmit="return confirm('تطبيق قالب صلاحيات رئيس القسم؟');">
+                                      data-confirm="تطبيق قالب صلاحيات رئيس القسم على هذا المستخدم؟"
+                                      data-confirm-title="مزامنة القالب"
+                                      data-confirm-type="warning"
+                                      data-confirm-btn="مزامنة">
                                     @csrf
                                     <button type="submit" class="btn btn-warning btn-sm">
                                         <i class="ri-refresh-line me-1"></i>مزامنة القالب

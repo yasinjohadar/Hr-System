@@ -169,12 +169,36 @@ public function __construct()
 
 
 
-    public function index()
-        {
-            $permissions = Permission::all();
-            $roles = Role::all();
-            return view("admin.pages.roles.index" , compact("roles" , "permissions"));
+    public function index(Request $request)
+    {
+        $roles = Role::query()
+            ->withCount('permissions')
+            ->orderBy('name');
+
+        if ($request->filled('query')) {
+            $search = $request->input('query');
+            $roles->where('name', 'like', "%{$search}%");
         }
+
+        $roles = $roles->paginate(15)->withQueryString();
+
+        if ($request->ajax()) {
+            return response()->json([
+                'body' => view('admin.partials.roles-table-body', compact('roles'))->render(),
+                'extra' => view('admin.partials.roles-table-footer', compact('roles'))->render(),
+                'from' => $roles->firstItem(),
+                'to' => $roles->lastItem(),
+                'total' => $roles->total(),
+            ]);
+        }
+
+        $roleStats = [
+            'total' => Role::count(),
+            'permissions' => Permission::count(),
+        ];
+
+        return view('admin.pages.roles.index', compact('roles', 'roleStats'));
+    }
 
     /**
      * Show the form for creating a new resource.
@@ -242,10 +266,11 @@ public function __construct()
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request )
+    public function destroy(string $id)
     {
-        $role = Role::findOrFail($request->id);
+        $role = Role::findOrFail($id);
         $role->delete();
-        return redirect()->route("roles.index")->with("success" , "تم حذف الدور بنجاح");
+
+        return redirect()->route('roles.index')->with('success', 'تم حذف الدور بنجاح');
     }
 }

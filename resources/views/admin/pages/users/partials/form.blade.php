@@ -9,111 +9,207 @@
     $wantUsername = (bool) old('set_username', $hasUsername) || $errors->has('username');
 @endphp
 
-<div class="form-section-title"><i class="ri-user-line me-1"></i>المعلومات الأساسية</div>
-<div class="row g-3 mb-4">
-    <div class="col-md-6">
-        <label class="form-label">الاسم الكامل <span class="text-danger">*</span></label>
-        <input type="text" class="form-control @error('name') is-invalid @enderror" name="name"
-            value="{{ old('name', $user->name ?? '') }}" required>
-        @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
-    </div>
-    @if (! $hasUsername)
-        <div class="col-12">
-            <div class="form-check">
-                <input type="checkbox" class="form-check-input" name="set_username" value="1" id="set_username"
-                    {{ $wantUsername ? 'checked' : '' }}>
-                <label class="form-check-label" for="set_username">
-                    تعيين اسم مستخدم للدخول (اختياري — الدخول بالبريد كافٍ)
-                </label>
+<div class="admin-form-body">
+
+    <div class="admin-form-section">
+        <div class="admin-form-section-head">
+            <div class="admin-section-icon admin-section-icon-blue">
+                <i class="ri-user-line"></i>
+            </div>
+            <div>
+                <h3>المعلومات الأساسية</h3>
+                <p>الاسم وبيانات الاتصال</p>
             </div>
         </div>
-    @endif
-    <div class="col-md-6 {{ $wantUsername ? '' : 'd-none' }}" id="username-field-col" data-username-optional="1">
-        <label class="form-label">اسم المستخدم</label>
-        <input type="text" class="form-control @error('username') is-invalid @enderror" name="username" id="username-input"
-            value="{{ $wantUsername ? old('username', $user->username ?? '') : '' }}"
-            autocomplete="off" autocapitalize="off" spellcheck="false"
-            placeholder="مثال: nayef.alobaid"
-            @if (! $wantUsername) disabled @endif>
-        <small class="text-muted d-block mt-1">يجب أن يكون فريداً. لا تستخدم بريد مستخدم آخر.</small>
-        @error('username')<div class="invalid-feedback">{{ $message }}</div>@enderror
-    </div>
-    <div class="col-md-6">
-        <label class="form-label">البريد الإلكتروني <span class="text-danger">*</span></label>
-        <input type="email" class="form-control @error('email') is-invalid @enderror" name="email"
-            value="{{ old('email', $user->email ?? '') }}" required>
-        @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
-    </div>
-    <div class="col-md-6">
-        <label class="form-label">رقم الهاتف</label>
-        <input type="tel" class="form-control @error('phone') is-invalid @enderror" name="phone"
-            value="{{ old('phone', $user->phone ?? '') }}">
-        @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
-    </div>
-</div>
 
-<div class="form-section-title"><i class="ri-lock-password-line me-1"></i>الأمان</div>
-<div class="row g-3 mb-4">
-    <div class="col-md-6">
-        <label class="form-label">
-            كلمة المرور @if (!$isEdit)<span class="text-danger">*</span>@else<small class="text-muted">(اتركها فارغة إن لم تُرد التغيير)</small>@endif
-        </label>
-        <input type="password" class="form-control @error('password') is-invalid @enderror" name="password"
-            {{ $isEdit ? '' : 'required' }}>
-        @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
-    </div>
-    <div class="col-md-6">
-        <label class="form-label">تأكيد كلمة المرور @if (!$isEdit)<span class="text-danger">*</span>@endif</label>
-        <input type="password" class="form-control @error('password_confirmation') is-invalid @enderror"
-            name="password_confirmation" {{ $isEdit ? '' : 'required' }}>
-        @error('password_confirmation')<div class="invalid-feedback">{{ $message }}</div>@enderror
-    </div>
-</div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="admin-form-field">
+                    <label class="admin-form-label">الاسم الكامل <span class="required">*</span></label>
+                    <input type="text" class="form-control @error('name') is-invalid @enderror" name="name"
+                        placeholder="أدخل الاسم الكامل" value="{{ old('name', $user->name ?? '') }}" required>
+                    @error('name')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                </div>
+            </div>
 
-<div class="form-section-title"><i class="ri-settings-3-line me-1"></i>الحالة والأدوار</div>
-<div class="row g-3 mb-4">
-    <div class="col-md-6">
-        <label class="form-label">حالة الحساب <span class="text-danger">*</span></label>
-        <select class="form-select @error('status') is-invalid @enderror" name="status" required>
-            <option value="active" {{ old('status', $user->status ?? 'active') == 'active' ? 'selected' : '' }}>مفعل</option>
-            <option value="inactive" {{ old('status', $user->status ?? '') == 'inactive' ? 'selected' : '' }}>موقوف</option>
-            <option value="banned" {{ old('status', $user->status ?? '') == 'banned' ? 'selected' : '' }}>محظور</option>
-        </select>
-        @error('status')<div class="invalid-feedback">{{ $message }}</div>@enderror
-    </div>
-    <div class="col-md-6 d-flex align-items-end">
-        <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" name="is_active" value="1" id="is_active"
-                {{ old('is_active', $isEdit ? ($user->is_active ?? false) : true) ? 'checked' : '' }}>
-            <label class="form-check-label" for="is_active">تفعيل الدخول للنظام</label>
+            @if (! $hasUsername)
+                <div class="col-12">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" name="set_username" value="1" id="set_username"
+                            {{ $wantUsername ? 'checked' : '' }}>
+                        <label class="form-check-label" for="set_username">
+                            تعيين اسم مستخدم للدخول (اختياري — الدخول بالبريد كافٍ)
+                        </label>
+                    </div>
+                </div>
+            @endif
+
+            <div class="col-md-6 {{ $wantUsername ? '' : 'd-none' }}" id="username-field-col" data-username-optional="1">
+                <div class="admin-form-field">
+                    <label class="admin-form-label">اسم المستخدم</label>
+                    <input type="text" class="form-control @error('username') is-invalid @enderror" name="username" id="username-input"
+                        value="{{ $wantUsername ? old('username', $user->username ?? '') : '' }}"
+                        autocomplete="off" autocapitalize="off" spellcheck="false"
+                        placeholder="مثال: nayef.alobaid"
+                        @if (! $wantUsername) disabled @endif>
+                    <small class="text-muted d-block mt-1">يجب أن يكون فريداً. لا تستخدم بريد مستخدم آخر.</small>
+                    @error('username')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="admin-form-field">
+                    <label class="admin-form-label">البريد الإلكتروني <span class="required">*</span></label>
+                    <input type="email" class="form-control @error('email') is-invalid @enderror" name="email"
+                        placeholder="example@domain.com" value="{{ old('email', $user->email ?? '') }}"
+                        autocomplete="off" required>
+                    @error('email')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="admin-form-field">
+                    <label class="admin-form-label">رقم الهاتف</label>
+                    <input type="tel" class="form-control @error('phone') is-invalid @enderror" name="phone"
+                        placeholder="05xxxxxxxx" value="{{ old('phone', $user->phone ?? '') }}">
+                    @error('phone')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                </div>
+            </div>
         </div>
     </div>
-    <div class="col-12">
-        <label class="form-label">الأدوار</label>
-        <div class="roles-grid">
+
+    <div class="admin-form-section">
+        <div class="admin-form-section-head">
+            <div class="admin-section-icon admin-section-icon-green">
+                <i class="ri-lock-password-line"></i>
+            </div>
+            <div>
+                <h3>الأمان</h3>
+                <p>
+                    @if ($isEdit)
+                        اترك الحقول فارغة إن لم تُرد تغيير كلمة المرور
+                    @else
+                        تعيين كلمة مرور آمنة للحساب
+                    @endif
+                </p>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="admin-form-field">
+                    <label class="admin-form-label">
+                        كلمة المرور @if (!$isEdit)<span class="required">*</span>@endif
+                    </label>
+                    <div class="admin-password-wrap">
+                        <input type="password" id="password" class="form-control @error('password') is-invalid @enderror"
+                            name="password" placeholder="••••••••" {{ $isEdit ? '' : 'required' }}>
+                        <button type="button" class="admin-password-toggle" data-toggle-password="password" aria-label="إظهار كلمة المرور">
+                            <i class="ri-eye-line"></i>
+                        </button>
+                    </div>
+                    @error('password')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="admin-form-field">
+                    <label class="admin-form-label">
+                        تأكيد كلمة المرور @if (!$isEdit)<span class="required">*</span>@endif
+                    </label>
+                    <div class="admin-password-wrap">
+                        <input type="password" id="password_confirmation"
+                            class="form-control @error('password_confirmation') is-invalid @enderror"
+                            name="password_confirmation" placeholder="••••••••" {{ $isEdit ? '' : 'required' }}>
+                        <button type="button" class="admin-password-toggle" data-toggle-password="password_confirmation" aria-label="إظهار كلمة المرور">
+                            <i class="ri-eye-line"></i>
+                        </button>
+                    </div>
+                    @error('password_confirmation')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-form-section">
+        <div class="admin-form-section-head">
+            <div class="admin-section-icon admin-section-icon-amber">
+                <i class="ri-settings-3-line"></i>
+            </div>
+            <div>
+                <h3>إعدادات الحساب</h3>
+                <p>الصورة والحالة والتفعيل</p>
+            </div>
+        </div>
+
+        <div class="row g-3 align-items-start">
+            <div class="col-md-6">
+                <div class="admin-form-field">
+                    <label class="admin-form-label">صورة المستخدم</label>
+                    <div class="admin-photo-zone">
+                        <div class="admin-photo-preview-wrap">
+                            <img id="photo-preview" src="{{ $photoSrc }}" alt="صورة المستخدم" class="admin-photo-preview">
+                            <input type="file" name="photo" id="photo-input" accept="image/*" data-photo-preview="photo-preview">
+                        </div>
+                        <div class="admin-photo-actions">
+                            <label for="photo-input" class="admin-photo-btn mb-0">
+                                <i class="ri-image-add-line"></i>
+                                اختر صورة
+                            </label>
+                            <p class="admin-photo-hint">JPG أو PNG — بحد أقصى 2 ميجابايت</p>
+                        </div>
+                    </div>
+                    @error('photo')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="admin-form-field mb-3">
+                    <label class="admin-form-label">حالة الحساب <span class="required">*</span></label>
+                    <select class="form-select @error('status') is-invalid @enderror" name="status" required data-admin-choices>
+                        <option value="active" {{ old('status', $user->status ?? 'active') == 'active' ? 'selected' : '' }}>مفعل</option>
+                        <option value="inactive" {{ old('status', $user->status ?? '') == 'inactive' ? 'selected' : '' }}>موقوف</option>
+                        <option value="banned" {{ old('status', $user->status ?? '') == 'banned' ? 'selected' : '' }}>محظور</option>
+                    </select>
+                    @error('status')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                </div>
+
+                <div class="admin-form-switch-card">
+                    <div class="switch-info">
+                        <strong>تفعيل الدخول للنظام</strong>
+                        <span>السماح بتسجيل الدخول {{ $isEdit ? 'لهذا الحساب' : 'فور الإنشاء' }}</span>
+                    </div>
+                    <input class="form-check-input" type="checkbox" name="is_active" value="1" id="is_active"
+                        {{ old('is_active', $isEdit ? ($user->is_active ?? false) : true) ? 'checked' : '' }}>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-form-section">
+        <div class="admin-form-section-head">
+            <div class="admin-section-icon admin-section-icon-purple">
+                <i class="ri-shield-user-line"></i>
+            </div>
+            <div>
+                <h3>الأدوار والصلاحيات</h3>
+                <p>حدد دوراً واحداً أو أكثر للمستخدم</p>
+            </div>
+        </div>
+
+        <div class="admin-role-grid">
             @foreach ($roles as $role)
-                <label class="role-check-card mb-0">
-                    <input type="checkbox" class="form-check-input me-2" name="roles[]" value="{{ $role->name }}"
+                <label class="admin-role-chip">
+                    <input type="checkbox" name="roles[]" value="{{ $role->name }}"
                         {{ in_array($role->name, $selectedRoles) ? 'checked' : '' }}>
-                    {{ $role->name }}
+                    <span>
+                        <i class="ri-user-star-line"></i>
+                        {{ $role->name }}
+                    </span>
                 </label>
             @endforeach
         </div>
-        @error('roles')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+        @error('roles')<div class="text-danger small mt-2">{{ $message }}</div>@enderror
     </div>
-</div>
 
-<div class="form-section-title"><i class="ri-image-line me-1"></i>الصورة</div>
-<div class="row g-3 mb-2">
-    <div class="col-12">
-        <div class="d-flex align-items-center gap-3">
-            <img id="photo-preview" src="{{ $photoSrc }}" alt="صورة المستخدم" class="photo-preview">
-            <div>
-                <input type="file" name="photo" id="photo-input" class="form-control" accept="image/*"
-                    onchange="previewUserPhoto(this)">
-                <div class="form-text">JPEG, PNG — بحد أقصى 2 ميجابايت</div>
-                @error('photo')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-            </div>
-        </div>
-    </div>
 </div>

@@ -43,9 +43,12 @@
 
 <!-- Custom-Switcher JS -->
 <script src="{{ asset('assets/js/custom-switcher.min.js') }}"></script>
+<script src="{{ asset('assets/js/rtl-lock.js') }}"></script>
 
 <!-- Custom JS -->
 <script src="{{ asset('assets/js/custom.js') }}"></script>
+<script src="{{ asset('assets/js/admin-confirm.js') }}"></script>
+<script src="{{ asset('assets/js/admin-tables.js') }}"></script>
 
 <!-- Sidebar Active Link JS -->
 <script src="{{ asset('assets/js/sidebar-active.js') }}"></script>
@@ -282,4 +285,5 @@
 </script>
 @endauth
 
+@stack('scripts')
 @yield('js')

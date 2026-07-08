@@ -119,18 +119,24 @@
                                             <i class="ri-link text-success me-2"></i>كود تسجيل الدخول
                                         </a>
                                     </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <a href="#" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#delete{{ $user->id }}">
-                                            <i class="ri-delete-bin-line me-2"></i>حذف المستخدم
-                                        </a>
-                                    </li>
+                                    @can('user-delete')
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <button type="button" class="dropdown-item text-danger border-0 bg-transparent w-100 text-start"
+                                                data-delete-url="{{ route('users.destroy', $user->id) }}"
+                                                data-delete-title="حذف المستخدم"
+                                                data-delete-message="هل أنت متأكد من حذف المستخدم {{ $user->name }}؟"
+                                                data-delete-hint="لا يمكن التراجع عن هذا الإجراء بعد الحذف."
+                                                data-delete-confirm="حذف المستخدم">
+                                                <i class="ri-delete-bin-line me-2"></i>حذف المستخدم
+                                            </button>
+                                        </li>
+                                    @endcan
                                 </ul>
                             </div>
                         </td>
                     </tr>
 
-                    @include('admin.pages.users.delete')
                     @include('admin.pages.users.change_password')
                 @empty
                     <tr>

@@ -1,43 +1,16 @@
 /**
- * Critical sidebar nav — يمنع وميض القوائم الفرعية قبل التحميل
- * العرض يعتمد على .open (يتولاه defaultmenu.min.js عند النقر)
+ * Sidebar nav — منع وميض القوائم قبل تهيئة JS فقط.
+ * التوسيع/الطي يتم عبر defaultmenu.min.js (slideDown / slideUp).
  */
-.app-sidebar .slide.has-sub:not(.open) > .slide-menu.child1 {
+html:not(.sidebar-nav-ready) .app-sidebar .slide.has-sub > .slide-menu {
     display: none !important;
 }
 
-.app-sidebar .slide.has-sub.open > .slide-menu.child1 {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    height: auto !important;
-    overflow: visible !important;
+.app-sidebar .side-menu__angle {
+    transition: transform 0.3s ease, color 0.2s ease, opacity 0.2s ease;
 }
 
 .app-sidebar .slide.has-sub.open > .side-menu__item .side-menu__angle,
 .app-sidebar .slide.has-sub.has-active.open > .side-menu__item .side-menu__angle {
     transform: rotate(90deg);
-}
-
-.app-sidebar .side-menu__item.active {
-    background-color: rgba(59, 130, 246, 0.12) !important;
-    color: #3b82f6 !important;
-    font-weight: 600;
-    position: relative;
-}
-
-.app-sidebar .side-menu__item.active::before {
-    content: "";
-    width: 3px;
-    height: 100%;
-    background: #3b82f6;
-    position: absolute;
-    inset-inline-start: 0;
-    top: 0;
-    border-radius: 0 2px 2px 0;
-}
-
-.app-sidebar .side-menu__item.active .side-menu__icon {
-    fill: #3b82f6 !important;
-    color: #3b82f6 !important;
 }

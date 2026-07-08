@@ -62,6 +62,9 @@
         @include('employee.layouts.footer')
 
     </div>
+
+    @include('admin.components.confirm-modal')
+
     @include('employee.layouts.footer-scripts')
     @stack('scripts')
 
