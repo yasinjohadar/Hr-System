@@ -105,6 +105,15 @@ class WorkflowSeeder extends Seeder
                 'created_by' => $createdBy,
                 'steps' => $stepTemplate($execId, $gmId),
             ],
+            [
+                'name' => 'Fund Transfer Workflow',
+                'name_ar' => 'سير عمل التحويل المالي',
+                'description' => 'موافقة التحويلات المالية فوق عتبة الاعتماد',
+                'type' => 'fund_transfer',
+                'is_active' => true,
+                'created_by' => $createdBy,
+                'steps' => $stepTemplate($execId, $gmId),
+            ],
         ];
 
         foreach ($workflows as $workflowData) {

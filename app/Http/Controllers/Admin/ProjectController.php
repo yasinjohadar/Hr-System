@@ -52,7 +52,14 @@ class ProjectController extends Controller
         $projects = $query->latest()->paginate(15);
         $departments = Department::where('is_active', true)->get();
 
-        return view('admin.pages.projects.index', compact('projects', 'departments'));
+        $projectStats = [
+            'total' => Project::count(),
+            'active' => Project::where('status', 'active')->count(),
+            'planning' => Project::where('status', 'planning')->count(),
+            'completed' => Project::where('status', 'completed')->count(),
+        ];
+
+        return view('admin.pages.projects.index', compact('projects', 'departments', 'projectStats'));
     }
 
     /**
@@ -111,6 +118,9 @@ class ProjectController extends Controller
                 'currency',
                 'creator',
                 'members.employee',
+                'stages.members.employee',
+                'budgetOverrides.approver',
+                'fundTransfers' => fn ($q) => $q->latest()->limit(30),
                 'documents.uploader',
                 'timeEntries' => function ($query) {
                     $query->with(['employee', 'task', 'creator'])
@@ -125,8 +135,15 @@ class ProjectController extends Controller
             ->findOrFail($id);
 
         $employees = Employee::where('is_active', true)->orderBy('full_name')->get();
+        $stagesAllocated = $project->stagesAllocatedTotal();
+        $activeTab = request('tab', 'overview');
 
-        return view('admin.pages.projects.show', compact('project', 'employees'));
+        return view('admin.pages.projects.show', compact(
+            'project',
+            'employees',
+            'stagesAllocated',
+            'activeTab'
+        ));
     }
 
     /**

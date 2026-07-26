@@ -4,60 +4,97 @@
     تفاصيل المشروع
 @stop
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('assets/css/admin-project-finance.css') }}?v=1">
+@endpush
+
 @section('content')
+    @php
+        $tab = $activeTab ?? request('tab', 'overview');
+        $budget = (float) ($project->budget ?? 0);
+        $allocated = (float) ($stagesAllocated ?? 0);
+    @endphp
+
     <div class="main-content app-content">
-        <div class="container-fluid">
-            <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
-                <div class="my-auto">
-                    <h5 class="page-title fs-21 mb-1">تفاصيل المشروع</h5>
+        <div class="container-fluid admin-page-shell">
+            @include('admin.pages.users.partials.alerts')
+
+            <div class="admin-page-banner">
+                <div class="admin-page-banner-main">
+                    <span class="admin-page-banner-icon"><i class="ri-folder-chart-line"></i></span>
+                    <div class="admin-page-banner-text">
+                        <h1>{{ $project->name_ar ?? $project->name }}</h1>
+                        <p>{{ $project->project_code }} — {{ $project->status_name_ar }} · إنجاز {{ $project->progress }}%</p>
+                    </div>
                 </div>
-                <div>
-                    <a href="{{ route('admin.projects.index') }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-right me-2"></i>العودة للقائمة
+                <div class="admin-page-banner-actions d-flex flex-wrap gap-2">
+                    <a href="{{ route('admin.projects.index') }}" class="admin-btn admin-btn-light">
+                        <i class="ri-arrow-right-line"></i>
+                        القائمة
                     </a>
+                    @can('project-edit')
+                        <a href="{{ route('admin.projects.edit', $project) }}" class="admin-btn admin-btn-primary">
+                            <i class="ri-edit-line"></i>
+                            تعديل
+                        </a>
+                    @endcan
                 </div>
             </div>
 
-            @if (session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <div class="admin-report-stats admin-report-stats-4 mb-4">
+                <div class="admin-report-stat admin-report-stat-static admin-report-stat-blue">
+                    <span class="admin-report-stat-icon"><i class="ri-percent-line"></i></span>
+                    <span class="admin-report-stat-label">نسبة الإنجاز</span>
+                    <span class="admin-report-stat-value" style="color:#2563eb;">{{ $project->progress }}%</span>
                 </div>
-            @endif
-            @if (session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <div class="admin-report-stat admin-report-stat-static admin-report-stat-green">
+                    <span class="admin-report-stat-icon"><i class="ri-stack-line"></i></span>
+                    <span class="admin-report-stat-label">المراحل</span>
+                    <span class="admin-report-stat-value" style="color:#059669;">{{ $project->stages->count() }}</span>
                 </div>
-            @endif
+                <div class="admin-report-stat admin-report-stat-static admin-report-stat-amber">
+                    <span class="admin-report-stat-icon"><i class="ri-wallet-3-line"></i></span>
+                    <span class="admin-report-stat-label">ميزانية / مخصّص</span>
+                    <span class="admin-report-stat-value" style="color:#d97706;font-size:1.1rem;">
+                        {{ $budget > 0 ? number_format($budget, 0) : '—' }}
+                        <small class="text-muted fw-normal">/ {{ number_format($allocated, 0) }}</small>
+                    </span>
+                </div>
+                <div class="admin-report-stat admin-report-stat-static admin-report-stat-cyan">
+                    <span class="admin-report-stat-icon"><i class="ri-team-line"></i></span>
+                    <span class="admin-report-stat-label">أعضاء الفريق</span>
+                    <span class="admin-report-stat-value" style="color:#0891b2;">{{ $project->members->count() }}</span>
+                </div>
+            </div>
 
-            <div class="row">
-                <div class="col-xl-10">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">{{ $project->name_ar ?? $project->name }}</h5>
-                        </div>
-                        <div class="card-body">
-                            <ul class="nav nav-tabs mb-3" role="tablist">
+            <div class="admin-page-card project-show-card">
+                <div class="card-body p-3 p-lg-4">
+                            <ul class="nav nav-tabs project-show-tabs mb-3" role="tablist">
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link active" id="tab-overview-btn" data-bs-toggle="tab" data-bs-target="#tab-overview" type="button" role="tab">نظرة عامة</button>
+                                    <button class="nav-link {{ $tab === 'overview' ? 'active' : '' }}" id="tab-overview-btn" data-bs-toggle="tab" data-bs-target="#tab-overview" type="button" role="tab">نظرة عامة</button>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="tab-team-btn" data-bs-toggle="tab" data-bs-target="#tab-team" type="button" role="tab">فريق المشروع</button>
+                                    <button class="nav-link {{ $tab === 'stages' ? 'active' : '' }}" id="tab-stages-btn" data-bs-toggle="tab" data-bs-target="#tab-stages" type="button" role="tab">المراحل</button>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="tab-docs-btn" data-bs-toggle="tab" data-bs-target="#tab-docs" type="button" role="tab">المستندات</button>
+                                    <button class="nav-link {{ $tab === 'team' ? 'active' : '' }}" id="tab-team-btn" data-bs-toggle="tab" data-bs-target="#tab-team" type="button" role="tab">فريق المشروع</button>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="tab-time-btn" data-bs-toggle="tab" data-bs-target="#tab-time" type="button" role="tab">سجل الوقت</button>
+                                    <button class="nav-link {{ $tab === 'finance' ? 'active' : '' }}" id="tab-finance-btn" data-bs-toggle="tab" data-bs-target="#tab-finance" type="button" role="tab">التمويل</button>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="tab-tasks-btn" data-bs-toggle="tab" data-bs-target="#tab-tasks" type="button" role="tab">المهام</button>
+                                    <button class="nav-link {{ $tab === 'docs' ? 'active' : '' }}" id="tab-docs-btn" data-bs-toggle="tab" data-bs-target="#tab-docs" type="button" role="tab">المستندات</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link {{ $tab === 'time' ? 'active' : '' }}" id="tab-time-btn" data-bs-toggle="tab" data-bs-target="#tab-time" type="button" role="tab">سجل الوقت</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link {{ $tab === 'tasks' ? 'active' : '' }}" id="tab-tasks-btn" data-bs-toggle="tab" data-bs-target="#tab-tasks" type="button" role="tab">المهام</button>
                                 </li>
                             </ul>
 
                             <div class="tab-content">
-                                <div class="tab-pane fade show active" id="tab-overview" role="tabpanel">
+                                <div class="tab-pane fade {{ $tab === 'overview' ? 'show active' : '' }}" id="tab-overview" role="tabpanel">
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label fw-bold">رقم المشروع:</label>
@@ -134,6 +171,7 @@
                                                         {{ $project->currency->code }}
                                                     @endif
                                                 </p>
+                                                <small class="text-muted">مخصّص للمراحل: {{ number_format($stagesAllocated ?? 0, 2) }}</small>
                                             </div>
                                         @endif
                                         <div class="col-md-6 mb-3">
@@ -171,11 +209,147 @@
                                     </div>
                                 </div>
 
-                                <div class="tab-pane fade" id="tab-team" role="tabpanel">
+                                <div class="tab-pane fade {{ $tab === 'stages' ? 'show active' : '' }}" id="tab-stages" role="tabpanel">
+                                    @php
+                                        $budget = (float) ($project->budget ?? 0);
+                                        $allocated = (float) ($stagesAllocated ?? 0);
+                                        $budgetPct = $budget > 0 ? min(100, round(($allocated / $budget) * 100)) : 0;
+                                    @endphp
+                                    <div class="mb-4 p-3 border rounded">
+                                        <div class="d-flex justify-content-between small mb-1">
+                                            <span>توزيع ميزانية المراحل</span>
+                                            <span>{{ number_format($allocated, 2) }} / {{ $budget > 0 ? number_format($budget, 2) : '—' }}</span>
+                                        </div>
+                                        <div class="progress" style="height: 10px;">
+                                            <div class="progress-bar {{ $allocated > $budget && $budget > 0 ? 'bg-warning' : 'bg-primary' }}" style="width: {{ $budget > 0 ? $budgetPct : 0 }}%"></div>
+                                        </div>
+                                        @if ($allocated > $budget && $budget > 0)
+                                            <small class="text-warning d-block mt-1">مجموع المراحل يتجاوز الميزانية — يتطلب صلاحية تجاوز مع سبب.</small>
+                                        @endif
+                                    </div>
+
+                                    @can('project-stage-create')
+                                        <form action="{{ route('admin.projects.stages.store', $project) }}" method="post" class="row g-2 mb-4 border rounded p-3">
+                                            @csrf
+                                            <div class="col-md-3">
+                                                <label class="form-label">اسم المرحلة</label>
+                                                <input type="text" name="name" class="form-control" required value="{{ old('name') }}">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">المبلغ المخصص</label>
+                                                <input type="number" step="0.01" min="0" name="allocated_amount" class="form-control" required value="{{ old('allocated_amount', 0) }}">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">البداية</label>
+                                                <input type="date" name="start_date" class="form-control" value="{{ old('start_date') }}">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">النهاية</label>
+                                                <input type="date" name="end_date" class="form-control" value="{{ old('end_date') }}">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">الحالة</label>
+                                                <select name="status" class="form-select" required>
+                                                    <option value="planned">مخططة</option>
+                                                    <option value="active">نشطة</option>
+                                                    <option value="completed">مكتملة</option>
+                                                    <option value="cancelled">ملغاة</option>
+                                                </select>
+                                            </div>
+                                            @can('project-budget-override')
+                                                <div class="col-md-8">
+                                                    <label class="form-label">سبب تجاوز الميزانية (إن لزم)</label>
+                                                    <input type="text" name="budget_override_reason" class="form-control" value="{{ old('budget_override_reason') }}">
+                                                </div>
+                                            @endcan
+                                            <div class="col-md-4 d-flex align-items-end">
+                                                <button type="submit" class="btn btn-primary w-100">إضافة مرحلة</button>
+                                            </div>
+                                        </form>
+                                    @endcan
+
+                                    <div class="table-responsive">
+                                        <table class="table table-striped align-middle">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>المرحلة</th>
+                                                    <th>التواريخ</th>
+                                                    <th>المبلغ</th>
+                                                    <th>الحالة</th>
+                                                    <th>الأعضاء</th>
+                                                    @canAny(['project-stage-edit', 'project-stage-delete'])
+                                                        <th></th>
+                                                    @endcanAny
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @forelse ($project->stages as $stage)
+                                                    <tr>
+                                                        <td>{{ $stage->sort_order }}</td>
+                                                        <td>{{ $stage->display_name }}</td>
+                                                        <td class="small">
+                                                            {{ $stage->start_date?->format('Y-m-d') ?? '—' }}
+                                                            →
+                                                            {{ $stage->end_date?->format('Y-m-d') ?? '—' }}
+                                                        </td>
+                                                        <td>{{ number_format((float) $stage->allocated_amount, 2) }}</td>
+                                                        <td><span class="badge bg-secondary">{{ $stage->status_name_ar }}</span></td>
+                                                        <td>
+                                                            @forelse ($stage->members as $sm)
+                                                                <span class="badge bg-light text-dark border">{{ $sm->employee->full_name ?? '—' }}</span>
+                                                                @can('project-edit')
+                                                                    <form action="{{ route('admin.projects.stages.members.destroy', [$project, $stage, $sm]) }}" method="post" class="d-inline" onsubmit="return confirm('إزالة من المرحلة؟');">
+                                                                        @csrf
+                                                                        @method('DELETE')
+                                                                        <button type="submit" class="btn btn-link btn-sm text-danger p-0">×</button>
+                                                                    </form>
+                                                                @endcan
+                                                            @empty
+                                                                <span class="text-muted small">—</span>
+                                                            @endforelse
+                                                        </td>
+                                                        @canAny(['project-stage-edit', 'project-stage-delete'])
+                                                            <td class="text-nowrap">
+                                                                @can('project-stage-delete')
+                                                                    <form action="{{ route('admin.projects.stages.destroy', [$project, $stage]) }}" method="post" class="d-inline" onsubmit="return confirm('حذف المرحلة؟');">
+                                                                        @csrf
+                                                                        @method('DELETE')
+                                                                        <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
+                                                                    </form>
+                                                                @endcan
+                                                            </td>
+                                                        @endcanAny
+                                                    </tr>
+                                                @empty
+                                                    <tr>
+                                                        <td colspan="7" class="text-center text-muted">لا توجد مراحل بعد.</td>
+                                                    </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    @if ($project->budgetOverrides->isNotEmpty())
+                                        <h6 class="mt-4">سجل تجاوزات الميزانية</h6>
+                                        <ul class="list-group list-group-flush">
+                                            @foreach ($project->budgetOverrides as $override)
+                                                <li class="list-group-item small">
+                                                    {{ $override->approved_at?->format('Y-m-d H:i') }} —
+                                                    إجمالي {{ number_format((float) $override->requested_stages_total, 2) }}
+                                                    — {{ $override->reason }}
+                                                    ({{ $override->approver->name ?? '—' }})
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    @endif
+                                </div>
+
+                                <div class="tab-pane fade {{ $tab === 'team' ? 'show active' : '' }}" id="tab-team" role="tabpanel">
                                     @can('project-edit')
                                         <form action="{{ route('admin.projects.members.store', $project) }}" method="post" class="row g-3 mb-4">
                                             @csrf
-                                            <div class="col-md-5">
+                                            <div class="col-md-4">
                                                 <label class="form-label">الموظف</label>
                                                 <select name="employee_id" class="form-select" required>
                                                     <option value="">— اختر —</option>
@@ -184,16 +358,29 @@
                                                     @endforeach
                                                 </select>
                                             </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">الدور</label>
+                                            <div class="col-md-3">
+                                                <label class="form-label">دور المشروع</label>
                                                 <select name="role" class="form-select" required>
                                                     <option value="member">عضو فريق</option>
                                                     <option value="lead">قائد فريق</option>
                                                     <option value="sponsor">راعي / داعم</option>
                                                 </select>
                                             </div>
-                                            <div class="col-md-3 d-flex align-items-end">
-                                                <button type="submit" class="btn btn-primary w-100">إضافة للفريق</button>
+                                            <div class="col-md-5">
+                                                <label class="form-label d-block">نطاق التعيين</label>
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="checkbox" name="assign_to_project" value="1" id="assign_project" checked>
+                                                    <label class="form-check-label" for="assign_project">المشروع</label>
+                                                </div>
+                                                @foreach ($project->stages as $stage)
+                                                    <div class="form-check form-check-inline">
+                                                        <input class="form-check-input" type="checkbox" name="stage_ids[]" value="{{ $stage->id }}" id="stage_{{ $stage->id }}">
+                                                        <label class="form-check-label" for="stage_{{ $stage->id }}">{{ $stage->display_name }}</label>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                            <div class="col-12">
+                                                <button type="submit" class="btn btn-primary">حفظ التعيين</button>
                                             </div>
                                         </form>
                                     @endcan
@@ -238,7 +425,60 @@
                                     </div>
                                 </div>
 
-                                <div class="tab-pane fade" id="tab-docs" role="tabpanel">
+                                <div class="tab-pane fade {{ $tab === 'finance' ? 'show active' : '' }}" id="tab-finance" role="tabpanel">
+                                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                                        <div>
+                                            <h6 class="mb-1">تمويل المشروع</h6>
+                                            <p class="text-muted small mb-0">آخر التحويلات المرتبطة بهذا المشروع</p>
+                                        </div>
+                                        @can('fund-transfer-create')
+                                            <a href="{{ route('admin.fund-transfers.create', ['project_id' => $project->id]) }}" class="btn btn-primary btn-sm">
+                                                <i class="ri-exchange-dollar-line me-1"></i>تحويل جديد
+                                            </a>
+                                        @endcan
+                                        @can('fund-transfer-list')
+                                            <a href="{{ route('admin.fund-transfers.index', ['project_id' => $project->id]) }}" class="btn btn-outline-secondary btn-sm">كل التحويلات</a>
+                                        @endcan
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>الرمز</th>
+                                                    <th>النوع</th>
+                                                    <th>المبلغ</th>
+                                                    <th>المرحلة</th>
+                                                    <th>الحالة</th>
+                                                    <th>التاريخ</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @forelse ($project->fundTransfers as $ft)
+                                                    <tr>
+                                                        <td>
+                                                            @can('fund-transfer-list')
+                                                                <a href="{{ route('admin.fund-transfers.show', $ft) }}">{{ $ft->transfer_code }}</a>
+                                                            @else
+                                                                {{ $ft->transfer_code }}
+                                                            @endcan
+                                                        </td>
+                                                        <td>{{ $ft->type_name_ar }}</td>
+                                                        <td>{{ number_format((float) $ft->amount, 2) }}</td>
+                                                        <td>{{ $ft->stage?->display_name ?? '—' }}</td>
+                                                        <td>{{ $ft->status_name_ar }}</td>
+                                                        <td>{{ $ft->created_at?->format('Y-m-d') }}</td>
+                                                    </tr>
+                                                @empty
+                                                    <tr>
+                                                        <td colspan="6" class="text-center text-muted">لا توجد تحويلات مرتبطة بعد.</td>
+                                                    </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane fade {{ $tab === 'docs' ? 'show active' : '' }}" id="tab-docs" role="tabpanel">
                                     @can('project-edit')
                                         <form action="{{ route('admin.projects.documents.store', $project) }}" method="post" enctype="multipart/form-data" class="row g-3 mb-4">
                                             @csrf
@@ -307,7 +547,7 @@
                                     </div>
                                 </div>
 
-                                <div class="tab-pane fade" id="tab-time" role="tabpanel">
+                                <div class="tab-pane fade {{ $tab === 'time' ? 'show active' : '' }}" id="tab-time" role="tabpanel">
                                     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
                                         <p class="mb-0"><strong>إجمالي الساعات:</strong> {{ number_format((float) ($project->total_logged_hours ?? 0), 2) }} ساعة</p>
                                         @can('project-show')
@@ -409,7 +649,7 @@
                                     </div>
                                 </div>
 
-                                <div class="tab-pane fade" id="tab-tasks" role="tabpanel">
+                                <div class="tab-pane fade {{ $tab === 'tasks' ? 'show active' : '' }}" id="tab-tasks" role="tabpanel">
                                     @if ($project->tasks->count() > 0)
                                         <div class="table-responsive">
                                             <table class="table table-striped">
@@ -448,8 +688,6 @@
                                     @endif
                                 </div>
                             </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

@@ -15,14 +15,19 @@ class RoleController extends Controller
 public function __construct()
 {
     $this->middleware('auth');
-    // يمكنه فقط رؤية قائمة الصلاحيات (index)
-    $this->middleware(['permission:role-list'])->only('index');
+
+    // تحذير أمني: هذا الـ Controller يعدّل الصلاحيات نفسها. أي دالة عامة تُضاف هنا
+    // ولا تُدرَج في أحد أسطر ->only() أدناه تصبح مفتوحة لأي مستخدم مُصادَق.
+    // عند إضافة دالة جديدة، أضِفها إلى السطر المناسب فوراً.
+
+    // يمكنه فقط رؤية قائمة الصلاحيات (index + show)
+    $this->middleware(['permission:role-list'])->only(['index', 'show']);
 
     // يمكنه فقط إنشاء صلاحية جديدة (create + store)
     $this->middleware(['permission:role-create'])->only(['create', 'store']);
 
-    // يمكنه فقط تعديل الصلاحية (edit + update)
-    $this->middleware(['permission:role-edit'])->only(['edit', 'update']);
+    // يمكنه فقط تعديل الصلاحية (edit + update + تطبيق قالب صلاحيات)
+    $this->middleware(['permission:role-edit'])->only(['edit', 'update', 'applyTemplate']);
 
     // يمكنه فقط حذف الصلاحية (destroy)
     $this->middleware(['permission:role-delete'])->only('destroy');

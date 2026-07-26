@@ -26,26 +26,24 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+// مسارات متاحة لكل مستخدم مُصادَق (بما فيهم الموظفون)
 Route::middleware(['auth', 'check.user.active'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('leave-impersonation', [ImpersonationController::class, 'leave'])->name('leave-impersonation');
+});
 
-    // Admin routes
+// إدارة المستخدمين والأدوار — إدارية فقط.
+// ملاحظة أمنية: هذه المجموعة تتحكم في الصلاحيات نفسها، فيجب أن تبقى دائماً
+// خلف ensure.admin + two.factor، والتحقق التفصيلي في constructor الـ Controller.
+Route::middleware(['auth', 'check.user.active', 'ensure.admin', 'two.factor'])->group(function () {
     Route::resource('users', UserController::class);
     Route::resource('roles', RoleController::class);
     Route::post('roles/{id}/apply-template', [RoleController::class, 'applyTemplate'])->name('roles.apply-template');
     Route::put('users/{user}/change-password', [UserController::class, 'updatePassword'])->name('users.update-password');
-});
-
-// مسار toggle-status بدون middleware check.user.active
-Route::middleware(['auth'])->group(function () {
     Route::post('users/{id}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
 });
-
-// مسار بديل للتجربة
-Route::post('toggle-user-status/{id}', [UserController::class, 'toggleStatus'])->name('users.toggle-status-alt');
 
 require __DIR__.'/auth.php';
 require __DIR__.'/employee.php';

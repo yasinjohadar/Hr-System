@@ -27,7 +27,7 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">الموظف</label>
-                                <input type="text" class="form-control" value="{{ $document->employee->full_name }}" disabled>
+                                <input type="text" class="form-control" value="{{ $document->employee->full_name ?? 'موظف محذوف' }}" disabled>
                             </div>
 
                             <div class="col-md-6">

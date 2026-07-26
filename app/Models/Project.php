@@ -107,6 +107,26 @@ class Project extends Model
         return $this->hasMany(ProjectTimeEntry::class);
     }
 
+    public function stages(): HasMany
+    {
+        return $this->hasMany(ProjectStage::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function budgetOverrides(): HasMany
+    {
+        return $this->hasMany(ProjectBudgetOverride::class);
+    }
+
+    public function fundTransfers(): HasMany
+    {
+        return $this->hasMany(FundTransfer::class);
+    }
+
+    public function stagesAllocatedTotal(): float
+    {
+        return (float) $this->stages()->sum('allocated_amount');
+    }
+
     /**
      * هل يمكن للموظف عرض المشروع أو تسجيل وقت عليه؟
      */
@@ -117,6 +137,10 @@ class Project extends Model
         }
 
         if ($this->members()->where('employee_id', $employee->id)->exists()) {
+            return true;
+        }
+
+        if ($this->stages()->whereHas('members', fn ($q) => $q->where('employee_id', $employee->id))->exists()) {
             return true;
         }
 

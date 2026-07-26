@@ -13,6 +13,9 @@ class LoginByCodeController extends Controller
 {
     /**
      * عرض صفحة إدخال الكود، أو استهلاك الكود مباشرة إذا وُجد في الرابط.
+     *
+     * ملاحظة أمنية: استهلاك الكود من الـ query string يجعله يظهر في سجلات الخادم
+     * وسجل المتصفح وترويسة Referer. يُفضَّل الاقتصار على إدخاله في النموذج (POST).
      */
     public function show(Request $request)
     {
@@ -49,6 +52,12 @@ class LoginByCodeController extends Controller
             }
             Cache::forget($employeeCacheKey);
             Auth::login($employee->user);
+            // منع تثبيت الجلسة (session fixation) بعد أي تسجيل دخول
+            $request->session()->regenerate();
+            // إسقاط علامة اجتياز التحقق الثنائي الخاصة بالحساب السابق، وإلا أمكن
+            // اجتياز 2FA على حساب ثم استهلاك كود دخول لحساب آخر محمي بـ 2FA وتخطّيه.
+            $request->session()->forget('two_factor_passed');
+
             return redirect()->route('employee.dashboard')->with('success', 'تم تسجيل الدخول بنجاح.');
         }
 
@@ -65,6 +74,12 @@ class LoginByCodeController extends Controller
             }
             Cache::forget($userCacheKey);
             Auth::login($user);
+            // منع تثبيت الجلسة (session fixation) بعد أي تسجيل دخول
+            $request->session()->regenerate();
+            // إسقاط علامة اجتياز التحقق الثنائي الخاصة بالحساب السابق، وإلا أمكن
+            // اجتياز 2FA على حساب ثم استهلاك كود دخول لحساب آخر محمي بـ 2FA وتخطّيه.
+            $request->session()->forget('two_factor_passed');
+
             return redirect()->route('admin.dashboard')->with('success', 'تم تسجيل الدخول بنجاح.');
         }
 

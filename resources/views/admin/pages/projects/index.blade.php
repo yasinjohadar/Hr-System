@@ -6,187 +6,202 @@
 
 @section('content')
     <div class="main-content app-content">
-        <div class="container-fluid">
-            <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
-                <div class="my-auto">
-                    <h5 class="page-title fs-21 mb-1">المشاريع</h5>
+        <div class="container-fluid admin-page-shell">
+            @include('admin.pages.users.partials.alerts')
+
+            <div class="admin-page-banner">
+                <div class="admin-page-banner-main">
+                    <span class="admin-page-banner-icon"><i class="ri-folder-chart-line"></i></span>
+                    <div class="admin-page-banner-text">
+                        <h1>المشاريع</h1>
+                        <p>إدارة المشاريع والمراحل والميزانيات والفرق</p>
+                    </div>
                 </div>
-                <div>
-                    @can('project-create')
-                    <a href="{{ route('admin.projects.create') }}" class="btn btn-primary">
-                        <i class="fas fa-plus me-2"></i>إضافة مشروع جديد
-                    </a>
-                    @endcan
+                @can('project-create')
+                    <div class="admin-page-banner-actions">
+                        <a href="{{ route('admin.projects.create') }}" class="admin-btn admin-btn-light">
+                            <i class="ri-add-line"></i>
+                            مشروع جديد
+                        </a>
+                    </div>
+                @endcan
+            </div>
+
+            <div class="admin-report-stats admin-report-stats-4 mb-4">
+                <div class="admin-report-stat admin-report-stat-static admin-report-stat-blue">
+                    <span class="admin-report-stat-icon"><i class="ri-folder-2-line"></i></span>
+                    <span class="admin-report-stat-label">إجمالي المشاريع</span>
+                    <span class="admin-report-stat-value" style="color:#2563eb;">{{ $projectStats['total'] }}</span>
+                </div>
+                <div class="admin-report-stat admin-report-stat-static admin-report-stat-green">
+                    <span class="admin-report-stat-icon"><i class="ri-play-circle-line"></i></span>
+                    <span class="admin-report-stat-label">نشطة</span>
+                    <span class="admin-report-stat-value" style="color:#059669;">{{ $projectStats['active'] }}</span>
+                </div>
+                <div class="admin-report-stat admin-report-stat-static admin-report-stat-amber">
+                    <span class="admin-report-stat-icon"><i class="ri-draft-line"></i></span>
+                    <span class="admin-report-stat-label">قيد التخطيط</span>
+                    <span class="admin-report-stat-value" style="color:#d97706;">{{ $projectStats['planning'] }}</span>
+                </div>
+                <div class="admin-report-stat admin-report-stat-static admin-report-stat-cyan">
+                    <span class="admin-report-stat-icon"><i class="ri-checkbox-circle-line"></i></span>
+                    <span class="admin-report-stat-label">مكتملة</span>
+                    <span class="admin-report-stat-value" style="color:#0891b2;">{{ $projectStats['completed'] }}</span>
                 </div>
             </div>
 
-            <!-- فلترة -->
-            <div class="card mb-3">
-                <div class="card-body">
-                    <form method="GET" action="{{ route('admin.projects.index') }}" class="row g-3">
-                        <div class="col-md-3">
-                            <input type="text" name="search" class="form-control" placeholder="بحث..." value="{{ request('search') }}">
+            <div class="admin-page-card">
+                <div class="card-toolbar">
+                    <form action="{{ route('admin.projects.index') }}" method="GET" class="admin-filters w-100">
+                        <div class="search-input-wrap">
+                            <i class="ri-search-line"></i>
+                            <input type="text" name="search" class="form-control"
+                                   placeholder="بحث بالاسم أو رقم المشروع..."
+                                   value="{{ request('search') }}" autocomplete="off">
                         </div>
-                        <div class="col-md-2">
-                            <select name="status" class="form-select">
-                                <option value="">كل الحالات</option>
-                                <option value="planning" {{ request('status') == 'planning' ? 'selected' : '' }}>قيد التخطيط</option>
-                                <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشط</option>
-                                <option value="on_hold" {{ request('status') == 'on_hold' ? 'selected' : '' }}>معلق</option>
-                                <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>مكتمل</option>
-                                <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>ملغي</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <select name="priority" class="form-select">
-                                <option value="">كل الأولويات</option>
-                                <option value="low" {{ request('priority') == 'low' ? 'selected' : '' }}>منخفض</option>
-                                <option value="medium" {{ request('priority') == 'medium' ? 'selected' : '' }}>متوسط</option>
-                                <option value="high" {{ request('priority') == 'high' ? 'selected' : '' }}>عالي</option>
-                                <option value="urgent" {{ request('priority') == 'urgent' ? 'selected' : '' }}>عاجل</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <select name="department_id" class="form-select">
-                                <option value="">كل الأقسام</option>
-                                @foreach ($departments as $dept)
-                                    <option value="{{ $dept->id }}" {{ request('department_id') == $dept->id ? 'selected' : '' }}>
-                                        {{ $dept->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <button type="submit" class="btn btn-primary w-100">تطبيق الفلترة</button>
-                        </div>
+                        <select name="status" class="form-select" style="width:auto;min-width:150px;">
+                            <option value="">كل الحالات</option>
+                            <option value="planning" @selected(request('status') === 'planning')>قيد التخطيط</option>
+                            <option value="active" @selected(request('status') === 'active')>نشط</option>
+                            <option value="on_hold" @selected(request('status') === 'on_hold')>معلق</option>
+                            <option value="completed" @selected(request('status') === 'completed')>مكتمل</option>
+                            <option value="cancelled" @selected(request('status') === 'cancelled')>ملغي</option>
+                        </select>
+                        <select name="priority" class="form-select" style="width:auto;min-width:140px;">
+                            <option value="">كل الأولويات</option>
+                            <option value="low" @selected(request('priority') === 'low')>منخفض</option>
+                            <option value="medium" @selected(request('priority') === 'medium')>متوسط</option>
+                            <option value="high" @selected(request('priority') === 'high')>عالي</option>
+                            <option value="urgent" @selected(request('priority') === 'urgent')>عاجل</option>
+                        </select>
+                        <select name="department_id" class="form-select" style="width:auto;min-width:160px;">
+                            <option value="">كل الأقسام</option>
+                            @foreach ($departments as $dept)
+                                <option value="{{ $dept->id }}" @selected(request('department_id') == $dept->id)>{{ $dept->name }}</option>
+                            @endforeach
+                        </select>
+                        <button type="submit" class="admin-btn admin-btn-primary">
+                            <i class="ri-search-line"></i> بحث
+                        </button>
+                        <a href="{{ route('admin.projects.index') }}" class="admin-btn admin-btn-danger">
+                            <i class="ri-filter-off-line"></i> مسح
+                        </a>
                     </form>
                 </div>
-            </div>
 
-            <!-- جدول المشاريع -->
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">قائمة المشاريع ({{ $projects->total() }})</h5>
-                </div>
-                <div class="card-body">
+                <div class="admin-table-wrap">
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover">
+                        <table class="admin-data-table">
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>رقم المشروع</th>
-                                    <th>الاسم</th>
+                                    <th>المشروع</th>
                                     <th>القسم</th>
                                     <th>المدير</th>
-                                    <th>تاريخ البدء</th>
-                                    <th>نسبة الإنجاز</th>
+                                    <th>الإنجاز</th>
                                     <th>الحالة</th>
                                     <th>الأولوية</th>
-                                    <th>عدد المهام</th>
-                                    <th>الإجراءات</th>
+                                    <th>المهام</th>
+                                    <th>العمليات</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse ($projects as $project)
                                     <tr>
-                                        <td>{{ $loop->iteration }}</td>
-                                        <td><strong>{{ $project->project_code }}</strong></td>
+                                        <th class="row-number">{{ $projects->firstItem() + $loop->index }}</th>
                                         <td>
-                                            <strong>{{ $project->name_ar ?? $project->name }}</strong>
-                                            @if ($project->name_ar && $project->name)
-                                                <br><small class="text-muted">{{ $project->name }}</small>
-                                            @endif
+                                            <a href="{{ route('admin.projects.show', $project) }}" class="admin-user-link">
+                                                {{ $project->name_ar ?? $project->name }}
+                                            </a>
+                                            <small class="text-muted d-block">{{ $project->project_code }}</small>
                                         </td>
-                                        <td>{{ $project->department->name ?? '-' }}</td>
-                                        <td>{{ $project->manager->full_name ?? '-' }}</td>
-                                        <td>{{ $project->start_date->format('Y-m-d') }}</td>
-                                        <td>
-                                            <div class="progress" style="height: 20px;">
-                                                <div class="progress-bar" role="progressbar" style="width: {{ $project->progress }}%">
-                                                    {{ $project->progress }}%
-                                                </div>
+                                        <td>{{ $project->department->name ?? '—' }}</td>
+                                        <td>{{ $project->manager->full_name ?? '—' }}</td>
+                                        <td style="min-width:120px;">
+                                            <div class="progress" style="height:8px;border-radius:99px;">
+                                                <div class="progress-bar bg-primary" style="width:{{ $project->progress }}%"></div>
                                             </div>
+                                            <small class="text-muted">{{ $project->progress }}%</small>
                                         </td>
                                         <td>
-                                            <span class="badge bg-{{ $project->status == 'completed' ? 'success' : ($project->status == 'active' ? 'primary' : ($project->status == 'cancelled' ? 'danger' : 'warning')) }}">
-                                                {{ $project->status_name_ar }}
-                                            </span>
+                                            @php
+                                                $statusBadge = match ($project->status) {
+                                                    'active' => 'admin-badge-success',
+                                                    'completed' => 'admin-badge-role',
+                                                    'cancelled' => 'admin-badge-danger',
+                                                    default => 'admin-badge-warning',
+                                                };
+                                            @endphp
+                                            <span class="admin-badge {{ $statusBadge }}">{{ $project->status_name_ar }}</span>
                                         </td>
                                         <td>
-                                            <span class="badge bg-{{ $project->priority == 'urgent' ? 'danger' : ($project->priority == 'high' ? 'warning' : 'info') }}">
+                                            <span class="admin-badge {{ $project->priority === 'urgent' ? 'admin-badge-danger' : ($project->priority === 'high' ? 'admin-badge-warning' : 'admin-badge-muted') }}">
                                                 {{ $project->priority_name_ar }}
                                             </span>
                                         </td>
-                                        <td>{{ $project->tasks_count }}</td>
+                                        <td><span class="admin-badge admin-badge-muted">{{ $project->tasks_count }}</span></td>
                                         <td>
-                                            @can('project-show')
-                                            <a href="{{ route('admin.projects.show', $project->id) }}" class="btn btn-sm btn-primary" title="عرض">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            @endcan
-                                            @can('project-edit')
-                                            <a href="{{ route('admin.projects.edit', $project->id) }}" class="btn btn-sm btn-info" title="تعديل">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            @endcan
-                                            @can('project-delete')
-                                            <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="{{ $project->id }}" title="حذف">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                            @endcan
+                                            <div class="admin-row-actions dropdown">
+                                                <button class="admin-kebab-btn" type="button" data-bs-toggle="dropdown">
+                                                    <i class="ri-more-2-fill"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    @can('project-show')
+                                                        <li>
+                                                            <a class="dropdown-item" href="{{ route('admin.projects.show', $project) }}">
+                                                                <i class="ri-eye-line text-info me-2"></i>عرض
+                                                            </a>
+                                                        </li>
+                                                    @endcan
+                                                    @can('project-edit')
+                                                        <li>
+                                                            <a class="dropdown-item" href="{{ route('admin.projects.edit', $project) }}">
+                                                                <i class="ri-edit-line text-primary me-2"></i>تعديل
+                                                            </a>
+                                                        </li>
+                                                    @endcan
+                                                    @can('project-delete')
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li>
+                                                            <button type="button" class="dropdown-item text-danger border-0 bg-transparent w-100 text-start"
+                                                                    data-delete-url="{{ route('admin.projects.destroy', $project) }}"
+                                                                    data-delete-message="هل أنت متأكد من حذف المشروع <strong>{{ $project->name_ar ?? $project->name }}</strong>؟">
+                                                                <i class="ri-delete-bin-line me-2"></i>حذف
+                                                            </button>
+                                                        </li>
+                                                    @endcan
+                                                </ul>
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="11" class="text-center">لا توجد مشاريع</td>
+                                        <td colspan="9">
+                                            <div class="admin-empty-state">
+                                                <i class="ri-folder-open-line"></i>
+                                                لا توجد مشاريع مطابقة
+                                            </div>
+                                        </td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
-                    <div class="mt-3">
+                </div>
+
+                <div class="admin-table-footer">
+                    <div class="admin-table-meta">
+                        @if ($projects->total() > 0)
+                            عرض {{ $projects->firstItem() }} إلى {{ $projects->lastItem() }} من {{ $projects->total() }}
+                        @else
+                            لا توجد نتائج
+                        @endif
+                    </div>
+                    <div class="admin-pagination">
                         {{ $projects->withQueryString()->links() }}
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Modal حذف -->
-    <div class="modal fade" id="deleteModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form method="POST" action="" id="deleteForm">
-                    @csrf
-                    @method('DELETE')
-                    <div class="modal-header">
-                        <h5 class="modal-title">تأكيد الحذف</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>هل أنت متأكد من حذف هذا المشروع؟</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                        <button type="submit" class="btn btn-danger">حذف</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 @stop
-
-@section('js')
-<script>
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const id = this.getAttribute('data-id');
-            // إنشاء URL بشكل صحيح
-            const deleteUrl = '{{ url("admin/projects") }}/' + id;
-            document.getElementById('deleteForm').action = deleteUrl;
-            new bootstrap.Modal(document.getElementById('deleteModal')).show();
-        });
-    });
-</script>
-@stop
-

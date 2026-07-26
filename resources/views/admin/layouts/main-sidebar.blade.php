@@ -639,7 +639,7 @@
                         <!-- End::slide has-sub -->
 
                         <!-- Start::slide has-sub - إدارة المهام والمشاريع -->
-                        @canAny(['project-list', 'task-list'])
+                        @canAny(['project-list', 'task-list', 'company-bank-account-list', 'fund-transfer-list'])
                         <li class="slide has-sub {{ sidebar_section_class('projects') }}">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
@@ -660,6 +660,22 @@
                                     <a href="{{route("admin.tasks.index")}}" class="side-menu__item">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
                                         <span class="side-menu__label">المهام</span>
+                                    </a>
+                                </li>
+                                @endcan
+                                @can('company-bank-account-list')
+                                <li class="slide">
+                                    <a href="{{ route('admin.company-bank-accounts.index') }}" class="side-menu__item">
+                                        <i class="ri-bank-line side-menu__icon"></i>
+                                        <span class="side-menu__label">حسابات الشركة</span>
+                                    </a>
+                                </li>
+                                @endcan
+                                @can('fund-transfer-list')
+                                <li class="slide">
+                                    <a href="{{ route('admin.fund-transfers.index') }}" class="side-menu__item">
+                                        <i class="ri-exchange-dollar-line side-menu__icon"></i>
+                                        <span class="side-menu__label">التحويلات المالية</span>
                                     </a>
                                 </li>
                                 @endcan

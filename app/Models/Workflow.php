@@ -61,6 +61,7 @@ class Workflow extends Model
             'employee_job_change' => 'تغيير وظيفي',
             'ticket_request' => 'تذكرة',
             'project_time_entry' => 'وقت مشروع',
+            'fund_transfer' => 'تحويل مالي',
             'task_approval' => 'موافقة مهمة',
             'performance_review' => 'تقييم الأداء',
             'overtime_request' => 'عمل إضافي',

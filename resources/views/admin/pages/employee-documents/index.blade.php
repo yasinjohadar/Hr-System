@@ -83,7 +83,7 @@
                                 @forelse ($documents as $document)
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
-                                        <td><strong>{{ $document->employee->full_name }}</strong></td>
+                                        <td><strong>{{ $document->employee->full_name ?? 'موظف محذوف' }}</strong></td>
                                         <td><span class="badge bg-info">{{ $document->document_type_name_ar }}</span></td>
                                         <td>{{ $document->title }}</td>
                                         <td>{{ $document->issue_date ? $document->issue_date->format('Y-m-d') : '-' }}</td>

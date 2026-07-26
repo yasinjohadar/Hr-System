@@ -2,6 +2,7 @@
 
 use App\Models\EmployeeJobChange;
 use App\Models\ExpenseRequest;
+use App\Models\FundTransfer;
 use App\Models\LeaveRequest;
 use App\Models\ProjectTimeEntry;
 use App\Models\Ticket;
@@ -67,6 +68,17 @@ return [
             'show_route' => null,
             'approve_route' => null,
             'reject_route' => null,
+        ],
+        'fund_transfer' => [
+            'label_ar' => 'تحويل مالي',
+            'model' => FundTransfer::class,
+            'status_field' => 'status',
+            'pending_values' => ['pending'],
+            'team_filter' => 'fund_transfer',
+            'with' => ['requester', 'project', 'stage', 'currency'],
+            'show_route' => 'admin.fund-transfers.show',
+            'approve_route' => 'admin.fund-transfers.approve',
+            'reject_route' => 'admin.fund-transfers.reject',
         ],
     ],
 

@@ -37,7 +37,9 @@ class UserController extends Controller
     // تأكد أن المستخدم مصادق أولًا ثم تحقق من الصلاحيات
     $this->middleware('auth');
 
-    $this->middleware('permission:user-list')->only('index');
+    // تحذير أمني: أي دالة عامة غير مُدرَجة في أسطر ->only() أدناه تكون مفتوحة
+    // لأي مستخدم يمرّ عبر middleware المسار. أضِف كل دالة جديدة هنا فوراً.
+    $this->middleware('permission:user-list')->only(['index', 'search']);
     $this->middleware('permission:user-create')->only(['create', 'store']);
     $this->middleware('permission:user-edit')->only(['edit', 'update']);
     $this->middleware('permission:user-delete')->only('destroy');

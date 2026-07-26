@@ -64,17 +64,17 @@ trait LogsActivity
      */
     protected function getActivityDescription($action)
     {
+        if (method_exists($this, 'activityDescription') && is_callable([$this, 'activityDescription'])) {
+            return $this->activityDescription($action);
+        }
+
         $modelName = class_basename($this);
-        $actionAr = match($action) {
+        $actionAr = match ($action) {
             'create' => 'إنشاء',
             'update' => 'تحديث',
             'delete' => 'حذف',
             default => $action,
         };
-
-        if (method_exists($this, 'getActivityDescription')) {
-            return $this->getActivityDescription($action);
-        }
 
         return "$actionAr $modelName";
     }

@@ -43,8 +43,11 @@ use App\Http\Controllers\Admin\DisciplinaryActionController;
 use App\Http\Controllers\Admin\EmployeeViolationController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\ProjectMemberController;
+use App\Http\Controllers\Admin\ProjectStageController;
 use App\Http\Controllers\Admin\ProjectDocumentController;
 use App\Http\Controllers\Admin\ProjectTimeEntryController;
+use App\Http\Controllers\Admin\CompanyBankAccountController;
+use App\Http\Controllers\Admin\FundTransferController;
 use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\OrganizationChartController;
 use App\Http\Controllers\Admin\EmployeeDirectoryController;
@@ -288,11 +291,23 @@ Route::middleware(['auth', 'check.user.active', 'ensure.admin', 'two.factor'])->
     Route::get('projects/{project}/time-entries/export', [ProjectController::class, 'exportTimeEntries'])->name('projects.time-entries.export');
     Route::post('projects/{project}/members', [ProjectMemberController::class, 'store'])->name('projects.members.store');
     Route::delete('projects/{project}/members/{member}', [ProjectMemberController::class, 'destroy'])->name('projects.members.destroy');
+    Route::delete('projects/{project}/stages/{stage}/members/{stageMember}', [ProjectMemberController::class, 'destroyStageMember'])->name('projects.stages.members.destroy');
+    Route::post('projects/{project}/stages', [ProjectStageController::class, 'store'])->name('projects.stages.store');
+    Route::put('projects/{project}/stages/{stage}', [ProjectStageController::class, 'update'])->name('projects.stages.update');
+    Route::delete('projects/{project}/stages/{stage}', [ProjectStageController::class, 'destroy'])->name('projects.stages.destroy');
     Route::post('projects/{project}/documents', [ProjectDocumentController::class, 'store'])->name('projects.documents.store');
     Route::delete('projects/{project}/documents/{document}', [ProjectDocumentController::class, 'destroy'])->name('projects.documents.destroy');
     Route::post('projects/{project}/time-entries', [ProjectTimeEntryController::class, 'store'])->name('projects.time-entries.store');
     Route::delete('projects/{project}/time-entries/{timeEntry}', [ProjectTimeEntryController::class, 'destroy'])->name('projects.time-entries.destroy');
     Route::resource('projects', ProjectController::class);
+
+    Route::resource('company-bank-accounts', CompanyBankAccountController::class);
+    Route::get('fund-transfers', [FundTransferController::class, 'index'])->name('fund-transfers.index');
+    Route::get('fund-transfers/create', [FundTransferController::class, 'create'])->name('fund-transfers.create');
+    Route::post('fund-transfers', [FundTransferController::class, 'store'])->name('fund-transfers.store');
+    Route::get('fund-transfers/{fundTransfer}', [FundTransferController::class, 'show'])->name('fund-transfers.show');
+    Route::post('fund-transfers/{fundTransfer}/approve', [FundTransferController::class, 'approve'])->name('fund-transfers.approve');
+    Route::post('fund-transfers/{fundTransfer}/reject', [FundTransferController::class, 'reject'])->name('fund-transfers.reject');
 
     // Routes للمهام
     Route::resource('tasks', TaskController::class);

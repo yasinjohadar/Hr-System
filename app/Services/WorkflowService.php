@@ -286,6 +286,23 @@ class WorkflowService
             return;
         }
 
+        if ($entity instanceof \App\Models\FundTransfer) {
+            if ($status === 'approved') {
+                app(FundTransferService::class)->executeApproved($entity);
+
+                return;
+            }
+            if ($status === 'rejected') {
+                app(FundTransferService::class)->reject(
+                    $entity,
+                    auth()->user() ?? $entity->requester,
+                    $rejectionReason
+                );
+
+                return;
+            }
+        }
+
         if ($entity instanceof \App\Models\Ticket) {
             $status = $status === 'approved' ? 'open' : ($status === 'rejected' ? 'rejected' : $status);
         }

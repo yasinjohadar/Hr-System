@@ -5,7 +5,10 @@ use App\Http\Controllers\Employee\SelfServiceController;
 use App\Http\Controllers\Employee\LoginByCodeController;
 
 // الدخول بكود (متاح للجميع بدون تسجيل دخول)
-Route::prefix('employee')->name('employee.')->group(function () {
+// throttle إجباري: الكود يمنح دخولاً كاملاً (بما فيه حسابات الإدارة)، فبدون تقييد
+// يمكن تخمينه بعدد محاولات غير محدود خلال مدة صلاحيته.
+// المُحدِّد 'login-code' مُعرَّف في AppServiceProvider ويحتسب الطلبات الحاملة لكود فقط.
+Route::prefix('employee')->name('employee.')->middleware('throttle:login-code')->group(function () {
     Route::get('/login-by-code', [LoginByCodeController::class, 'show'])->name('login-by-code');
     Route::post('/login-by-code', [LoginByCodeController::class, 'useCode'])->name('login-by-code.use');
 });

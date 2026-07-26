@@ -8,6 +8,7 @@ use App\Models\LeaveRequest;
 use App\Models\OvertimeRecord;
 use App\Models\Payroll;
 use App\Models\PerformanceReview;
+use App\Models\FundTransfer;
 use App\Models\ProjectTimeEntry;
 use App\Models\Ticket;
 
@@ -23,6 +24,7 @@ class WorkflowEntityType
         'PerformanceReview' => PerformanceReview::class,
         'Ticket' => Ticket::class,
         'ProjectTimeEntry' => ProjectTimeEntry::class,
+        'FundTransfer' => FundTransfer::class,
     ];
 
     /**

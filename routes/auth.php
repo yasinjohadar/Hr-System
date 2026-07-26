@@ -16,7 +16,10 @@ Route::middleware('guest')->group(function () {
     Route::get('register', [RegisteredUserController::class, 'create'])
         ->name('register');
 
-    Route::post('register', [RegisteredUserController::class, 'store']);
+    // throttle: التسجيل الذاتي مفتوح للعامة، فيُقيَّد لمنع إنشاء حسابات آلي.
+    // مُحدِّد مُسمّى بمفتاح مستقل حتى لا يتشارك العدّاد مع بقية مسارات الزوار.
+    Route::post('register', [RegisteredUserController::class, 'store'])
+        ->middleware('throttle:register');
 
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
@@ -59,8 +62,18 @@ Route::middleware('auth')->group(function () {
         ->name('logout');
 
     Route::get('two-factor/challenge', [TwoFactorController::class, 'challenge'])->name('two-factor.challenge');
-    Route::post('two-factor/verify', [TwoFactorController::class, 'verify'])->name('two-factor.verify');
     Route::get('two-factor/setup', [TwoFactorController::class, 'setup'])->name('two-factor.setup');
-    Route::post('two-factor/confirm', [TwoFactorController::class, 'confirmSetup'])->name('two-factor.confirm');
-    Route::post('two-factor/disable', [TwoFactorController::class, 'disable'])->name('two-factor.disable');
+
+    // throttle على كل مسار يستهلك كوداً سرياً — بدونه يمكن تخمين رمز الـ 6 أرقام
+    // أو أحد رموز الاستعادة الثمانية بعدد محاولات غير محدود.
+    // المُحدِّد 'two-factor' يفصل العدّاد لكل مسار على حدة (AppServiceProvider).
+    Route::post('two-factor/verify', [TwoFactorController::class, 'verify'])
+        ->middleware('throttle:two-factor')
+        ->name('two-factor.verify');
+    Route::post('two-factor/confirm', [TwoFactorController::class, 'confirmSetup'])
+        ->middleware('throttle:two-factor')
+        ->name('two-factor.confirm');
+    Route::post('two-factor/disable', [TwoFactorController::class, 'disable'])
+        ->middleware('throttle:two-factor')
+        ->name('two-factor.disable');
 });

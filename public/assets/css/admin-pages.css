@@ -205,6 +205,12 @@
     transform: translateY(-1px);
 }
 
+.admin-btn-sm {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8rem;
+    border-radius: 8px;
+}
+
 .admin-btn-primary {
     background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
     color: #fff !important;
