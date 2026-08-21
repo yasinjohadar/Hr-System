@@ -166,6 +166,60 @@
     padding-inline-start: 2.2rem;
 }
 
+/*
+ * حقول الفلترة على سطر واحد.
+ *
+ * الصنف admin-filter-select كان مستخدماً في الـ blade بلا أي تعريف CSS،
+ * فتبقى .form-select على width:100% من Bootstrap — وداخل حاوية
+ * flex-wrap يأخذ كل حقل سطراً كاملاً، فتنزل الفلاتر عمودياً.
+ *
+ * flex: 1 1 <basis> مع min/max width يجعلها تتقاسم السطر وتتقلّص عند
+ * الحاجة، ثم تلتفّ تلقائياً على الشاشات الأصغر (انظر الاستعلامات أدناه).
+ */
+.admin-filters .admin-filter-select {
+    flex: 1 1 8rem;
+    width: auto;
+    min-width: 7rem;
+    max-width: 11rem;
+}
+
+/* حقل البحث يأخذ ضعف نصيب الحقول الأخرى — النص فيه أطول */
+.admin-filters .search-input-wrap {
+    flex: 2 1 13rem;
+}
+
+/* الأزرار لا تتقلّص ولا يُقطع نصّها */
+.admin-filters .admin-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+/* لوحي: الحقول تتقاسم السطر مثنى مثنى بدل التقلّص المفرط */
+@media (max-width: 991.98px) {
+    .admin-filters .admin-filter-select {
+        flex: 1 1 calc(50% - 0.3rem);
+        max-width: none;
+    }
+
+    .admin-filters .search-input-wrap {
+        flex: 1 1 100%;
+        max-width: none;
+    }
+}
+
+/* جوّال: حقل واحد لكل سطر، والزرّان يتقاسمان سطراً */
+@media (max-width: 575.98px) {
+    .admin-filters .admin-filter-select {
+        flex: 1 1 100%;
+        max-width: none;
+    }
+
+    .admin-filters .admin-btn {
+        flex: 1 1 calc(50% - 0.3rem);
+        justify-content: center;
+    }
+}
+
 .admin-filters .admin-filter-dates {
     display: flex;
     align-items: center;
@@ -308,6 +362,36 @@
 
 .admin-data-table tbody tr:hover {
     background: var(--list-hover-focus-bg, rgba(59, 130, 246, 0.04));
+}
+
+/*
+ * نسخة مصغّرة للجداول المتداخلة داخل النماذج (بنود الراتب مثلاً):
+ * حشو وخطّ أصغر، وبلا تخطيط أسطر ولا تلوين عند التمرير — الجدول هنا
+ * حقول إدخال لا بيانات للقراءة، فالتلوين يشوّش لا يساعد.
+ */
+.admin-data-table.admin-data-table-sm thead th {
+    padding: 0.55rem 0.6rem;
+    font-size: 0.74rem;
+}
+
+.admin-data-table.admin-data-table-sm tbody td,
+.admin-data-table.admin-data-table-sm tbody th {
+    padding: 0.45rem 0.5rem;
+    font-size: 0.8rem;
+}
+
+.admin-data-table.admin-data-table-sm tbody tr:nth-child(even) {
+    background: transparent;
+}
+
+.admin-data-table.admin-data-table-sm tbody tr:hover {
+    background: transparent;
+}
+
+.admin-data-table.admin-data-table-sm .form-control,
+.admin-data-table.admin-data-table-sm .form-select {
+    font-size: 0.82rem;
+    padding-block: 0.35rem;
 }
 
 .admin-data-table .row-number {
@@ -1876,7 +1960,20 @@ button.admin-report-stat-red:hover { border-color: rgba(239, 68, 68, 0.45); }
     margin-top: 0.15rem;
 }
 
-/* ===== Page banner (hero) ===== */
+/* ===== Page banner (hero) =====
+ *
+ * نفس تصميم .page-hero في صفحة التقارير (assets/css/admin-reports.css):
+ * بطاقة بلون السطح مع شريط لوني بعرض 4px على حافة البداية، بدل التدرّج
+ * الأزرق المصمت السابق. السبب أن التدرّج كان مثبّتاً على الأزرق ولا يتبع
+ * لون الواجهة، وكان لوحاً ساطعاً في الوضع الداكن.
+ *
+ * كل الألوان من رموز القالب، فلا حاجة لأي قاعدة dark منفصلة:
+ *   --custom-white       سطح البطاقة (يقلب مع data-theme-mode)
+ *   --default-border     الحدود
+ *   --default-text-color العنوان
+ *   --text-muted         الوصف
+ *   --primary-rgb        الشريط اللوني وخلفية الأيقونة
+ */
 .admin-page-banner {
     position: relative;
     display: flex;
@@ -1884,23 +1981,24 @@ button.admin-report-stat-red:hover { border-color: rgba(239, 68, 68, 0.45); }
     align-items: center;
     justify-content: space-between;
     gap: 1.25rem;
-    padding: 1.75rem 1.85rem;
+    padding: 1.35rem 1.5rem;
     margin-bottom: 1.25rem;
-    border-radius: 18px;
-    overflow: hidden;
-    background: linear-gradient(135deg, #1e40af 0%, #2563eb 42%, #3b82f6 72%, #60a5fa 100%);
-    box-shadow: 0 14px 42px rgba(37, 99, 235, 0.28);
-    isolation: isolate;
+    border: 1px solid var(--default-border);
+    border-inline-start: 4px solid rgb(var(--primary-rgb));
+    border-radius: 0.75rem;
+    background: var(--custom-white);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    /* نفس تفاعل .report-card: رفع خفيف وظلّ أوضح */
+    transition: box-shadow 0.2s ease, transform 0.15s ease, border-color 0.2s ease;
 }
 
-.admin-page-banner::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background:
-        radial-gradient(circle at 85% 20%, rgba(255, 255, 255, 0.18) 0%, transparent 42%),
-        radial-gradient(circle at 10% 90%, rgba(255, 255, 255, 0.08) 0%, transparent 38%);
-    pointer-events: none;
+.admin-page-banner:hover {
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    transform: translateY(-2px);
+}
+
+[data-theme-mode="dark"] .admin-page-banner:hover {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
 .admin-page-banner-main {
@@ -1911,32 +2009,37 @@ button.admin-report-stat-red:hover { border-color: rgba(239, 68, 68, 0.45); }
     z-index: 1;
 }
 
+/* الأيقونة: مربّع بخلفية لون الواجهة الشفاف — نفس مقاس .page-hero-icon */
 .admin-page-banner-icon {
     width: 56px;
     height: 56px;
-    border-radius: 14px;
+    border-radius: 12px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.55rem;
-    color: #fff;
-    background: rgba(255, 255, 255, 0.18);
-    backdrop-filter: blur(6px);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    flex-shrink: 0;
+    font-size: 1.75rem;
+    color: rgb(var(--primary-rgb));
+    background: rgba(var(--primary-rgb), 0.12);
+    transition: background 0.2s ease;
+}
+
+.admin-page-banner:hover .admin-page-banner-icon {
+    background: rgba(var(--primary-rgb), 0.18);
 }
 
 .admin-page-banner-text h1 {
-    margin: 0 0 0.3rem;
-    font-size: clamp(1.25rem, 2vw, 1.55rem);
-    font-weight: 800;
-    color: #fff;
+    margin: 0 0 0.2rem;
+    font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+    font-weight: 700;
+    color: var(--default-text-color);
 }
 
 .admin-page-banner-text p {
     margin: 0;
-    font-size: 0.88rem;
-    color: rgba(255, 255, 255, 0.88);
-    font-weight: 600;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-muted);
 }
 
 .admin-page-banner-actions {
@@ -1947,15 +2050,22 @@ button.admin-report-stat-red:hover { border-color: rgba(239, 68, 68, 0.45); }
     gap: 0.5rem;
 }
 
+/*
+ * زرّ البنر (24 استخداماً): كان أبيض بنصّ ملوّن ليظهر على بنر مصمت.
+ * بعد أن صار البنر بطاقة بيضاء، انعكس المنطق: الزرّ يمتلئ بلون الواجهة
+ * ونصّه أبيض — وهو نفس شكل زرّ «عرض التقرير الشامل» في صفحة التقارير.
+ * الاسم admin-btn-light لم يُغيَّر تفادياً لتعديل 24 موضعاً في الـ blade.
+ */
 .admin-btn-light {
-    background: #fff !important;
-    color: #2563eb !important;
-    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.12);
+    background: rgb(var(--primary-rgb)) !important;
+    color: #fff !important;
+    box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.28);
 }
 
 .admin-btn-light:hover {
-    background: #f8fafc !important;
-    color: #1d4ed8 !important;
+    background: rgb(var(--primary-rgb)) !important;
+    color: #fff !important;
+    box-shadow: 0 6px 18px rgba(var(--primary-rgb), 0.38);
     transform: translateY(-2px);
 }
 
@@ -2028,9 +2138,12 @@ button.admin-report-stat-red:hover { border-color: rgba(239, 68, 68, 0.45); }
     border: 2px solid rgba(59, 130, 246, 0.15);
 }
 
-[data-theme-mode="dark"] .admin-page-banner {
-    box-shadow: 0 14px 42px rgba(0, 0, 0, 0.35);
-}
+/*
+ * الوضع الداكن لا يحتاج تجاوزاً للبنر: سطحه --custom-white وحدوده
+ * --default-border وعناوينه --default-text-color / --text-muted، وكلها
+ * معرَّفة داخل [data-theme-mode=dark] في styles.min.css فتقلب تلقائياً.
+ * التجاوز الوحيد هو ظلّ التمرير (مُعرَّف عند .admin-page-banner:hover).
+ */
 
 [data-theme-mode="dark"] .admin-row-actions .admin-kebab-btn {
     background: #141a26;

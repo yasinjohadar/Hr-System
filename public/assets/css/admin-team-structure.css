@@ -1,0 +1,54 @@
+/* ==========================================================================
+   هيكل القسم (admin/team/structure) — شجرة الأقسام التنظيمية
+
+   كل الألوان من رموز القالب (--primary-rgb، --default-border،
+   --default-text-color، --text-muted) فتتبع الوضع الليلي/النهاري تلقائياً
+   بلا أي قاعدة dark منفصلة.
+   ========================================================================== */
+
+/* شريط لوني على يمين البطاقة يضعف تدريجياً كلما زاد عمق التعشيش،
+   فيقرأ المستخدم المستوى الهرمي بنظرة واحدة قبل قراءة أي نص */
+.admin-org-node {
+    border-inline-start: 4px solid rgb(var(--primary-rgb));
+}
+
+.admin-org-node--level-1 {
+    border-inline-start-color: rgba(var(--primary-rgb), 0.55);
+}
+
+.admin-org-node--level-2 {
+    border-inline-start-color: rgba(var(--primary-rgb), 0.3);
+}
+
+.admin-org-node__icon {
+    background: rgba(var(--primary-rgb), 0.12) !important;
+    color: rgb(var(--primary-rgb));
+    font-size: 1rem;
+}
+
+/* صفّ رئيس القسم — مفصول بخط عن قائمة الموظفين تحته */
+.admin-org-node__manager {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding-bottom: 0.85rem;
+    margin-bottom: 0.85rem;
+    border-bottom: 1px solid var(--default-border);
+}
+
+.admin-org-node__employees {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.admin-org-node__employee {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+}
+
+.admin-org-node__employee .min-w-0 {
+    min-width: 0;
+}

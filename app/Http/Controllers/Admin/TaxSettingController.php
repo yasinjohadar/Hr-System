@@ -38,9 +38,37 @@ class TaxSettingController extends Controller
             $query->where('is_active', $request->input('is_active') == '1');
         }
 
+        // فلتر طريقة الحساب — العمود موجود ويُعرض في الجدول، ولم يكن مفلتراً
+        if ($request->filled('calculation_method')) {
+            $query->where('calculation_method', $request->input('calculation_method'));
+        }
+
         $taxSettings = $query->latest()->paginate(20);
 
-        return view('admin.pages.tax-settings.index', compact('taxSettings'));
+        // فلترة عبر AJAX: نرجّع الأجزاء المتغيّرة فقط.
+        // الإحصاءات ليست ضمنها لأنها إجماليات عامة لا تتأثّر بالفلاتر.
+        if ($request->ajax() || $request->boolean('ajax')) {
+            return response()->json([
+                'html_rows'       => view('admin.pages.tax-settings._index_rows', compact('taxSettings'))->render(),
+                'html_pagination' => view('admin.pages.tax-settings._index_pagination', compact('taxSettings'))->render(),
+                'html_meta'       => view('admin.pages.tax-settings._index_meta', compact('taxSettings'))->render(),
+                'total'           => $taxSettings->total(),
+            ]);
+        }
+
+        // إحصاءات البنر — استعلام واحد مجمّع بدل عدّة count() منفصلة
+        $counts = TaxSetting::selectRaw('type, COUNT(*) as aggregate')
+            ->groupBy('type')
+            ->pluck('aggregate', 'type');
+
+        $stats = [
+            'total'            => (int) $counts->sum(),
+            'income_tax'       => (int) $counts->get('income_tax', 0),
+            'social_insurance' => (int) $counts->get('social_insurance', 0),
+            'active'           => (int) TaxSetting::where('is_active', true)->count(),
+        ];
+
+        return view('admin.pages.tax-settings.index', compact('taxSettings', 'stats'));
     }
 
     public function create()

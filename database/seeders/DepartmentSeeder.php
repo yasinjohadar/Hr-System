@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Department;
-use App\Models\Employee;
 use Illuminate\Database\Seeder;
 
 class DepartmentSeeder extends Seeder
@@ -68,22 +67,22 @@ class DepartmentSeeder extends Seeder
             );
         }
 
-        // تعيين مديرين للأقسام
-        $hrDept = Department::where('code', 'HR')->first();
-        $itDept = Department::where('code', 'IT')->first();
-        
-        if ($hrDept) {
-            $hrManager = Employee::where('department_id', $hrDept->id)->first();
-            if ($hrManager) {
-                $hrDept->update(['manager_id' => $hrManager->id]);
-            }
-        }
-        
-        if ($itDept) {
-            $itManager = Employee::where('department_id', $itDept->id)->first();
-            if ($itManager) {
-                $itDept->update(['manager_id' => $itManager->id]);
-            }
-        }
+        // تعيين مديرين للأقسام لا يحدث هنا.
+        //
+        // هذا السيدر يُشغَّل في "المرحلة 2: الهيكل التنظيمي" — قبل
+        // EmployeeSeeder ("المرحلة 3") في DatabaseSeeder — فلا يوجد أي
+        // موظف بعد عند تنفيذه على قاعدة جديدة. الكود القديم هنا كان
+        // يستعلم Employee::where(...)->first() في هذه اللحظة فيرجع دائماً
+        // null على تنفيذ نظيف، ثم — الأخطر — كان يمرّر $employee->id
+        // مباشرة كـ manager_id رغم أن العمود مفتاح أجنبي على users.id لا
+        // employees.id (انظر plan/department-head-runtime.md)، فيُخزَّن رقم
+        // سجل موظف عشوائي وكأنه معرّف مستخدم. تحقّقتُ: على القاعدة الحالية
+        // (المبنية بتشغيلات متكرّرة لا تشغيلة واحدة نظيفة) هذا أدّى فعلاً
+        // إلى تعيين مستخدمين حقيقيين لا علاقة لهم بالقسم كمديرين له.
+        //
+        // التعيين الصحيح — بعد وجود الموظفين، وعبر DepartmentHeadRoleService
+        // الذي يضبط manager_id بالمعرّف الصحيح ويمنح دور department_head
+        // تلقائياً — انتقل إلى DepartmentStructureSeeder (يُشغَّل بعد
+        // EmployeeSeeder في DatabaseSeeder).
     }
 }

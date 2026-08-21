@@ -158,13 +158,81 @@ public function index(Request $request)
      */
     public function show(string $id)
     {
-        $user = User::with(['roles', 'employee'])->findOrFail($id);
-        $lastSession = DB::table('sessions')
+        $user = User::with([
+            'roles',
+            'employee.department',
+            'employee.position',
+            'employee.branch',
+            'employee.manager',
+            'employee.creator',
+        ])->findOrFail($id);
+
+        $sessions = DB::table('sessions')
             ->where('user_id', $user->id)
             ->orderByDesc('last_activity')
-            ->first();
+            ->limit(8)
+            ->get();
 
-        return view('admin.pages.users.profile', compact('user', 'lastSession'));
+        $lastSession = $sessions->first();
+
+        // سجل الجلسات الأخيرة لعرضه في تبويب الأمان.
+        //
+        // device_type/browser/os/login_at في جدول sessions فارغة دائماً في
+        // هذه القاعدة (لا كتابة إليها من أي مكان في الكود) — تحقّقت: صفر من
+        // كل الجلسات المسجّلة. فبدل عرض أعمدة فاضية، نستخلص المتصفح ونظام
+        // التشغيل من user_agent الفعلي المخزَّن (وهو مملوء دائماً).
+        //
+        // كذلك is_current في القاعدة يساوي 1 على كل سطر بلا استثناء —
+        // معطَّل تماماً، لا يعكس شيئاً حقيقياً. "آخر نشاط" الحقيقي هو
+        // أحدث last_activity، فهو ما نستخدمه لتمييز آخر جلسة.
+        $onlineThreshold = now()->subMinutes(5)->timestamp;
+        $recentSessions = $sessions->map(function ($session) use ($lastSession, $onlineThreshold) {
+            $agent = $this->summarizeUserAgent($session->user_agent);
+
+            return (object) [
+                'ip_address'    => $session->ip_address,
+                'browser'       => $agent['browser'],
+                'os'            => $agent['os'],
+                'last_activity' => $session->last_activity,
+                'is_latest'     => $lastSession && $session->id === $lastSession->id,
+                'is_online_now' => $session->last_activity >= $onlineThreshold,
+            ];
+        });
+
+        return view('admin.pages.users.profile', compact('user', 'lastSession', 'recentSessions'));
+    }
+
+    /**
+     * استخلاص متصفّح ونظام تشغيل مقروءين من نص user_agent الخام —
+     * بلا مكتبة تحليل خارجية، فقط تحقّقات نصّية كافية للعرض.
+     *
+     * @return array{browser: string, os: string}
+     */
+    private function summarizeUserAgent(?string $userAgent): array
+    {
+        if (! $userAgent) {
+            return ['browser' => '—', 'os' => '—'];
+        }
+
+        $browser = match (true) {
+            str_contains($userAgent, 'Edg/') => 'Edge',
+            str_contains($userAgent, 'OPR/') || str_contains($userAgent, 'Opera') => 'Opera',
+            str_contains($userAgent, 'Chrome/') => 'Chrome',
+            str_contains($userAgent, 'Firefox/') => 'Firefox',
+            str_contains($userAgent, 'Safari/') => 'Safari',
+            default => 'متصفّح آخر',
+        };
+
+        $os = match (true) {
+            str_contains($userAgent, 'Windows') => 'Windows',
+            str_contains($userAgent, 'Mac OS') => 'macOS',
+            str_contains($userAgent, 'Android') => 'Android',
+            str_contains($userAgent, 'iPhone') || str_contains($userAgent, 'iPad') => 'iOS',
+            str_contains($userAgent, 'Linux') => 'Linux',
+            default => 'نظام آخر',
+        };
+
+        return ['browser' => $browser, 'os' => $os];
     }
 
     /**

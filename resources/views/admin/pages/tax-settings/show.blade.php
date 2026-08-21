@@ -22,21 +22,28 @@
 
 @section('content')
     <div class="main-content app-content">
-        <div class="container-fluid">
-            <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
-                <div class="my-auto">
-                    <h5 class="page-title fs-21 mb-1">تفاصيل إعداد الضريبة</h5>
-                    <p class="text-muted small mb-0">{{ $taxSetting->name_ar ?? $taxSetting->name }} — {{ $taxSetting->type_name_ar }}</p>
+        <div class="container-fluid admin-page-shell">
+            @include('admin.pages.users.partials.alerts')
+
+            <div class="admin-page-banner">
+                <div class="admin-page-banner-main">
+                    <span class="admin-page-banner-icon"><i class="ri-percent-line"></i></span>
+                    <div class="admin-page-banner-text">
+                        <h1>تفاصيل إعداد الضريبة</h1>
+                        <p>{{ $taxSetting->name_ar ?? $taxSetting->name }} — {{ $taxSetting->type_name_ar }}</p>
+                    </div>
                 </div>
-                <div class="d-flex flex-wrap gap-2 mt-2 mt-md-0">
-                    <a href="{{ route('admin.tax-settings.index') }}" class="btn btn-secondary btn-sm">
-                        <i class="fas fa-arrow-right me-1"></i>العودة للقائمة
-                    </a>
+                <div class="admin-page-banner-actions">
                     @can('tax-setting-edit')
-                        <a href="{{ route('admin.tax-settings.edit', $taxSetting->id) }}" class="btn btn-warning btn-sm">
-                            <i class="fas fa-edit me-1"></i>تعديل
+                        <a href="{{ route('admin.tax-settings.edit', $taxSetting->id) }}" class="admin-btn admin-btn-light">
+                            <i class="ri-pencil-line"></i>
+                            تعديل
                         </a>
                     @endcan
+                    <a href="{{ route('admin.tax-settings.index') }}" class="admin-btn admin-btn-secondary">
+                        <i class="ri-arrow-right-line"></i>
+                        العودة للقائمة
+                    </a>
                 </div>
             </div>
 
@@ -61,9 +68,9 @@
                             <div class="mb-3">
                                 <div class="text-white-75 small mb-2">الحالة</div>
                                 @if ($taxSetting->is_active)
-                                    <span class="badge bg-success fs-14 px-3 py-2">نشط</span>
+                                    <span class="admin-badge admin-badge-success">نشط</span>
                                 @else
-                                    <span class="badge bg-secondary fs-14 px-3 py-2">غير نشط</span>
+                                    <span class="admin-badge admin-badge-muted">غير نشط</span>
                                 @endif
                             </div>
                             <div class="mt-auto pt-3 border-top border-white border-opacity-25">
@@ -83,16 +90,14 @@
                 </div>
 
                 <div class="col-lg-8">
-                    <div class="card shadow-sm border-0 h-100">
-                        <div class="card-header bg-light py-3 border-bottom">
-                            <h6 class="mb-0 fw-semibold">
-                                <i class="fas fa-calculator text-primary me-2"></i>تفاصيل الحساب والمبالغ
-                            </h6>
+                    <div class="admin-page-card h-100">
+                        <div class="card-toolbar d-block">
+                            <h6 class="mb-0 fw-bold">تفاصيل الحساب والمبالغ</h6>
                             <small class="text-muted">طريقة الحساب، الحدود، والإعفاءات</small>
                         </div>
-                        <div class="card-body p-0">
+                        <div class="admin-form-body">
                             <div class="table-responsive">
-                                <table class="table table-hover mb-0">
+                                <table class="admin-data-table admin-data-table-sm">
                                     <tbody>
                                         <tr>
                                             <th scope="row" class="ps-4 py-3 align-middle" style="width:40%">
@@ -100,11 +105,11 @@
                                             </th>
                                             <td class="pe-4 py-3 align-middle fw-semibold">
                                                 @if($taxSetting->calculation_method == 'percentage')
-                                                    <span class="badge bg-primary-subtle text-primary border">نسبة مئوية</span>
+                                                    <span class="admin-badge admin-badge-role">نسبة مئوية</span>
                                                 @elseif($taxSetting->calculation_method == 'slab')
-                                                    <span class="badge bg-info-subtle text-dark border">شرائح</span>
+                                                    <span class="admin-badge admin-badge-role">شرائح</span>
                                                 @else
-                                                    <span class="badge bg-secondary-subtle text-dark border">مبلغ ثابت</span>
+                                                    <span class="admin-badge admin-badge-muted">مبلغ ثابت</span>
                                                 @endif
                                             </td>
                                         </tr>
@@ -175,17 +180,15 @@
             @if($taxSetting->slabs && count($taxSetting->slabs) > 0)
             <div class="row g-3 mt-1">
                 <div class="col-12">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-header bg-light py-3">
-                            <h6 class="mb-0 fw-semibold">
-                                <i class="fas fa-layer-group text-primary me-2"></i>شرائح الضريبة
-                            </h6>
+                    <div class="admin-page-card">
+                        <div class="card-toolbar d-block">
+                            <h6 class="mb-0 fw-bold">شرائح الضريبة</h6>
                             <small class="text-muted">تفصيل الشرائح ونسب الخصم لكل شريحة</small>
                         </div>
-                        <div class="card-body p-0">
+                        <div class="admin-form-body">
                             <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0">
-                                    <thead class="table-light">
+                                <table class="admin-data-table admin-data-table-sm">
+                                    <thead>
                                         <tr>
                                             <th class="ps-4">#</th>
                                             <th>من</th>
@@ -201,7 +204,7 @@
                                                 <td class="fw-semibold">{{ number_format($slab['min'] ?? 0, 2) }}</td>
                                                 <td class="fw-semibold">{{ number_format($slab['max'] ?? 0, 2) }}</td>
                                                 <td class="text-end">
-                                                    <span class="badge bg-primary-subtle text-primary">{{ $slab['rate'] ?? 0 }}%</span>
+                                                    <span class="admin-badge admin-badge-role">{{ $slab['rate'] ?? 0 }}%</span>
                                                 </td>
                                                 <td class="pe-4 text-end text-muted small">
                                                     {{ number_format($slab['min'] ?? 0, 0) }} — {{ number_format($slab['max'] ?? 0, 0) }}
@@ -219,13 +222,11 @@
 
             <div class="row g-3 mt-1 mb-4">
                 <div class="col-12">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-header bg-light py-3">
-                            <h6 class="mb-0 fw-semibold">
-                                <i class="fas fa-circle-info text-primary me-2"></i>بيانات السجل
-                            </h6>
+                    <div class="admin-page-card">
+                        <div class="card-toolbar d-block">
+                            <h6 class="mb-0 fw-bold">بيانات السجل</h6>
                         </div>
-                        <div class="card-body">
+                        <div class="admin-form-body">
                             <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-0">
                                 @if($taxSetting->creator)
                                 <div class="col border-bottom border-end-md p-3">

@@ -8,47 +8,36 @@
 @stop
 
 @section('content')
-    @if (\Session::has('success'))
-        <div class="alert alert-success">
-            <ul>
-                <li>{!! \Session::get('success') !!}</li>
-            </ul>
-        </div>
-    @endif
-
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
     <div class="main-content app-content">
-        <div class="container-fluid">
+        <div class="container-fluid admin-page-shell">
+            @include('admin.pages.users.partials.alerts')
 
-            <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
-                <div class="my-auto">
-                    <h5 class="page-title fs-21 mb-1">كافة الرواتب</h5>
+            <div class="admin-page-banner">
+                <div class="admin-page-banner-main">
+                    <span class="admin-page-banner-icon"><i class="ri-money-dollar-circle-line"></i></span>
+                    <div class="admin-page-banner-text">
+                        <h1>كافة الرواتب</h1>
+                        <p>إدارة رواتب الموظفين وبنودها التفصيلية وحالات الدفع</p>
+                    </div>
                 </div>
-                <div class="mt-2 mt-md-0">
-                    @can('salary-create')
-                        <a href="{{ route('admin.salaries.create') }}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-plus me-1"></i>إضافة راتب جديد
+                @can('salary-create')
+                    <div class="admin-page-banner-actions">
+                        <a href="{{ route('admin.salaries.create') }}" class="admin-btn admin-btn-light">
+                            <i class="ri-add-line"></i>
+                            إضافة راتب جديد
                         </a>
-                    @endcan
-                </div>
+                    </div>
+                @endcan
             </div>
 
-            <div class="card mb-3">
-                <div class="card-body py-3">
+            <div class="admin-page-card mb-3">
+                <div class="card-toolbar">
+                    {{-- الـ IDs هنا يقرأها سكربت الفلترة أسفل الصفحة — لا تُغيَّر --}}
                     <form id="salaries-filter-form" method="GET" action="{{ route('admin.salaries.index') }}"
-                        class="row g-2 align-items-end">
+                        class="row g-2 align-items-end w-100">
                         <div class="col-12 col-sm-6 col-md-4 col-xl-2">
-                            <label class="form-label small text-muted mb-0" for="salaries-filter-employee">الموظف</label>
-                            <select name="employee_id" id="salaries-filter-employee" class="form-select form-select-sm">
+                            <label class="admin-form-label mb-1" for="salaries-filter-employee">الموظف</label>
+                            <select name="employee_id" id="salaries-filter-employee" class="form-select admin-filter-select">
                                 <option value="">كل الموظفين</option>
                                 @foreach ($employees as $employee)
                                     <option value="{{ $employee->id }}"
@@ -59,8 +48,8 @@
                             </select>
                         </div>
                         <div class="col-12 col-sm-6 col-md-4 col-xl-2">
-                            <label class="form-label small text-muted mb-0" for="salaries-filter-month">الشهر</label>
-                            <select name="salary_month" id="salaries-filter-month" class="form-select form-select-sm">
+                            <label class="admin-form-label mb-1" for="salaries-filter-month">الشهر</label>
+                            <select name="salary_month" id="salaries-filter-month" class="form-select admin-filter-select">
                                 <option value="">كل الأشهر</option>
                                 @php
                                     $monthNames = ['', 'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
@@ -74,8 +63,8 @@
                             </select>
                         </div>
                         <div class="col-12 col-sm-6 col-md-4 col-xl-2">
-                            <label class="form-label small text-muted mb-0" for="salaries-filter-year">السنة</label>
-                            <select name="salary_year" id="salaries-filter-year" class="form-select form-select-sm">
+                            <label class="admin-form-label mb-1" for="salaries-filter-year">السنة</label>
+                            <select name="salary_year" id="salaries-filter-year" class="form-select admin-filter-select">
                                 <option value="">كل السنوات</option>
                                 @if ($years->isEmpty())
                                     <option value="{{ date('Y') }}"
@@ -93,8 +82,8 @@
                             </select>
                         </div>
                         <div class="col-12 col-sm-6 col-md-4 col-xl-2">
-                            <label class="form-label small text-muted mb-0" for="salaries-filter-payment">حالة الدفع</label>
-                            <select name="payment_status" id="salaries-filter-payment" class="form-select form-select-sm">
+                            <label class="admin-form-label mb-1" for="salaries-filter-payment">حالة الدفع</label>
+                            <select name="payment_status" id="salaries-filter-payment" class="form-select admin-filter-select">
                                 <option value="">كل الحالات</option>
                                 <option value="pending"
                                     {{ request()->filled('payment_status') && request('payment_status') === 'pending' ? 'selected' : '' }}>قيد الانتظار</option>
@@ -105,23 +94,27 @@
                             </select>
                         </div>
                         <div class="col-12 col-sm-6 col-md-4 col-xl-2">
-                            <label class="form-label small text-muted mb-0 d-block" for="salaries-filter-clear">&nbsp;</label>
-                            <button type="button" class="btn btn-sm btn-outline-secondary w-100 text-nowrap"
-                                id="salaries-filter-clear">إلغاء الفلترة</button>
+                            <label class="admin-form-label mb-1 d-block" for="salaries-filter-clear">&nbsp;</label>
+                            <button type="button" class="admin-btn admin-btn-danger w-100 text-nowrap"
+                                id="salaries-filter-clear">
+                                <i class="ri-filter-off-line"></i>
+                                إلغاء الفلترة
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <div class="card position-relative" id="salaries-table-card">
-                <div class="card-header d-flex align-items-center justify-content-between">
-                    <h5 class="card-title mb-0">قائمة الرواتب (<span id="salaries-total">{{ $salaries->total() }}</span>)</h5>
+            <div class="admin-page-card position-relative" id="salaries-table-card">
+                <div class="card-toolbar justify-content-between">
+                    <h5 class="mb-0 fw-bold">قائمة الرواتب (<span id="salaries-total">{{ $salaries->total() }}</span>)</h5>
                     <span id="salaries-loading" class="spinner-border spinner-border-sm text-primary d-none" role="status" aria-hidden="true"></span>
                 </div>
-                <div class="card-body">
+
+                <div class="admin-table-wrap">
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover align-middle table-nowrap mb-0">
-                            <thead class="table-light">
+                        <table class="admin-data-table">
+                            <thead>
                                 <tr>
                                     <th>#</th>
                                     <th>الموظف</th>
@@ -141,7 +134,17 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="mt-3" id="salaries-pagination">
+                </div>
+
+                <div class="admin-table-footer">
+                    <div class="admin-table-meta">
+                        @if ($salaries->total() > 0)
+                            عرض {{ $salaries->firstItem() }} إلى {{ $salaries->lastItem() }} من {{ $salaries->total() }} نتيجة
+                        @else
+                            لا توجد نتائج
+                        @endif
+                    </div>
+                    <div class="admin-pagination" id="salaries-pagination">
                         @include('admin.pages.salaries._index_pagination', ['salaries' => $salaries])
                     </div>
                 </div>

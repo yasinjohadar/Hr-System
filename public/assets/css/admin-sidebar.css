@@ -1,0 +1,345 @@
+/* ==========================================================================
+   الشريط الجانبي للإدارة — منقول حرفياً من مشروع
+   ClaudSoft Full Platform / claudSoft-lms_laravel
+   (public/assets/css/custom.css، الأسطر 10330–10546)
+
+   نفس المُحدِّدات ونفس القيم بالضبط: حجم الخط، المسافات، الحشو، الهوامش،
+   أنصاف الأقطار، وأحجام الأيقونات. أُبقيت الأسماء .admin-portal
+   و .admin-sidebar كما هي حتى تتطابق درجة التخصيص (specificity) مع
+   المرجع، فيتصرّف التتالي أمام styles.min.css بنفس الطريقة تماماً
+   (ملف styles.min.css متطابق في المشروعين — نفس بصمة MD5).
+
+   فرق وحيد بين المشروعين تعامَل معه في القسم الأخير:
+   المرجع يستخدم أيقونات خطّ <i class="fe fe-…">، وهذا النظام يستخدم
+   <svg> مضمّناً في 94 عنصراً. الأيقونة الخطّية تُرسم كحرف بحجم
+   font-size داخل مربّع 1.75rem، أما الـ SVG فيمتلئ بحجم عنصره كاملاً،
+   فأُضيف له حشو يعيد مساحة الرسم إلى نفس القياس البصري.
+   ========================================================================== */
+
+/* ==========================================================================
+   Admin portal — sidebar icons (colored rounded boxes)
+   ========================================================================== */
+.admin-portal .admin-sidebar .side-menu__item::before,
+.admin-portal .admin-sidebar .side-menu__item::after {
+    display: none !important;
+}
+
+.admin-portal .admin-sidebar .main-menu > .slide > .side-menu__item {
+    margin-inline: 0.35rem;
+    margin-block: 0;
+    border-radius: 8px;
+    gap: 0.65rem;
+    padding-block: 10px;
+    padding-inline-start: 18px;
+    padding-inline-end: 16px;
+    transition: background 0.2s ease, color 0.2s ease;
+    align-items: center;
+}
+
+.admin-portal .admin-sidebar .main-menu > .slide > .side-menu__item > .side-menu__icon {
+    width: 1.75rem;
+    height: 1.75rem;
+    min-width: 1.75rem;
+    margin: 0 !important;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    font-size: 0.9rem;
+    line-height: 1;
+    flex-shrink: 0;
+    color: var(--admin-sidebar-icon-fg, #6366f1);
+    background: var(--admin-sidebar-icon-bg, rgba(99, 102, 241, 0.12));
+    fill: currentColor;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.admin-portal .admin-sidebar svg.side-menu__icon {
+    width: 0.95rem;
+    height: 0.95rem;
+}
+
+.admin-portal .admin-sidebar svg.side-menu__icon path:not([fill="none"]) {
+    fill: currentColor;
+}
+
+.admin-portal .admin-sidebar svg.side-menu__icon [stroke] {
+    stroke: currentColor;
+}
+
+/* Per-item icon tones (top-level only) */
+.admin-portal .admin-sidebar .main-menu > .slide:nth-child(1) > .side-menu__item > .side-menu__icon { --admin-sidebar-icon-fg: #64748b; --admin-sidebar-icon-bg: rgba(100, 116, 139, 0.14); }
+.admin-portal .admin-sidebar .main-menu > .slide:nth-child(2) > .side-menu__item > .side-menu__icon { --admin-sidebar-icon-fg: #3b82f6; --admin-sidebar-icon-bg: rgba(59, 130, 246, 0.14); }
+.admin-portal .admin-sidebar .main-menu > .slide:nth-child(3) > .side-menu__item > .side-menu__icon { --admin-sidebar-icon-fg: #ec4899; --admin-sidebar-icon-bg: rgba(236, 72, 153, 0.14); }
+.admin-portal .admin-sidebar .main-menu > .slide:nth-child(4) > .side-menu__item > .side-menu__icon { --admin-sidebar-icon-fg: #8b5cf6; --admin-sidebar-icon-bg: rgba(139, 92, 246, 0.14); }
+.admin-portal .admin-sidebar .main-menu > .slide:nth-child(5) > .side-menu__item > .side-menu__icon { --admin-sidebar-icon-fg: #6366f1; --admin-sidebar-icon-bg: rgba(99, 102, 241, 0.14); }
+.admin-portal .admin-sidebar .main-menu > .slide:nth-child(6) > .side-menu__item > .side-menu__icon { --admin-sidebar-icon-fg: #14b8a6; --admin-sidebar-icon-bg: rgba(20, 184, 166, 0.14); }
+.admin-portal .admin-sidebar .main-menu > .slide:nth-child(7) > .side-menu__item > .side-menu__icon { --admin-sidebar-icon-fg: #a855f7; --admin-sidebar-icon-bg: rgba(168, 85, 247, 0.14); }
+.admin-portal .admin-sidebar .main-menu > .slide:nth-child(8) > .side-menu__item > .side-menu__icon { --admin-sidebar-icon-fg: #f59e0b; --admin-sidebar-icon-bg: rgba(245, 158, 11, 0.14); }
+.admin-portal .admin-sidebar .main-menu > .slide:nth-child(9) > .side-menu__item > .side-menu__icon { --admin-sidebar-icon-fg: #eab308; --admin-sidebar-icon-bg: rgba(234, 179, 8, 0.16); }
+.admin-portal .admin-sidebar .main-menu > .slide:nth-child(10) > .side-menu__item > .side-menu__icon { --admin-sidebar-icon-fg: #06b6d4; --admin-sidebar-icon-bg: rgba(6, 182, 212, 0.14); }
+.admin-portal .admin-sidebar .main-menu > .slide:nth-child(11) > .side-menu__item > .side-menu__icon { --admin-sidebar-icon-fg: #0ea5e9; --admin-sidebar-icon-bg: rgba(14, 165, 233, 0.14); }
+.admin-portal .admin-sidebar .main-menu > .slide:nth-child(12) > .side-menu__item > .side-menu__icon { --admin-sidebar-icon-fg: #d946ef; --admin-sidebar-icon-bg: rgba(217, 70, 239, 0.14); }
+.admin-portal .admin-sidebar .main-menu > .slide:nth-child(13) > .side-menu__item > .side-menu__icon { --admin-sidebar-icon-fg: #ef4444; --admin-sidebar-icon-bg: rgba(239, 68, 68, 0.14); }
+.admin-portal .admin-sidebar .main-menu > .slide:nth-child(14) > .side-menu__item > .side-menu__icon { --admin-sidebar-icon-fg: #22c55e; --admin-sidebar-icon-bg: rgba(34, 197, 94, 0.14); }
+.admin-portal .admin-sidebar .main-menu > .slide:nth-child(15) > .side-menu__item > .side-menu__icon { --admin-sidebar-icon-fg: #7c3aed; --admin-sidebar-icon-bg: rgba(124, 58, 237, 0.14); }
+.admin-portal .admin-sidebar .main-menu > .slide:nth-child(16) > .side-menu__item > .side-menu__icon { --admin-sidebar-icon-fg: #f97316; --admin-sidebar-icon-bg: rgba(249, 115, 22, 0.14); }
+.admin-portal .admin-sidebar .main-menu > .slide:nth-child(17) > .side-menu__item > .side-menu__icon { --admin-sidebar-icon-fg: #64748b; --admin-sidebar-icon-bg: rgba(100, 116, 139, 0.14); }
+.admin-portal .admin-sidebar .main-menu > .slide:nth-child(n+18) > .side-menu__item > .side-menu__icon { --admin-sidebar-icon-fg: #6366f1; --admin-sidebar-icon-bg: rgba(99, 102, 241, 0.14); }
+
+.admin-portal .admin-sidebar .main-menu > .slide > .side-menu__item:not(.active):hover {
+    background: rgba(59, 130, 246, 0.06);
+}
+
+.admin-portal .admin-sidebar .main-menu > .slide > .side-menu__item.active {
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
+    font-weight: 600;
+}
+
+.admin-portal .admin-sidebar .main-menu > .slide > .side-menu__item.active .side-menu__label,
+.admin-portal .admin-sidebar .main-menu > .slide > .side-menu__item.active .side-menu__angle {
+    color: #2563eb !important;
+}
+
+.admin-portal .admin-sidebar .main-menu > .slide > .side-menu__item.active > .side-menu__icon {
+    color: var(--admin-sidebar-icon-fg, #3b82f6);
+    background: var(--admin-sidebar-icon-bg, rgba(59, 130, 246, 0.14));
+}
+
+.admin-portal .admin-sidebar .slide.has-sub.open > .side-menu__item:not(.active) {
+    background: rgba(59, 130, 246, 0.05);
+    border-radius: 8px 8px 0 0;
+}
+
+.admin-portal .admin-sidebar .slide-menu.child1,
+.admin-portal .admin-sidebar .slide-menu.child2,
+.admin-portal .admin-sidebar .slide-menu.child3 {
+    margin: 0 0.35rem 0.1rem;
+    padding: 0.1rem 0;
+    border-radius: 0 0 8px 8px;
+    background: rgba(59, 130, 246, 0.03);
+    border: 1px solid rgba(59, 130, 246, 0.06);
+    border-top: none;
+}
+
+.admin-portal .admin-sidebar .slide-menu .side-menu__item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 6px;
+    margin-inline: 0.2rem;
+    margin-block: 0;
+    padding-block: 7px;
+    padding-inline-start: 10px;
+    padding-inline-end: 12px;
+    font-size: 0.82rem;
+}
+
+/* إخفاء النقطة الافتراضية عند وجود أيقونة */
+.admin-portal .admin-sidebar .slide-menu .side-menu__item:has(> i)::before,
+.admin-portal .admin-sidebar .slide-menu .side-menu__item:has(> svg.side-menu__icon)::before {
+    display: none !important;
+}
+
+/* أيقونات القوائم الفرعية — مربعات ملونة صغيرة */
+.admin-portal .admin-sidebar .slide-menu .side-menu__item > i.side-menu__icon,
+.admin-portal .admin-sidebar .slide-menu .side-menu__item > i.fe,
+.admin-portal .admin-sidebar .slide-menu .side-menu__item > i.fas,
+.admin-portal .admin-sidebar .slide-menu .side-menu__item > i.fab,
+.admin-portal .admin-sidebar .slide-menu .side-menu__item > i.far,
+.admin-portal .admin-sidebar .slide-menu .side-menu__item > i[class*="ri-"],
+.admin-portal .admin-sidebar .slide-menu .side-menu__item > svg.side-menu__icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    min-width: 1.5rem;
+    margin: 0 !important;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    line-height: 1;
+    flex-shrink: 0;
+    color: var(--admin-sub-icon-fg, #6366f1);
+    background: var(--admin-sub-icon-bg, rgba(99, 102, 241, 0.1));
+}
+
+/* تنويع ألوان أيقونات المستوى الأول */
+.admin-portal .admin-sidebar .slide-menu.child1 > .slide:nth-child(2) .side-menu__item > i,
+.admin-portal .admin-sidebar .slide-menu.child1 > .slide:nth-child(2) .side-menu__item > svg.side-menu__icon { --admin-sub-icon-fg: #3b82f6; --admin-sub-icon-bg: rgba(59, 130, 246, 0.1); }
+.admin-portal .admin-sidebar .slide-menu.child1 > .slide:nth-child(3) .side-menu__item > i,
+.admin-portal .admin-sidebar .slide-menu.child1 > .slide:nth-child(3) .side-menu__item > svg.side-menu__icon { --admin-sub-icon-fg: #8b5cf6; --admin-sub-icon-bg: rgba(139, 92, 246, 0.1); }
+.admin-portal .admin-sidebar .slide-menu.child1 > .slide:nth-child(4) .side-menu__item > i,
+.admin-portal .admin-sidebar .slide-menu.child1 > .slide:nth-child(4) .side-menu__item > svg.side-menu__icon { --admin-sub-icon-fg: #ec4899; --admin-sub-icon-bg: rgba(236, 72, 153, 0.1); }
+.admin-portal .admin-sidebar .slide-menu.child1 > .slide:nth-child(5) .side-menu__item > i,
+.admin-portal .admin-sidebar .slide-menu.child1 > .slide:nth-child(5) .side-menu__item > svg.side-menu__icon { --admin-sub-icon-fg: #14b8a6; --admin-sub-icon-bg: rgba(20, 184, 166, 0.1); }
+.admin-portal .admin-sidebar .slide-menu.child1 > .slide:nth-child(6) .side-menu__item > i,
+.admin-portal .admin-sidebar .slide-menu.child1 > .slide:nth-child(6) .side-menu__item > svg.side-menu__icon { --admin-sub-icon-fg: #f59e0b; --admin-sub-icon-bg: rgba(245, 158, 11, 0.1); }
+.admin-portal .admin-sidebar .slide-menu.child1 > .slide:nth-child(7) .side-menu__item > i,
+.admin-portal .admin-sidebar .slide-menu.child1 > .slide:nth-child(7) .side-menu__item > svg.side-menu__icon { --admin-sub-icon-fg: #06b6d4; --admin-sub-icon-bg: rgba(6, 182, 212, 0.1); }
+.admin-portal .admin-sidebar .slide-menu.child1 > .slide:nth-child(8) .side-menu__item > i,
+.admin-portal .admin-sidebar .slide-menu.child1 > .slide:nth-child(8) .side-menu__item > svg.side-menu__icon { --admin-sub-icon-fg: #22c55e; --admin-sub-icon-bg: rgba(34, 197, 94, 0.1); }
+.admin-portal .admin-sidebar .slide-menu.child1 > .slide:nth-child(n+9) .side-menu__item > i,
+.admin-portal .admin-sidebar .slide-menu.child1 > .slide:nth-child(n+9) .side-menu__item > svg.side-menu__icon { --admin-sub-icon-fg: #64748b; --admin-sub-icon-bg: rgba(100, 116, 139, 0.1); }
+
+.admin-portal .admin-sidebar .slide-menu.child2 .side-menu__item > i,
+.admin-portal .admin-sidebar .slide-menu.child3 .side-menu__item > i,
+.admin-portal .admin-sidebar .slide-menu.child2 .side-menu__item > svg.side-menu__icon,
+.admin-portal .admin-sidebar .slide-menu.child3 .side-menu__item > svg.side-menu__icon {
+    --admin-sub-icon-fg: #64748b;
+    --admin-sub-icon-bg: rgba(100, 116, 139, 0.1);
+    width: 1.35rem;
+    height: 1.35rem;
+    min-width: 1.35rem;
+    font-size: 0.72rem;
+}
+
+/* عناصر نصية بدون أيقونة — مسافة أقل */
+.admin-portal .admin-sidebar .slide-menu .side-menu__item:not(:has(> i)):not(:has(> svg.side-menu__icon)) {
+    padding-inline-start: 22px;
+}
+
+.admin-portal .admin-sidebar .slide-menu .side-menu__item:not(:has(> i)):not(:has(> svg.side-menu__icon))::before {
+    font-size: 8px;
+    inset-inline-start: 8px;
+}
+
+.admin-portal .admin-sidebar .slide-menu .side-menu__item.active > i,
+.admin-portal .admin-sidebar .slide-menu .side-menu__item.active > svg.side-menu__icon {
+    color: var(--admin-sub-icon-fg, #3b82f6);
+    background: var(--admin-sub-icon-bg, rgba(59, 130, 246, 0.12));
+}
+
+.admin-portal .admin-sidebar .slide-menu .side-menu__item:not(.active):hover {
+    background: rgba(59, 130, 246, 0.06);
+    color: #2563eb;
+}
+
+.admin-portal .admin-sidebar .slide-menu .side-menu__item.active {
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563eb !important;
+    font-weight: 600;
+}
+
+.admin-portal .admin-sidebar .side-menu__angle {
+    font-size: 0.85rem;
+    opacity: 0.55;
+}
+
+/*
+ * السهم كان ملاصقاً تقريباً لحافة الشريط (المرجع: inset-inline-end:1.2rem
+ * من حافة البند). نزيحه للداخل قليلاً بطلب صريح — لا نغيّر padding البند
+ * نفسه، فالتأثير مقصور على موضع السهم وحده.
+ *
+ * أول محاولة (1.5rem) كانت زيادة أكبر من المطلوب فقُلِّصت إلى 1.3rem —
+ * إزاحة أخفّ عن المرجع (1.2rem) لا تصل إلى حدّ الإزاحة الأولى.
+ */
+.admin-portal .admin-sidebar .side-menu__angle {
+    inset-inline-end: 1.3rem;
+}
+
+[data-theme-mode="dark"] .admin-portal .admin-sidebar .main-menu > .slide > .side-menu__item.active {
+    background: rgba(59, 130, 246, 0.16);
+    color: #93c5fd;
+}
+
+[data-theme-mode="dark"] .admin-portal .admin-sidebar .main-menu > .slide > .side-menu__item.active .side-menu__label,
+[data-theme-mode="dark"] .admin-portal .admin-sidebar .main-menu > .slide > .side-menu__item.active .side-menu__angle {
+    color: #93c5fd !important;
+}
+
+[data-theme-mode="dark"] .admin-portal .admin-sidebar .slide-menu.child1,
+[data-theme-mode="dark"] .admin-portal .admin-sidebar .slide-menu.child2,
+[data-theme-mode="dark"] .admin-portal .admin-sidebar .slide-menu.child3 {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* ==========================================================================
+   تكييف خاص بهذا المشروع — ليس في المرجع
+   ========================================================================== */
+
+/*
+ * أيقونة الخطّ في المرجع تُرسم كحرف بحجم font-size داخل مربّع 1.75rem،
+ * فيبقى حولها فراغ. أما الـ <svg> فيمتلئ بحجم عنصره كاملاً ويلمس حدود
+ * المربّع. الحشو أدناه يعيد مساحة الرسم إلى القياس البصري نفسه:
+ *   المستوى الأول: 28px مربّع − 14.4px رسم (0.9rem)  → حشو 6.8px
+ *   المستوى الفرعي: 24px مربّع − 12.5px رسم (0.78rem) → حشو 5.75px
+ */
+.admin-portal .admin-sidebar .main-menu > .slide > .side-menu__item > svg.side-menu__icon {
+    box-sizing: border-box;
+    width: 1.75rem;
+    height: 1.75rem;
+    min-width: 1.75rem;
+    padding: 0.425rem;
+}
+
+.admin-portal .admin-sidebar .slide-menu .side-menu__item > svg.side-menu__icon {
+    box-sizing: border-box;
+    padding: 0.36rem;
+}
+
+.admin-portal .admin-sidebar .slide-menu.child2 .side-menu__item > svg.side-menu__icon,
+.admin-portal .admin-sidebar .slide-menu.child3 .side-menu__item > svg.side-menu__icon {
+    padding: 0.32rem;
+}
+
+/*
+ * custom.css يفرض `a { font-weight: bold !important }` على كل الروابط،
+ * فتصبح كل عناوين القائمة عريضة — وهو أوضح فرق بصري عن المرجع، الذي
+ * يرث الوزن الافتراضي 400 من styles.min.css ويستخدم 600 للعنصر النشط فقط.
+ *
+ * القيمة هنا 700 لا 400: أسمك من المرجع بطلب صريح ("bold")، ورُفعت من
+ * 600 إلى 700 لاحقاً لنفس السبب. خط Cairo عند الأوزان المنخفضة يبدو
+ * رقيقاً في العربية أكثر من خطوط المرجع اللاتينية. Cairo محمّل كخط
+ * متغيّر (200..1000) فوزن 700 يُرسم فعلياً لا محاكاةً (بلا تغليظ صناعي
+ * يشوّه الحروف).
+ */
+.admin-portal .admin-sidebar .side-menu__item {
+    font-weight: 700 !important;
+}
+
+.admin-portal .admin-sidebar .side-menu__label {
+    font-weight: 700 !important;
+}
+
+.admin-portal .admin-sidebar .main-menu > .slide > .side-menu__item.active,
+.admin-portal .admin-sidebar .main-menu > .slide > .side-menu__item.active .side-menu__label,
+.admin-portal .admin-sidebar .slide-menu .side-menu__item.active,
+.admin-portal .admin-sidebar .slide-menu .side-menu__item.active .side-menu__label {
+    font-weight: 800 !important;
+}
+
+/*
+ * حجم الخط: المرجع يرث 0.85rem من styles.min.css. رُفع هنا بطلب صريح
+ * إلى 0.925rem للمستوى الأول و 0.875rem للقوائم الفرعية (كانت 0.82rem).
+ *
+ * line-height صار 1.4 لا 1: مع الحجم الأكبر، القيمة 1 تقصّ نزول حروف
+ * مثل ج/ح/ع وتلاصق الشكل. و padding-block رُفع معها حتى لا يضيق البند
+ * على النص الأطول.
+ */
+.admin-portal .admin-sidebar .side-menu__label {
+    font-size: 0.925rem;
+    line-height: 1.4;
+}
+
+/*
+ * المسافة العمودية بين البنود = padding-block لكل بند (margin-block صفر
+ * في الكتلة الأصلية أعلاه)، فتقليلها بنسبة 20% بطلب صريح يعني تقليل هذه
+ * القيمة تحديداً: 11px → 9px للمستوى الأول، 8px → 6px للفرعي.
+ */
+.admin-portal .admin-sidebar .main-menu > .slide > .side-menu__item {
+    padding-block: 9px;
+}
+
+.admin-portal .admin-sidebar .slide-menu .side-menu__item {
+    font-size: 0.875rem;
+    padding-block: 6px;
+}
+
+.admin-portal .admin-sidebar .slide-menu .side-menu__label {
+    font-size: 0.875rem;
+}

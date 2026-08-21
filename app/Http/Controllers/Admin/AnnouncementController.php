@@ -38,7 +38,19 @@ class AnnouncementController extends Controller
 
         $announcements = $query->paginate(15);
 
-        return view('admin.pages.announcements.index', compact('announcements'));
+        // إحصاءات البنر — استعلام واحد مجمّع بدل أربعة count() منفصلة
+        $counts = Announcement::selectRaw('status, COUNT(*) as aggregate')
+            ->groupBy('status')
+            ->pluck('aggregate', 'status');
+
+        $stats = [
+            'total'     => (int) $counts->sum(),
+            'published' => (int) $counts->get('published', 0),
+            'draft'     => (int) $counts->get('draft', 0),
+            'archived'  => (int) $counts->get('archived', 0),
+        ];
+
+        return view('admin.pages.announcements.index', compact('announcements', 'stats'));
     }
 
     public function create()

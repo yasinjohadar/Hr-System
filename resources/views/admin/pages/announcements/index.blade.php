@@ -5,111 +5,183 @@
 @stop
 
 @section('content')
-    @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
+    {{--
+        نفس بنية بقية صفحات الإدارة (انظر admin/pages/department-heads/index.blade.php):
+        admin-page-shell ← admin-page-banner ← admin-report-stats ← admin-page-card
+        ← card-toolbar/admin-filters ← admin-table-wrap/admin-data-table ← admin-table-footer
+        كل التنسيق من assets/css/admin-pages.css فلا CSS خاص بهذه الصفحة.
+    --}}
     <div class="main-content app-content">
-        <div class="container-fluid">
-            <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
-                <div class="my-auto">
-                    <h5 class="page-title fs-21 mb-1">إعلانات الشركة</h5>
+        <div class="container-fluid admin-page-shell">
+            @include('admin.pages.users.partials.alerts')
+
+            <div class="admin-page-banner">
+                <div class="admin-page-banner-main">
+                    <span class="admin-page-banner-icon"><i class="ri-megaphone-line"></i></span>
+                    <div class="admin-page-banner-text">
+                        <h1>إعلانات الشركة</h1>
+                        <p>نشر الإعلانات وإدارة استهدافها ومواعيد نشرها وانتهائها</p>
+                    </div>
+                </div>
+                <div class="admin-page-banner-actions">
+                    <a href="{{ route('admin.announcements.create') }}" class="admin-btn admin-btn-light">
+                        <i class="ri-add-line"></i>
+                        إضافة إعلان جديد
+                    </a>
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-xl-12">
-                    <div class="card">
-                        <div class="card-header align-items-center d-flex gap-3">
-                            <a href="{{ route('admin.announcements.create') }}" class="btn btn-primary btn-sm">إضافة إعلان جديد</a>
-                            <form action="{{ route('admin.announcements.index') }}" method="GET" class="d-flex align-items-center gap-2 flex-wrap">
-                                <input style="width: 220px" type="text" name="search" class="form-control"
-                                    placeholder="بحث بالعنوان أو المحتوى" value="{{ request('search') }}">
-                                <select name="status" class="form-select" style="width: 140px">
-                                    <option value="">كل الحالات</option>
-                                    <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>مسودة</option>
-                                    <option value="published" {{ request('status') == 'published' ? 'selected' : '' }}>منشور</option>
-                                    <option value="archived" {{ request('status') == 'archived' ? 'selected' : '' }}>مؤرشف</option>
-                                </select>
-                                <button type="submit" class="btn btn-secondary">بحث</button>
-                                <a href="{{ route('admin.announcements.index') }}" class="btn btn-danger">مسح</a>
-                            </form>
-                        </div>
+            <div class="admin-report-stats admin-report-stats-4 mb-4">
+                <div class="admin-report-stat admin-report-stat-static admin-report-stat-blue">
+                    <span class="admin-report-stat-icon"><i class="ri-megaphone-line"></i></span>
+                    <span class="admin-report-stat-label">إجمالي الإعلانات</span>
+                    <span class="admin-report-stat-value" style="color:#2563eb;">{{ $stats['total'] }}</span>
+                </div>
+                <div class="admin-report-stat admin-report-stat-static admin-report-stat-green">
+                    <span class="admin-report-stat-icon"><i class="ri-checkbox-circle-line"></i></span>
+                    <span class="admin-report-stat-label">منشورة</span>
+                    <span class="admin-report-stat-value" style="color:#059669;">{{ $stats['published'] }}</span>
+                </div>
+                <div class="admin-report-stat admin-report-stat-static admin-report-stat-amber">
+                    <span class="admin-report-stat-icon"><i class="ri-draft-line"></i></span>
+                    <span class="admin-report-stat-label">مسودات</span>
+                    <span class="admin-report-stat-value" style="color:#d97706;">{{ $stats['draft'] }}</span>
+                </div>
+                <div class="admin-report-stat admin-report-stat-static admin-report-stat-cyan">
+                    <span class="admin-report-stat-icon"><i class="ri-archive-line"></i></span>
+                    <span class="admin-report-stat-label">مؤرشفة</span>
+                    <span class="admin-report-stat-value" style="color:#0891b2;">{{ $stats['archived'] }}</span>
+                </div>
+            </div>
 
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-striped table-hover align-middle table-nowrap mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>#</th>
-                                            <th>العنوان</th>
-                                            <th>الحالة</th>
-                                            <th>الاستهداف</th>
-                                            <th>تاريخ النشر</th>
-                                            <th>تاريخ الانتهاء</th>
-                                            <th>العمليات</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse ($announcements as $announcement)
-                                            <tr>
-                                                <th>{{ $loop->iteration + ($announcements->currentPage() - 1) * $announcements->perPage() }}</th>
-                                                <td>
-                                                    <strong>{{ $announcement->title }}</strong>
-                                                    @if ($announcement->content)
-                                                        <br><small class="text-muted">{{ Str::limit(strip_tags($announcement->content), 50) }}</small>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    @if ($announcement->status === 'published')
-                                                        <span class="badge bg-success">{{ $announcement->status_label }}</span>
-                                                    @elseif($announcement->status === 'draft')
-                                                        <span class="badge bg-secondary">{{ $announcement->status_label }}</span>
-                                                    @else
-                                                        <span class="badge bg-warning text-dark">{{ $announcement->status_label }}</span>
-                                                    @endif
-                                                </td>
-                                                <td>{{ $announcement->target_type_label }} @if($announcement->department) ({{ $announcement->department->name_ar ?? $announcement->department->name }}) @endif @if($announcement->branch) ({{ $announcement->branch->name_ar ?? $announcement->branch->name }}) @endif</td>
-                                                <td>{{ $announcement->publish_date?->format('Y-m-d') ?? '—' }}</td>
-                                                <td>{{ $announcement->expiry_date?->format('Y-m-d') ?? '—' }}</td>
-                                                <td>
-                                                    <a class="btn btn-info btn-sm me-1" href="{{ route('admin.announcements.show', $announcement) }}" title="عرض"><i class="fa-solid fa-eye"></i></a>
-                                                    <a class="btn btn-warning btn-sm me-1" href="{{ route('admin.announcements.edit', $announcement) }}" title="تعديل"><i class="fa-solid fa-pen-to-square"></i></a>
-                                                    <a class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#delete{{ $announcement->id }}" title="حذف"><i class="fa-solid fa-trash-can"></i></a>
-                                                </td>
-                                            </tr>
-                                            @include('admin.pages.announcements.delete')
-                                        @empty
-                                            <tr>
-                                                <td colspan="7" class="text-center text-muted py-4">لا توجد إعلانات.</td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                                @if ($announcements->hasPages())
-                                    <div class="mt-3">{{ $announcements->withQueryString()->links() }}</div>
-                                @endif
-                            </div>
+            <div class="admin-page-card">
+                <div class="card-toolbar">
+                    <form action="{{ route('admin.announcements.index') }}" method="GET" class="admin-filters w-100">
+                        <div class="search-input-wrap">
+                            <i class="ri-search-line"></i>
+                            <input type="text" name="search" class="form-control"
+                                   placeholder="بحث بالعنوان أو المحتوى"
+                                   value="{{ request('search') }}" autocomplete="off">
                         </div>
+                        <select name="status" class="form-select admin-filter-select">
+                            <option value="">كل الحالات</option>
+                            <option value="draft" @selected(request('status') === 'draft')>مسودة</option>
+                            <option value="published" @selected(request('status') === 'published')>منشور</option>
+                            <option value="archived" @selected(request('status') === 'archived')>مؤرشف</option>
+                        </select>
+                        <button type="submit" class="admin-btn admin-btn-primary">
+                            <i class="ri-search-line"></i>
+                            بحث
+                        </button>
+                        <a href="{{ route('admin.announcements.index') }}" class="admin-btn admin-btn-danger">
+                            <i class="ri-filter-off-line"></i>
+                            مسح
+                        </a>
+                    </form>
+                </div>
+
+                <div class="admin-table-wrap">
+                    <div class="table-responsive">
+                        <table class="admin-data-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>العنوان</th>
+                                    <th>الحالة</th>
+                                    <th>الاستهداف</th>
+                                    <th>تاريخ النشر</th>
+                                    <th>تاريخ الانتهاء</th>
+                                    <th>العمليات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($announcements as $announcement)
+                                    <tr>
+                                        <td>{{ $loop->iteration + ($announcements->currentPage() - 1) * $announcements->perPage() }}</td>
+                                        <td>
+                                            <div class="fw-semibold">{{ $announcement->title }}</div>
+                                            @if ($announcement->content)
+                                                <small class="text-muted">{{ Str::limit(strip_tags($announcement->content), 60) }}</small>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if ($announcement->status === 'published')
+                                                <span class="admin-badge admin-badge-success">{{ $announcement->status_label }}</span>
+                                            @elseif ($announcement->status === 'draft')
+                                                <span class="admin-badge admin-badge-muted">{{ $announcement->status_label }}</span>
+                                            @else
+                                                <span class="admin-badge admin-badge-warning">{{ $announcement->status_label }}</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <span class="admin-badge admin-badge-role">{{ $announcement->target_type_label }}</span>
+                                            @if ($announcement->department)
+                                                <span class="admin-badge admin-badge-muted">{{ $announcement->department->name_ar ?? $announcement->department->name }}</span>
+                                            @endif
+                                            @if ($announcement->branch)
+                                                <span class="admin-badge admin-badge-muted">{{ $announcement->branch->name_ar ?? $announcement->branch->name }}</span>
+                                            @endif
+                                        </td>
+                                        <td>{{ $announcement->publish_date?->format('Y-m-d') ?? '—' }}</td>
+                                        <td>{{ $announcement->expiry_date?->format('Y-m-d') ?? '—' }}</td>
+                                        <td>
+                                            <div class="admin-row-actions dropdown">
+                                                <button class="admin-kebab-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="ri-more-2-fill"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li>
+                                                        <a class="dropdown-item" href="{{ route('admin.announcements.show', $announcement) }}">
+                                                            <i class="ri-eye-line text-info me-2"></i>عرض الإعلان
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item" href="{{ route('admin.announcements.edit', $announcement) }}">
+                                                            <i class="ri-pencil-line text-primary me-2"></i>تعديل
+                                                        </a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li>
+                                                        {{-- المودال المركزي admin-confirm بدل مودال لكل صف --}}
+                                                        <button type="button"
+                                                                class="dropdown-item text-danger border-0 bg-transparent w-100 text-start"
+                                                                data-delete-url="{{ route('admin.announcements.destroy', $announcement) }}"
+                                                                data-delete-message="حذف الإعلان <strong>{{ $announcement->title }}</strong>؟">
+                                                            <i class="ri-delete-bin-line me-2"></i>حذف
+                                                        </button>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7">
+                                            <div class="admin-empty-state">
+                                                <i class="ri-megaphone-line"></i>
+                                                لا توجد إعلانات.
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="admin-table-footer">
+                    <div class="admin-table-meta">
+                        @if ($announcements->total() > 0)
+                            عرض {{ $announcements->firstItem() }} إلى {{ $announcements->lastItem() }} من {{ $announcements->total() }} نتيجة
+                        @else
+                            لا توجد نتائج
+                        @endif
+                    </div>
+                    <div class="admin-pagination">
+                        {{ $announcements->withQueryString()->links() }}
                     </div>
                 </div>
             </div>
         </div>
     </div>
-@stop
-
-@section('js')
 @stop

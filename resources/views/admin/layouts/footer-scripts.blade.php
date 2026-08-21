@@ -47,7 +47,16 @@
 
 <!-- Custom JS -->
 <script src="{{ asset('assets/js/custom.js') }}"></script>
+
+<!-- Theme Panel (إعدادات العرض) JS -->
+<script src="{{ asset('assets/js/theme-panel.js') }}"></script>
+
+<!-- Header People Search JS -->
+<script src="{{ asset('assets/js/admin-header-search.js') }}" defer></script>
 <script src="{{ asset('assets/js/admin-confirm.js') }}"></script>
+<script src="{{ asset('assets/js/admin-post-action.js') }}"></script>
+<script src="{{ asset('assets/js/admin-filter-table.js') }}" defer></script>
+<script src="{{ asset('assets/js/admin-header-panel.js') }}" defer></script>
 <script src="{{ asset('assets/js/admin-tables.js') }}"></script>
 
 <!-- Sidebar Active Link JS -->

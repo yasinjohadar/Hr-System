@@ -30,7 +30,15 @@ class TeamDelegationController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        return view('admin.pages.team.delegations', compact('delegations', 'receivedDelegations'));
+        // إحصاءات البنر — من المجموعتين المُحمَّلتين أصلاً، بلا استعلامات إضافية
+        $stats = [
+            'sent_active'     => $delegations->where('status', 'active')->count(),
+            'sent_total'      => $delegations->count(),
+            'received_active' => $receivedDelegations->where('status', 'active')->count(),
+            'received_total'  => $receivedDelegations->count(),
+        ];
+
+        return view('admin.pages.team.delegations', compact('delegations', 'receivedDelegations', 'stats'));
     }
 
     public function create()
@@ -40,12 +48,7 @@ class TeamDelegationController extends Controller
             ->orderBy('name')
             ->get();
 
-        $workflowTypes = [
-            'leave_request' => 'طلب الإجازة',
-            'expense_request' => 'طلب المصروفات',
-            'employee_job_change' => 'تغيير الوظيفة',
-            'overtime_request' => 'العمل الإضافي',
-        ];
+        $workflowTypes = ApprovalDelegation::WORKFLOW_TYPES;
 
         return view('admin.pages.team.delegation-create', compact('users', 'workflowTypes'));
     }

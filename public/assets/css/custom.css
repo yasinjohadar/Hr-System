@@ -8,22 +8,27 @@ a {
     font-weight: bold !important;
 }
 
-/* ===== Sidebar colored icons & active state ===== */
-.app-sidebar .main-menu {
+/* ===== Sidebar (بوابة الموظف) — colored icons & active state =====
+   أُعيد نطاق هذه القواعد من .app-sidebar إلى .employee-portal .app-sidebar
+   عند نقل تصميم شريط الإدارة من مشروع claudSoft-lms_laravel.
+   السبب: هذه القواعد تستخدم !important على الحشو ووزن الخط، فكانت
+   تتغلّب على القواعد المنقولة في assets/css/admin-sidebar.css. التقييد
+   بالبوابة يُبقي شريط الموظف كما كان بالضبط ويُخلي الطريق لشريط الإدارة. */
+.employee-portal .app-sidebar .main-menu {
     padding: 0.5rem 0 1rem;
 }
 
-.app-sidebar .slide-menu .side-menu__item {
+.employee-portal .app-sidebar .slide-menu .side-menu__item {
     display: flex;
     align-items: center;
     gap: 0.35rem;
 }
 
-.app-sidebar .slide__category {
+.employee-portal .app-sidebar .slide__category {
     display: none !important;
 }
 
-.app-sidebar .main-menu > .slide > .side-menu__item {
+.employee-portal .app-sidebar .main-menu > .slide > .side-menu__item {
     padding-block: 0.6rem !important;
     padding-inline: 0.85rem 1rem !important;
     margin-inline: 0.65rem;
@@ -33,8 +38,8 @@ a {
     transition: background 0.2s ease, color 0.2s ease;
 }
 
-.app-sidebar .slide-menu.child1 .side-menu__item,
-.app-sidebar .slide-menu.child2 .side-menu__item {
+.employee-portal .app-sidebar .slide-menu.child1 .side-menu__item,
+.employee-portal .app-sidebar .slide-menu.child2 .side-menu__item {
     padding-block: 0.45rem !important;
     padding-inline: 0.75rem 0.65rem !important;
     margin-inline: 0.5rem 0.75rem;
@@ -42,23 +47,23 @@ a {
     font-weight: 600 !important;
 }
 
-.app-sidebar .slide-menu.child1 .side-menu__item::before,
-.app-sidebar .slide-menu.child2 .side-menu__item::before,
-.app-sidebar .slide-menu.child3 .side-menu__item::before {
+.employee-portal .app-sidebar .slide-menu.child1 .side-menu__item::before,
+.employee-portal .app-sidebar .slide-menu.child2 .side-menu__item::before,
+.employee-portal .app-sidebar .slide-menu.child3 .side-menu__item::before {
     display: none !important;
 }
 
-.app-sidebar .slide.has-sub .slide-menu {
+.employee-portal .app-sidebar .slide.has-sub .slide-menu {
     padding-inline-start: 0.35rem !important;
     padding-block: 0.15rem 0.25rem;
 }
 
 /* العنصر النشط — تمييز لطيف */
-.app-sidebar .side-menu__item.active::before {
+.employee-portal .app-sidebar .side-menu__item.active::before {
     display: none !important;
 }
 
-.app-sidebar .side-menu__item.active {
+.employee-portal .app-sidebar .side-menu__item.active {
     position: relative;
     font-weight: 700 !important;
     color: rgb(var(--primary-rgb, 74, 125, 255)) !important;
@@ -66,46 +71,46 @@ a {
     box-shadow: inset 2px 0 0 0 rgba(var(--primary-rgb, 74, 125, 255), 0.55);
 }
 
-.app-sidebar .side-menu__item.active .side-menu__label {
+.employee-portal .app-sidebar .side-menu__item.active .side-menu__label {
     color: rgb(var(--primary-rgb, 74, 125, 255)) !important;
     font-weight: 700 !important;
 }
 
-.app-sidebar .side-menu__item.active .menu-icon-box {
+.employee-portal .app-sidebar .side-menu__item.active .menu-icon-box {
     opacity: 1;
 }
 
-.app-sidebar .slide.has-sub.open > .side-menu__item.active {
+.employee-portal .app-sidebar .slide.has-sub.open > .side-menu__item.active {
     background: rgba(var(--primary-rgb, 74, 125, 255), 0.05) !important;
     box-shadow: inset 2px 0 0 0 rgba(var(--primary-rgb, 74, 125, 255), 0.4);
 }
 
-.app-sidebar .slide.has-sub.open > .side-menu__item .side-menu__angle {
+.employee-portal .app-sidebar .slide.has-sub.open > .side-menu__item .side-menu__angle {
     transform: rotate(90deg);
     color: rgb(var(--primary-rgb, 74, 125, 255));
     opacity: 0.85;
 }
 
-.app-sidebar .slide.active > .side-menu__item:not(.active) {
+.employee-portal .app-sidebar .slide.active > .side-menu__item:not(.active) {
     color: var(--menu-prime-color);
 }
 
-.app-sidebar .side-menu__item:not(.active):hover {
+.employee-portal .app-sidebar .side-menu__item:not(.active):hover {
     background: rgba(var(--primary-rgb, 74, 125, 255), 0.04);
     border-radius: 12px;
 }
 
-[data-theme-mode="dark"] .app-sidebar .side-menu__item.active {
+[data-theme-mode="dark"] .employee-portal .app-sidebar .side-menu__item.active {
     background: rgba(var(--primary-rgb, 74, 125, 255), 0.12) !important;
     color: #a5c4fc !important;
     box-shadow: inset 2px 0 0 0 rgba(147, 197, 253, 0.7);
 }
 
-[data-theme-mode="dark"] .app-sidebar .side-menu__item.active .side-menu__label {
+[data-theme-mode="dark"] .employee-portal .app-sidebar .side-menu__item.active .side-menu__label {
     color: #a5c4fc !important;
 }
 
-.app-sidebar .side-menu__label {
+.employee-portal .app-sidebar .side-menu__label {
     font-size: 0.84rem;
     line-height: 1.35;
     font-weight: 600 !important;

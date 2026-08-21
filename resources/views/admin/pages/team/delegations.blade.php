@@ -1,4 +1,4 @@
-﻿@extends('admin.layouts.master')
+@extends('admin.layouts.master')
 
 @section('page-title')
     إدارة التفويض
@@ -6,33 +6,65 @@
 
 @section('content')
     <div class="main-content app-content">
-        <div class="container-fluid">
-            <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
-                <div>
-                    <h5 class="page-title fs-21 mb-1">إدارة التفويض</h5>
-                    <p class="text-muted fs-13 mb-0">تفويض صلاحيات الموافقة</p>
+        <div class="container-fluid admin-page-shell">
+            @include('admin.pages.users.partials.alerts')
+
+            <div class="admin-page-banner">
+                <div class="admin-page-banner-main">
+                    <span class="admin-page-banner-icon"><i class="ri-share-forward-line"></i></span>
+                    <div class="admin-page-banner-text">
+                        <h1>إدارة التفويض</h1>
+                        <p>تفويض صلاحيات الموافقة لموظف آخر خلال فترة محدّدة</p>
+                    </div>
                 </div>
-                <div class="d-flex gap-2">
-                    <a href="{{ route('admin.team.delegations.create') }}" class="btn btn-primary btn-sm">
-                        <i class="ri-add-line me-1"></i>تفويض جديد
+                <div class="admin-page-banner-actions">
+                    <a href="{{ route('admin.team.delegations.create') }}" class="admin-btn admin-btn-light">
+                        <i class="ri-add-line"></i>
+                        تفويض جديد
                     </a>
-                    <a href="{{ route('admin.team.dashboard') }}" class="btn btn-outline-primary btn-sm">
-                        <i class="ri-arrow-left-line me-1"></i>العودة
+                    <a href="{{ route('admin.team.dashboard') }}" class="admin-btn admin-btn-secondary">
+                        <i class="ri-arrow-right-line"></i>
+                        العودة
                     </a>
                 </div>
             </div>
 
-            <!-- Active Delegations -->
-            <div class="card custom-card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h6 class="card-title fw-semibold mb-0">
-                        <i class="ri-share-line me-1"></i>التفويضات الصادرة
-                    </h6>
+            <div class="admin-report-stats admin-report-stats-4 mb-4">
+                <div class="admin-report-stat admin-report-stat-static admin-report-stat-blue">
+                    <span class="admin-report-stat-icon"><i class="ri-share-line"></i></span>
+                    <span class="admin-report-stat-label">تفويضات صادرة</span>
+                    <span class="admin-report-stat-value" style="color:#2563eb;">{{ $stats['sent_total'] }}</span>
                 </div>
-                <div class="card-body p-0">
+                <div class="admin-report-stat admin-report-stat-static admin-report-stat-green">
+                    <span class="admin-report-stat-icon"><i class="ri-checkbox-circle-line"></i></span>
+                    <span class="admin-report-stat-label">صادرة ونشطة الآن</span>
+                    <span class="admin-report-stat-value" style="color:#059669;">{{ $stats['sent_active'] }}</span>
+                </div>
+                <div class="admin-report-stat admin-report-stat-static admin-report-stat-cyan">
+                    <span class="admin-report-stat-icon"><i class="ri-arrow-down-circle-line"></i></span>
+                    <span class="admin-report-stat-label">تفويضات مستلمة</span>
+                    <span class="admin-report-stat-value" style="color:#0891b2;">{{ $stats['received_total'] }}</span>
+                </div>
+                <div class="admin-report-stat admin-report-stat-static admin-report-stat-amber">
+                    <span class="admin-report-stat-icon"><i class="ri-flashlight-line"></i></span>
+                    <span class="admin-report-stat-label">مستلمة ونشطة الآن</span>
+                    <span class="admin-report-stat-value" style="color:#d97706;">{{ $stats['received_active'] }}</span>
+                </div>
+            </div>
+
+            {{-- التفويضات الصادرة --}}
+            <div class="admin-page-card mb-4">
+                <div class="card-toolbar">
+                    <h6 class="mb-0 fw-bold">
+                        <i class="ri-share-line text-primary me-2"></i>التفويضات الصادرة
+                    </h6>
+                    <small class="text-muted">صلاحيات فوّضتها أنت لموظفين آخرين</small>
+                </div>
+
+                <div class="admin-table-wrap">
                     <div class="table-responsive">
-                        <table class="table table-bordered table-hover text-nowrap mb-0">
-                            <thead class="table-light">
+                        <table class="admin-data-table">
+                            <thead>
                                 <tr>
                                     <th>المفوَّض</th>
                                     <th>أنواع الطلبات</th>
@@ -44,48 +76,60 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($delegations as $delegation)
+                                @forelse ($delegations as $delegation)
                                     <tr>
                                         <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="avatar avatar-sm bg-primary-transparent avatar-rounded me-2">
-                                                    {{ substr($delegation->delegate->name, 0, 1) }}
-                                                </div>
-                                                <span class="fw-medium">{{ $delegation->delegate->name }}</span>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="admin-avatar-initial" style="width:1.75rem; height:1.75rem; font-size:0.8rem;">
+                                                    {{ mb_substr($delegation->delegate->name, 0, 1) }}
+                                                </span>
+                                                <span class="fw-semibold">{{ $delegation->delegate->name }}</span>
                                             </div>
                                         </td>
                                         <td>
-                                            @if(empty($delegation->workflow_types))
-                                                <span class="badge bg-info-transparent">جميع الأنواع</span>
+                                            @if (empty($delegation->workflow_types))
+                                                <span class="admin-badge admin-badge-role">جميع الأنواع</span>
                                             @else
-                                                @foreach($delegation->workflow_types as $type)
-                                                    <span class="badge bg-primary-transparent me-1">{{ $type }}</span>
+                                                @foreach ($delegation->workflow_type_labels as $label)
+                                                    <span class="admin-badge admin-badge-muted">{{ $label }}</span>
                                                 @endforeach
                                             @endif
                                         </td>
-                                        <td>{{ $delegation->start_date->format('Y/m/d H:i') }}</td>
-                                        <td>{{ $delegation->end_date->format('Y/m/d H:i') }}</td>
+                                        <td class="small text-muted">{{ $delegation->start_date->format('Y-m-d H:i') }}</td>
+                                        <td class="small text-muted">{{ $delegation->end_date->format('Y-m-d H:i') }}</td>
                                         <td>
-                                            <span class="badge bg-{{ $delegation->status === 'active' ? 'success' : ($delegation->status === 'expired' ? 'danger' : 'warning') }}-transparent">
+                                            <span class="admin-badge admin-badge-{{ match ($delegation->status) {
+                                                'active' => 'success',
+                                                'expired' => 'danger',
+                                                default => 'muted',
+                                            } }}">
                                                 {{ $delegation->status_name_ar }}
                                             </span>
                                         </td>
-                                        <td>{{ Str::limit($delegation->notes, 50) ?? '-' }}</td>
+                                        <td class="small">{{ $delegation->notes ? Str::limit($delegation->notes, 40) : '—' }}</td>
                                         <td>
-                                            @if($delegation->status === 'active')
-                                                <form action="{{ route('admin.team.delegations.cancel', $delegation->id) }}" method="POST" class="d-inline">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('هل أنت متأكد من إلغاء هذا التفويض؟')">
-                                                        <i class="ri-close-line"></i> إلغاء
-                                                    </button>
-                                                </form>
+                                            @if ($delegation->status === 'active')
+                                                <button type="button" class="admin-btn admin-btn-danger admin-btn-sm"
+                                                        data-post-url="{{ route('admin.team.delegations.cancel', $delegation->id) }}"
+                                                        data-post-confirm="إلغاء تفويض <strong>{{ $delegation->delegate->name }}</strong>؟"
+                                                        data-post-title="إلغاء التفويض"
+                                                        data-post-type="danger"
+                                                        data-post-btn="إلغاء">
+                                                    <i class="ri-close-line"></i>
+                                                    إلغاء
+                                                </button>
+                                            @else
+                                                <span class="text-muted small">—</span>
                                             @endif
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center text-muted py-4">
-                                            لا توجد تفويضات صادرة
+                                        <td colspan="7">
+                                            <div class="admin-empty-state">
+                                                <i class="ri-share-line"></i>
+                                                لا توجد تفويضات صادرة
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforelse
@@ -95,17 +139,19 @@
                 </div>
             </div>
 
-            <!-- Received Delegations -->
-            <div class="card custom-card">
-                <div class="card-header bg-success text-white">
-                    <h6 class="card-title fw-semibold mb-0">
-                        <i class="ri-arrow-down-circle-line me-1"></i>التفويضات المستلمة
+            {{-- التفويضات المستلمة --}}
+            <div class="admin-page-card">
+                <div class="card-toolbar">
+                    <h6 class="mb-0 fw-bold">
+                        <i class="ri-arrow-down-circle-line text-primary me-2"></i>التفويضات المستلمة
                     </h6>
+                    <small class="text-muted">صلاحيات فوَّضها لك آخرون</small>
                 </div>
-                <div class="card-body p-0">
+
+                <div class="admin-table-wrap">
                     <div class="table-responsive">
-                        <table class="table table-bordered table-hover text-nowrap mb-0">
-                            <thead class="table-light">
+                        <table class="admin-data-table">
+                            <thead>
                                 <tr>
                                     <th>المفوِّض</th>
                                     <th>أنواع الطلبات</th>
@@ -115,37 +161,44 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($receivedDelegations as $delegation)
+                                @forelse ($receivedDelegations as $delegation)
                                     <tr>
                                         <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="avatar avatar-sm bg-success-transparent avatar-rounded me-2">
-                                                    {{ substr($delegation->delegator->name, 0, 1) }}
-                                                </div>
-                                                <span class="fw-medium">{{ $delegation->delegator->name }}</span>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="admin-avatar-initial" style="width:1.75rem; height:1.75rem; font-size:0.8rem; background:linear-gradient(135deg,#10b981,#34d399);">
+                                                    {{ mb_substr($delegation->delegator->name, 0, 1) }}
+                                                </span>
+                                                <span class="fw-semibold">{{ $delegation->delegator->name }}</span>
                                             </div>
                                         </td>
                                         <td>
-                                            @if(empty($delegation->workflow_types))
-                                                <span class="badge bg-info-transparent">جميع الأنواع</span>
+                                            @if (empty($delegation->workflow_types))
+                                                <span class="admin-badge admin-badge-role">جميع الأنواع</span>
                                             @else
-                                                @foreach($delegation->workflow_types as $type)
-                                                    <span class="badge bg-success-transparent me-1">{{ $type }}</span>
+                                                @foreach ($delegation->workflow_type_labels as $label)
+                                                    <span class="admin-badge admin-badge-muted">{{ $label }}</span>
                                                 @endforeach
                                             @endif
                                         </td>
-                                        <td>{{ $delegation->start_date->format('Y/m/d H:i') }}</td>
-                                        <td>{{ $delegation->end_date->format('Y/m/d H:i') }}</td>
+                                        <td class="small text-muted">{{ $delegation->start_date->format('Y-m-d H:i') }}</td>
+                                        <td class="small text-muted">{{ $delegation->end_date->format('Y-m-d H:i') }}</td>
                                         <td>
-                                            <span class="badge bg-{{ $delegation->status === 'active' ? 'success' : ($delegation->status === 'expired' ? 'danger' : 'warning') }}-transparent">
+                                            <span class="admin-badge admin-badge-{{ match ($delegation->status) {
+                                                'active' => 'success',
+                                                'expired' => 'danger',
+                                                default => 'muted',
+                                            } }}">
                                                 {{ $delegation->status_name_ar }}
                                             </span>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted py-4">
-                                            لا توجد تفويضات مستلمة
+                                        <td colspan="5">
+                                            <div class="admin-empty-state">
+                                                <i class="ri-arrow-down-circle-line"></i>
+                                                لا توجد تفويضات مستلمة
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforelse

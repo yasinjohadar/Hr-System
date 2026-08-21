@@ -35,7 +35,16 @@
 
 <!-- Custom Css -->
 <link rel="stylesheet" href="{{ asset('assets/css/custom.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/footer-brand.css') }}">
+
+<!-- Theme Panel (إعدادات العرض) Css -->
+<link rel="stylesheet" href="{{ asset('assets/css/theme-panel.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/css/admin-pages.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/css/admin-confirm-modal.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/css/sidebar-nav-critical.css') }}">
+
+<!-- Admin Sidebar (منقول من claudSoft-lms_laravel) Css -->
+<link rel="stylesheet" href="{{ asset('assets/css/admin-sidebar.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/admin-sidebar-brand.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/admin-header.css') }}">
 @stack('styles')

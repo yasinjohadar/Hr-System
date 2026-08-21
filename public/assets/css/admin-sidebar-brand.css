@@ -1,0 +1,285 @@
+/* ==========================================================================
+   شعار الشريط الجانبي + زرّ الطيّ (بوابة الإدارة)
+
+   يحلّ محلّ صور القالب الأربع (desktop-logo / toggle-logo / desktop-white /
+   toggle-white) بنصّ واحد، ومحلّ أيقونة fe-align-left بزرّ متحرّك مبني
+   بـ CSS بالكامل — بلا صور ولا خطوط أيقونات.
+
+   الوضع الليلي/النهاري: كل الألوان من متغيّرات القالب، ولا قاعدة dark
+   منفصلة إلا حيث تختلف الدرجة فعلياً. الرموز المستخدمة:
+     --default-text-color  نص أساسي (يقلب مع data-theme-mode)
+     --menu-prime-color    نص الشريط الجانبي (يقلب مع data-menu-styles)
+     --primary-rgb         لون الواجهة الذي يختاره المستخدم من لوحة العرض
+   ========================================================================== */
+
+/* ==========================================================================
+   1) شعار الشريط الجانبي — نص فقط
+   ========================================================================== */
+
+/*
+ * رأس الشريط في القالب: width 15rem، height 4rem، padding .9375rem 1.25rem
+ * → المساحة الصافية للنص 200×34px تقريباً.
+ *
+ * white-space لم يُضبط على nowrap عن قصد: لو خرج قياس Cairo أوسع من
+ * المتوقّع يلتفّ النص على سطرين بدلاً من أن يُقتطع بنقاط. الرأس مضبوط
+ * على align-items:center فيبقى السطران متمركزين.
+ */
+.admin-portal .app-sidebar .main-sidebar-header .hr-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    text-decoration: none;
+    text-align: center;
+}
+
+.admin-portal .app-sidebar .main-sidebar-header .hr-brand__title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: 0.2px;
+    color: var(--default-text-color);
+    transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.admin-portal .app-sidebar .main-sidebar-header .hr-brand:hover .hr-brand__title {
+    color: rgb(var(--primary-rgb));
+}
+
+/*
+ * الوضع الليلي: --default-text-color يقلب تلقائياً مع data-theme-mode،
+ * لكن الشريط قد يكون داكناً مع مظهر فاتح (data-menu-styles=dark) — وحينها
+ * لا يقلب. نعتمد على رمز الشريط نفسه في تلك الحالات.
+ */
+[data-menu-styles="dark"] .admin-portal .app-sidebar .main-sidebar-header .hr-brand__title,
+[data-menu-styles="color"] .admin-portal .app-sidebar .main-sidebar-header .hr-brand__title,
+[data-menu-styles="gradient"] .admin-portal .app-sidebar .main-sidebar-header .hr-brand__title {
+    color: #fff;
+}
+
+/*
+ * حالات الشريط المصغّر: رأس الشريط ينزل إلى 5rem (أو 9rem في icontext)،
+ * ولا تكفي لعرض «إدارة الموارد البشرية». نخفي النص بدل اقتطاعه.
+ * نفس مجموعة المُحدِّدات التي يستخدمها القالب لتصغير الرأس.
+ */
+@media (min-width: 992px) {
+    [data-vertical-style="overlay"][data-toggled="icon-overlay-close"]:not([data-icon-overlay="open"]) .admin-portal .hr-brand__title,
+    [data-vertical-style="closed"][data-toggled="close-menu-close"] .admin-portal .hr-brand__title,
+    [data-vertical-style="icontext"][data-toggled="icon-text-close"]:not([data-icon-text="open"]) .admin-portal .hr-brand__title,
+    [data-vertical-style="doublemenu"][data-toggled="double-menu-close"] .admin-portal .hr-brand__title,
+    [data-nav-style="icon-click"][data-toggled="icon-click-closed"] .admin-portal .hr-brand__title,
+    [data-nav-style="icon-hover"][data-toggled="icon-hover-closed"] .admin-portal .hr-brand__title {
+        opacity: 0;
+        visibility: hidden;
+    }
+}
+
+/* ==========================================================================
+   1ب) نسخة الهيدر من الشعار (.horizontal-logo)
+   ========================================================================== */
+
+/*
+ * نفس النص يظهر في الهيدر أيضاً: القالب يُظهر .horizontal-logo عند
+ * [data-toggled=close] (الحالة الابتدائية لهذا النظام) و [data-toggled=open]
+ * (الجوّال). لذلك استُبدلت صوره الأربع كذلك، وإلا بقي مربّع الشعار الرمادي
+ * ظاهراً في الهيدر بعد تغيير شريط الجانب.
+ *
+ * الفرق عن نسخة الشريط: الخلفية هنا هي خلفية الهيدر لا القائمة، فالرمز
+ * اللوني المناسب هو --header-prime-color.
+ */
+.admin-portal .horizontal-logo .hr-brand--header {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.admin-portal .horizontal-logo .hr-brand--header .hr-brand__title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: 0.2px;
+    color: var(--header-prime-color, var(--default-text-color));
+}
+
+.admin-portal .horizontal-logo .hr-brand--header:hover .hr-brand__title {
+    color: rgb(var(--primary-rgb));
+}
+
+[data-header-styles="dark"] .admin-portal .horizontal-logo .hr-brand--header .hr-brand__title,
+[data-header-styles="color"] .admin-portal .horizontal-logo .hr-brand--header .hr-brand__title,
+[data-header-styles="gradient"] .admin-portal .horizontal-logo .hr-brand--header .hr-brand__title {
+    color: #fff;
+}
+
+/* على الشاشات الضيّقة جداً يقصر النص حتى لا يزحم أدوات الهيدر */
+@media (max-width: 420px) {
+    .admin-portal .horizontal-logo .hr-brand--header .hr-brand__title {
+        font-size: 0.85rem;
+    }
+}
+
+/* ==========================================================================
+   2) زرّ طيّ الشريط الجانبي
+   ========================================================================== */
+
+/*
+ * .sidemenu-toggle إجباري: defaultmenu.min.js يقرأه بـ querySelector ثم
+ * يستدعي addEventListener بدون فحص null. أما أصناف القالب
+ * animated-arrow / hor-toggle / horizontal-navtoggle فأُزيلت — كانت
+ * للتخطيط الأفقي فقط (CSS بحت، لا يقرأها أي JS) وهذا النظام عمودي دائماً.
+ */
+.admin-portal .hr-navtoggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    background: none;
+    line-height: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.admin-portal .hr-navtoggle__box {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 4px;
+    width: 2.375rem;
+    height: 2.375rem;
+    padding: 0.6875rem 0.625rem;
+    border: 1px solid rgba(var(--primary-rgb), 0.16);
+    border-radius: 0.75rem;
+    background: rgba(var(--primary-rgb), 0.08);
+    box-sizing: border-box;
+    transition: background 0.25s ease, border-color 0.25s ease,
+                transform 0.25s cubic-bezier(0.34, 1.4, 0.64, 1),
+                box-shadow 0.25s ease;
+}
+
+.admin-portal .hr-navtoggle__bar {
+    display: block;
+    height: 2px;
+    border-radius: 2px;
+    background: rgb(var(--primary-rgb));
+    /* التأخير المتدرّج يجعل الأشرطة تتحرّك تتابعاً لا معاً */
+    transition: width 0.28s cubic-bezier(0.34, 1.4, 0.64, 1),
+                background 0.25s ease;
+}
+
+/* الشريط الأوسط أقصر — هو ما يعطي الأيقونة شخصيتها */
+.admin-portal .hr-navtoggle__bar:nth-child(1) { width: 100%; transition-delay: 0s; }
+.admin-portal .hr-navtoggle__bar:nth-child(2) { width: 58%; transition-delay: 0.04s; }
+.admin-portal .hr-navtoggle__bar:nth-child(3) { width: 78%; transition-delay: 0.08s; }
+
+/* التمرير: الأشرطة تستوي بالكامل + الزرّ يرتفع قليلاً */
+.admin-portal .hr-navtoggle:hover .hr-navtoggle__box {
+    border-color: rgba(var(--primary-rgb), 0.32);
+    background: rgba(var(--primary-rgb), 0.14);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.18);
+}
+
+.admin-portal .hr-navtoggle:hover .hr-navtoggle__bar:nth-child(2),
+.admin-portal .hr-navtoggle:hover .hr-navtoggle__bar:nth-child(3) {
+    width: 100%;
+}
+
+.admin-portal .hr-navtoggle:active .hr-navtoggle__box {
+    transform: translateY(0) scale(0.96);
+    box-shadow: none;
+}
+
+.admin-portal .hr-navtoggle:focus-visible .hr-navtoggle__box {
+    outline: 2px solid rgba(var(--primary-rgb), 0.55);
+    outline-offset: 2px;
+}
+
+/*
+ * حالة «الشريط مطويّ»: الزرّ يمتلئ باللون الأساسي والأشرطة تبيضّ، مع
+ * قلب تدرّج الأطوال (58%/78% يتبادلان) فيبدو التدرّج معكوس الاتجاه —
+ * إشارة واضحة للحالة عبر انتقال width القائم أصلاً، بلا هندسة دوران هشّة.
+ *
+ * تُطابَق data-toggled وحدها بلا data-vertical-style: القالب يضبط أحدهما
+ * فقط في بعض المسارات، والقيم أعلاه فريدة لحالة الطيّ على أي حال.
+ */
+[data-toggled="icon-overlay-close"] .admin-portal .hr-navtoggle__box,
+[data-toggled="close-menu-close"] .admin-portal .hr-navtoggle__box,
+[data-toggled="icon-text-close"] .admin-portal .hr-navtoggle__box,
+[data-toggled="double-menu-close"] .admin-portal .hr-navtoggle__box,
+[data-toggled="icon-click-closed"] .admin-portal .hr-navtoggle__box,
+[data-toggled="icon-hover-closed"] .admin-portal .hr-navtoggle__box,
+[data-toggled="detached-close"] .admin-portal .hr-navtoggle__box {
+    border-color: transparent;
+    background: rgb(var(--primary-rgb));
+    box-shadow: 0 4px 14px rgba(var(--primary-rgb), 0.35);
+}
+
+[data-toggled="icon-overlay-close"] .admin-portal .hr-navtoggle__bar,
+[data-toggled="close-menu-close"] .admin-portal .hr-navtoggle__bar,
+[data-toggled="icon-text-close"] .admin-portal .hr-navtoggle__bar,
+[data-toggled="double-menu-close"] .admin-portal .hr-navtoggle__bar,
+[data-toggled="icon-click-closed"] .admin-portal .hr-navtoggle__bar,
+[data-toggled="icon-hover-closed"] .admin-portal .hr-navtoggle__bar,
+[data-toggled="detached-close"] .admin-portal .hr-navtoggle__bar {
+    background: #fff;
+}
+
+[data-toggled="icon-overlay-close"] .admin-portal .hr-navtoggle__bar:nth-child(2),
+[data-toggled="close-menu-close"] .admin-portal .hr-navtoggle__bar:nth-child(2),
+[data-toggled="icon-text-close"] .admin-portal .hr-navtoggle__bar:nth-child(2),
+[data-toggled="double-menu-close"] .admin-portal .hr-navtoggle__bar:nth-child(2),
+[data-toggled="icon-click-closed"] .admin-portal .hr-navtoggle__bar:nth-child(2),
+[data-toggled="icon-hover-closed"] .admin-portal .hr-navtoggle__bar:nth-child(2),
+[data-toggled="detached-close"] .admin-portal .hr-navtoggle__bar:nth-child(2) {
+    width: 78%;
+}
+
+[data-toggled="icon-overlay-close"] .admin-portal .hr-navtoggle__bar:nth-child(3),
+[data-toggled="close-menu-close"] .admin-portal .hr-navtoggle__bar:nth-child(3),
+[data-toggled="icon-text-close"] .admin-portal .hr-navtoggle__bar:nth-child(3),
+[data-toggled="double-menu-close"] .admin-portal .hr-navtoggle__bar:nth-child(3),
+[data-toggled="icon-click-closed"] .admin-portal .hr-navtoggle__bar:nth-child(3),
+[data-toggled="icon-hover-closed"] .admin-portal .hr-navtoggle__bar:nth-child(3),
+[data-toggled="detached-close"] .admin-portal .hr-navtoggle__bar:nth-child(3) {
+    width: 58%;
+}
+
+/* الهيدر الداكن: الزرّ الخفيف يذوب فيه، فنرفع تباينه */
+[data-header-styles="dark"] .admin-portal .hr-navtoggle__box,
+[data-header-styles="color"] .admin-portal .hr-navtoggle__box,
+[data-header-styles="gradient"] .admin-portal .hr-navtoggle__box {
+    border-color: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.12);
+}
+
+[data-header-styles="dark"] .admin-portal .hr-navtoggle__bar,
+[data-header-styles="color"] .admin-portal .hr-navtoggle__bar,
+[data-header-styles="gradient"] .admin-portal .hr-navtoggle__bar {
+    background: #fff;
+}
+
+[data-header-styles="dark"] .admin-portal .hr-navtoggle:hover .hr-navtoggle__box,
+[data-header-styles="color"] .admin-portal .hr-navtoggle:hover .hr-navtoggle__box,
+[data-header-styles="gradient"] .admin-portal .hr-navtoggle:hover .hr-navtoggle__box {
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* احترام تفضيل تقليل الحركة في النظام */
+@media (prefers-reduced-motion: reduce) {
+    .admin-portal .hr-navtoggle__box,
+    .admin-portal .hr-navtoggle__bar,
+    .admin-portal .app-sidebar .main-sidebar-header .hr-brand__title {
+        transition: none;
+    }
+
+    .admin-portal .hr-navtoggle:hover .hr-navtoggle__box,
+    .admin-portal .hr-navtoggle:active .hr-navtoggle__box {
+        transform: none;
+    }
+}

@@ -5,32 +5,34 @@
 @stop
 
 @section('content')
-    @if ($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li class="small">{{ $error }}</li>
-                @endforeach
-            </ul>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-
     <div class="main-content app-content">
-        <div class="container-fluid">
-            <div class="page-header d-flex justify-content-between align-items-center my-4">
-                <h5 class="page-title mb-0">إنشاء كشف راتب جديد</h5>
-                <a href="{{ route('admin.payrolls.index') }}" class="btn btn-secondary btn-sm">رجوع</a>
+        <div class="container-fluid admin-page-shell">
+            @include('admin.pages.users.partials.alerts')
+
+            <div class="admin-page-banner">
+                <div class="admin-page-banner-main">
+                    <span class="admin-page-banner-icon"><i class="ri-file-add-line"></i></span>
+                    <div class="admin-page-banner-text">
+                        <h1>إنشاء كشف راتب جديد</h1>
+                        <p>اختر الموظف والشهر والسنة لإنشاء كشف الراتب</p>
+                    </div>
+                </div>
+                <div class="admin-page-banner-actions">
+                    <a href="{{ route('admin.payrolls.index') }}" class="admin-btn admin-btn-light">
+                        <i class="ri-arrow-right-line"></i>
+                        العودة للقائمة
+                    </a>
+                </div>
             </div>
 
-            <div class="card">
-                <div class="card-body">
-                    <form method="POST" action="{{ route('admin.payrolls.store') }}">
-                        @csrf
+            <div class="admin-page-card">
+                <form class="admin-form" method="POST" action="{{ route('admin.payrolls.store') }}">
+                    @csrf
 
+                    <div class="admin-form-body">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">الموظف <span class="text-danger">*</span></label>
+                                <label class="admin-form-label">الموظف <span class="text-danger">*</span></label>
                                 <select class="form-select @error('employee_id') is-invalid @enderror" name="employee_id" required>
                                     <option value="">اختر الموظف</option>
                                     @foreach ($employees as $employee)
@@ -45,7 +47,7 @@
                             </div>
 
                             <div class="col-md-3">
-                                <label class="form-label">الشهر <span class="text-danger">*</span></label>
+                                <label class="admin-form-label">الشهر <span class="text-danger">*</span></label>
                                 <select class="form-select @error('payroll_month') is-invalid @enderror" name="payroll_month" required>
                                     @for ($i = 1; $i <= 12; $i++)
                                         <option value="{{ $i }}" {{ old('payroll_month', date('n')) == $i ? 'selected' : '' }}>
@@ -59,7 +61,7 @@
                             </div>
 
                             <div class="col-md-3">
-                                <label class="form-label">السنة <span class="text-danger">*</span></label>
+                                <label class="admin-form-label">السنة <span class="text-danger">*</span></label>
                                 <input type="number" class="form-control @error('payroll_year') is-invalid @enderror" 
                                        name="payroll_year" value="{{ old('payroll_year', date('Y')) }}" 
                                        min="2020" max="2100" required>
@@ -69,7 +71,7 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">العملة</label>
+                                <label class="admin-form-label">العملة</label>
                                 <select class="form-select" name="currency_id">
                                     <option value="">اختر العملة</option>
                                     @foreach ($currencies as $currency)
@@ -81,12 +83,16 @@
                             </div>
                         </div>
 
-                        <div class="mt-4">
-                            <button type="submit" class="btn btn-primary">إنشاء كشف الراتب</button>
-                            <a href="{{ route('admin.payrolls.index') }}" class="btn btn-secondary">إلغاء</a>
-                        </div>
-                    </form>
-                </div>
+                    </div>
+
+                    <div class="admin-form-footer">
+                        <a href="{{ route('admin.payrolls.index') }}" class="admin-btn admin-btn-secondary">إلغاء</a>
+                        <button type="submit" class="admin-btn admin-btn-primary">
+                            <i class="ri-save-line"></i>
+                            إنشاء كشف الراتب
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

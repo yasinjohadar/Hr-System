@@ -5,33 +5,36 @@
 @stop
 
 @section('content')
-    @if ($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li class="small">{{ $error }}</li>
-                @endforeach
-            </ul>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-
     <div class="main-content app-content">
-        <div class="container-fluid">
-            <div class="page-header d-flex justify-content-between align-items-center my-4">
-                <h5 class="page-title mb-0">تعديل مكون الراتب</h5>
-                <a href="{{ route('admin.salary-components.index') }}" class="btn btn-secondary btn-sm">رجوع</a>
+        <div class="container-fluid admin-page-shell">
+            @include('admin.pages.users.partials.alerts')
+
+            <div class="admin-page-banner">
+                <div class="admin-page-banner-main">
+                    <span class="admin-page-banner-icon"><i class="ri-edit-box-line"></i></span>
+                    <div class="admin-page-banner-text">
+                        <h1>تعديل مكوّن الراتب</h1>
+                        <p>{{ $component->name_ar ?? $component->name }}</p>
+                    </div>
+                </div>
+                <div class="admin-page-banner-actions">
+                    <a href="{{ route('admin.salary-components.index') }}" class="admin-btn admin-btn-light">
+                        <i class="ri-arrow-right-line"></i>
+                        العودة للقائمة
+                    </a>
+                </div>
             </div>
 
-            <div class="card">
-                <div class="card-body">
-                    <form method="POST" action="{{ route('admin.salary-components.update', $component->id) }}">
-                        @csrf
-                        @method('PUT')
+            <div class="admin-page-card">
+                <form class="admin-form" method="POST" action="{{ route('admin.salary-components.update', $component->id) }}">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="admin-form-body">
 
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">الكود <span class="text-danger">*</span></label>
+                                <label class="admin-form-label">الكود <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control @error('code') is-invalid @enderror" 
                                        name="code" value="{{ old('code', $component->code) }}" required>
                                 @error('code')
@@ -40,7 +43,7 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">الاسم <span class="text-danger">*</span></label>
+                                <label class="admin-form-label">الاسم <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control @error('name') is-invalid @enderror" 
                                        name="name" value="{{ old('name', $component->name) }}" required>
                                 @error('name')
@@ -49,12 +52,12 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">الاسم بالعربية</label>
+                                <label class="admin-form-label">الاسم بالعربية</label>
                                 <input type="text" class="form-control" name="name_ar" value="{{ old('name_ar', $component->name_ar) }}">
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">النوع <span class="text-danger">*</span></label>
+                                <label class="admin-form-label">النوع <span class="text-danger">*</span></label>
                                 <select class="form-select @error('type') is-invalid @enderror" name="type" required>
                                     <option value="">اختر النوع</option>
                                     <option value="allowance" {{ old('type', $component->type) == 'allowance' ? 'selected' : '' }}>بدل</option>
@@ -68,7 +71,7 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">طريقة الحساب <span class="text-danger">*</span></label>
+                                <label class="admin-form-label">طريقة الحساب <span class="text-danger">*</span></label>
                                 <select class="form-select @error('calculation_type') is-invalid @enderror" name="calculation_type" required id="calculation_type">
                                     <option value="">اختر طريقة الحساب</option>
                                     <option value="fixed" {{ old('calculation_type', $component->calculation_type) == 'fixed' ? 'selected' : '' }}>ثابت</option>
@@ -83,19 +86,19 @@
                             </div>
 
                             <div class="col-md-6" id="default_value_div">
-                                <label class="form-label">القيمة الافتراضية</label>
+                                <label class="admin-form-label">القيمة الافتراضية</label>
                                 <input type="number" step="0.01" class="form-control" name="default_value" value="{{ old('default_value', $component->default_value) }}" min="0">
                             </div>
 
-                            <div class="col-md-6" id="percentage_div" style="display: none;">
-                                <label class="form-label">النسبة المئوية (%)</label>
+                            <div class="col-md-6" id="percentage_div" hidden>
+                                <label class="admin-form-label">النسبة المئوية (%)</label>
                                 <input type="number" step="0.01" class="form-control" name="percentage" value="{{ old('percentage', $component->percentage) }}" min="0" max="100">
                             </div>
 
-                            <div class="col-md-6" id="formula_div" style="display: none;">
-                                <label class="form-label">الصيغة</label>
+                            <div class="col-md-6" id="formula_div" hidden>
+                                <label class="admin-form-label">الصيغة</label>
                                 <input type="text" class="form-control" name="formula" value="{{ old('formula', $component->formula) }}" placeholder="مثال: {base_salary} * 0.1">
-                                <small class="text-muted">استخدم {base_salary}, {present_days}, {working_days}</small>
+                                <small class="text-muted">المتغيّرات المتاحة: base_salary، daily_rate، hourly_rate، hours، working_days، present_days، absent_days، leave_days، late_days — بأقواس {} أو بدونها</small>
                             </div>
 
                             <div class="col-md-6">
@@ -127,31 +130,63 @@
                             </div>
 
                             <div class="col-md-12">
-                                <label class="form-label">الوصف</label>
+                                <label class="admin-form-label">الوصف</label>
                                 <textarea class="form-control" name="description" rows="3">{{ old('description', $component->description) }}</textarea>
                             </div>
                         </div>
 
-                        <div class="mt-4">
-                            <button type="submit" class="btn btn-primary">حفظ</button>
-                            <a href="{{ route('admin.salary-components.index') }}" class="btn btn-secondary">إلغاء</a>
-                        </div>
-                    </form>
-                </div>
+                    </div>
+
+                    <div class="admin-form-footer">
+                        <a href="{{ route('admin.salary-components.index') }}" class="admin-btn admin-btn-secondary">إلغاء</a>
+                        <button type="submit" class="admin-btn admin-btn-primary">
+                            <i class="ri-save-line"></i>
+                            حفظ
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
-    @section('js')
+@stop
+
+@section('js')
     <script>
-        document.getElementById('calculation_type').addEventListener('change', function() {
-            const type = this.value;
-            document.getElementById('default_value_div').style.display = (type === 'fixed' || type === 'attendance_based' || type === 'leave_based') ? 'block' : 'none';
-            document.getElementById('percentage_div').style.display = type === 'percentage' ? 'block' : 'none';
-            document.getElementById('formula_div').style.display = type === 'formula' ? 'block' : 'none';
-        });
-        document.getElementById('calculation_type').dispatchEvent(new Event('change'));
+        /*
+         * إظهار حقل القيمة/النسبة/الصيغة حسب طريقة الحساب.
+         *
+         * نستخدم السمة hidden لا style.display: الحقول داخل col-md-6،
+         * وإعادة display إلى 'block' تُخرجها من شبكة Bootstrap فيختلّ الصف.
+         *
+         * وكان السكربت أيضاً في قسم js متداخل داخل قسم content — تعشيش
+         * غير صالح لأقسام Blade، نُقل إلى قسمه المستقل.
+         */
+        (function () {
+            const select = document.getElementById('calculation_type');
+
+            if (!select) {
+                return;
+            }
+
+            const shows = {
+                default_value_div: ['fixed', 'attendance_based', 'leave_based'],
+                percentage_div: ['percentage'],
+                formula_div: ['formula'],
+            };
+
+            function sync() {
+                Object.keys(shows).forEach(function (id) {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.hidden = !shows[id].includes(select.value);
+                    }
+                });
+            }
+
+            select.addEventListener('change', sync);
+            sync();
+        })();
     </script>
-    @stop
 @stop
 

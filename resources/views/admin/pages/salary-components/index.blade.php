@@ -1,136 +1,138 @@
 @extends('admin.layouts.master')
 
 @section('page-title')
-    مكونات الراتب
+    مكوّنات الراتب
 @stop
 
 @section('content')
-    @if (\Session::has('success'))
-        <div class="alert alert-success">
-            <ul>
-                <li>{!! \Session::get('success') !!}</li>
-            </ul>
-        </div>
-    @endif
-
     <div class="main-content app-content">
-        <div class="container-fluid">
-            <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
-                <div class="my-auto">
-                    <h5 class="page-title fs-21 mb-1">مكونات الراتب</h5>
+        <div class="container-fluid admin-page-shell">
+            @include('admin.pages.users.partials.alerts')
+
+            <div class="admin-page-banner">
+                <div class="admin-page-banner-main">
+                    <span class="admin-page-banner-icon"><i class="ri-list-settings-line"></i></span>
+                    <div class="admin-page-banner-text">
+                        <h1>مكوّنات الراتب</h1>
+                        <p>البدلات والخصومات والمكافآت وطرق احتسابها المستخدمة في كشوف الرواتب</p>
+                    </div>
+                </div>
+                @can('salary-component-create')
+                    <div class="admin-page-banner-actions">
+                        <a href="{{ route('admin.salary-components.create') }}" class="admin-btn admin-btn-light">
+                            <i class="ri-add-line"></i>
+                            إضافة مكوّن جديد
+                        </a>
+                    </div>
+                @endcan
+            </div>
+
+            <div class="admin-report-stats admin-report-stats-4 mb-4">
+                <div class="admin-report-stat admin-report-stat-static admin-report-stat-blue">
+                    <span class="admin-report-stat-icon"><i class="ri-list-settings-line"></i></span>
+                    <span class="admin-report-stat-label">إجمالي المكوّنات</span>
+                    <span class="admin-report-stat-value" style="color:#2563eb;">{{ $stats['total'] }}</span>
+                </div>
+                <div class="admin-report-stat admin-report-stat-static admin-report-stat-green">
+                    <span class="admin-report-stat-icon"><i class="ri-add-circle-line"></i></span>
+                    <span class="admin-report-stat-label">بدلات</span>
+                    <span class="admin-report-stat-value" style="color:#059669;">{{ $stats['allowance'] }}</span>
+                </div>
+                <div class="admin-report-stat admin-report-stat-static admin-report-stat-red">
+                    <span class="admin-report-stat-icon"><i class="ri-indeterminate-circle-line"></i></span>
+                    <span class="admin-report-stat-label">خصومات</span>
+                    <span class="admin-report-stat-value" style="color:#dc2626;">{{ $stats['deduction'] }}</span>
+                </div>
+                <div class="admin-report-stat admin-report-stat-static admin-report-stat-cyan">
+                    <span class="admin-report-stat-icon"><i class="ri-gift-line"></i></span>
+                    <span class="admin-report-stat-label">مكافآت</span>
+                    <span class="admin-report-stat-value" style="color:#0891b2;">{{ $stats['bonus'] }}</span>
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-xl-12">
-                    <div class="card">
-                        <div class="card-header align-items-center d-flex gap-3">
-                            @can('salary-component-create')
-                            <a href="{{ route('admin.salary-components.create') }}" class="btn btn-primary btn-sm">إضافة مكون جديد</a>
-                            @endcan
-
-                            <div class="flex-shrink-0">
-                                <form action="{{ route('admin.salary-components.index') }}" method="GET" class="d-flex align-items-center gap-2">
-                                    <input type="text" name="search" class="form-control" placeholder="بحث..." value="{{ request('search') }}" style="width: 200px;">
-                                    
-                                    <select name="type" class="form-select" style="width: 150px;">
-                                        <option value="">كل الأنواع</option>
-                                        <option value="allowance" {{ request('type') == 'allowance' ? 'selected' : '' }}>بدل</option>
-                                        <option value="deduction" {{ request('type') == 'deduction' ? 'selected' : '' }}>خصم</option>
-                                        <option value="bonus" {{ request('type') == 'bonus' ? 'selected' : '' }}>مكافأة</option>
-                                        <option value="overtime" {{ request('type') == 'overtime' ? 'selected' : '' }}>ساعات إضافية</option>
-                                    </select>
-
-                                    <select name="is_active" class="form-select" style="width: 120px;">
-                                        <option value="">كل الحالات</option>
-                                        <option value="1" {{ request('is_active') == '1' ? 'selected' : '' }}>نشط</option>
-                                        <option value="0" {{ request('is_active') == '0' ? 'selected' : '' }}>غير نشط</option>
-                                    </select>
-
-                                    <button type="submit" class="btn btn-primary btn-sm">بحث</button>
-                                    <a href="{{ route('admin.salary-components.index') }}" class="btn btn-secondary btn-sm">إعادة تعيين</a>
-                                </form>
-                            </div>
+            <div class="admin-page-card">
+                <div class="card-toolbar">
+                    {{-- الفلترة عبر AJAX — assets/js/admin-filter-table.js يقرأ هذه السمات --}}
+                    <form action="{{ route('admin.salary-components.index') }}" method="GET"
+                          class="admin-filters w-100"
+                          data-filter-table
+                          data-filter-rows="#components-table-body"
+                          data-filter-pagination="#components-pagination"
+                          data-filter-meta="#components-meta"
+                          data-filter-loading="#components-loading">
+                        <div class="search-input-wrap">
+                            <i class="ri-search-line"></i>
+                            <input type="text" name="search" class="form-control"
+                                   placeholder="بحث بالكود أو الاسم"
+                                   value="{{ request('search') }}" autocomplete="off">
                         </div>
 
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-bordered text-nowrap border-bottom">
-                                    <thead>
-                                        <tr>
-                                            <th>الكود</th>
-                                            <th>الاسم</th>
-                                            <th>النوع</th>
-                                            <th>طريقة الحساب</th>
-                                            <th>القيمة الافتراضية</th>
-                                            <th>الحالة</th>
-                                            <th>الإجراءات</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse ($components as $component)
-                                            <tr>
-                                                <td>{{ $component->code }}</td>
-                                                <td>{{ $component->name_ar ?? $component->name }}</td>
-                                                <td>
-                                                    <span class="badge bg-{{ match($component->type) {
-                                                        'allowance' => 'success',
-                                                        'deduction' => 'danger',
-                                                        'bonus' => 'info',
-                                                        'overtime' => 'warning',
-                                                        default => 'secondary'
-                                                    } }}">
-                                                        {{ $component->type_name_ar }}
-                                                    </span>
-                                                </td>
-                                                <td>{{ $component->calculation_type_name_ar }}</td>
-                                                <td>
-                                                    @if($component->calculation_type == 'percentage')
-                                                        {{ $component->percentage }}%
-                                                    @else
-                                                        {{ number_format($component->default_value, 2) }}
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    <span class="badge bg-{{ $component->is_active ? 'success' : 'secondary' }}">
-                                                        {{ $component->is_active ? 'نشط' : 'غير نشط' }}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <div class="d-flex gap-2">
-                                                        @can('salary-component-show')
-                                                        <a href="{{ route('admin.salary-components.show', $component->id) }}" class="btn btn-sm btn-info">عرض</a>
-                                                        @endcan
-                                                        @can('salary-component-edit')
-                                                        <a href="{{ route('admin.salary-components.edit', $component->id) }}" class="btn btn-sm btn-primary">تعديل</a>
-                                                        @endcan
-                                                        @can('salary-component-delete')
-                                                        <form action="{{ route('admin.salary-components.destroy', $component->id) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من الحذف؟');">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="btn btn-sm btn-danger">حذف</button>
-                                                        </form>
-                                                        @endcan
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="7" class="text-center">لا توجد مكونات</td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
+                        <select name="type" class="form-select admin-filter-select">
+                            <option value="">كل الأنواع</option>
+                            <option value="allowance" @selected(request('type') === 'allowance')>بدل</option>
+                            <option value="deduction" @selected(request('type') === 'deduction')>خصم</option>
+                            <option value="bonus" @selected(request('type') === 'bonus')>مكافأة</option>
+                            <option value="overtime" @selected(request('type') === 'overtime')>ساعات إضافية</option>
+                        </select>
 
-                            <div class="d-flex justify-content-center mt-3">
-                                {{ $components->links() }}
-                            </div>
-                        </div>
+                        <select name="is_active" class="form-select admin-filter-select">
+                            <option value="">كل الحالات</option>
+                            <option value="1" @selected(request('is_active') === '1')>نشط</option>
+                            <option value="0" @selected(request('is_active') === '0')>غير نشط</option>
+                        </select>
+
+                        <select name="calculation_type" class="form-select admin-filter-select">
+                            <option value="">كل طرق الحساب</option>
+                            <option value="fixed" @selected(request('calculation_type') === 'fixed')>ثابت</option>
+                            <option value="percentage" @selected(request('calculation_type') === 'percentage')>نسبة مئوية</option>
+                            <option value="formula" @selected(request('calculation_type') === 'formula')>صيغة</option>
+                            <option value="attendance_based" @selected(request('calculation_type') === 'attendance_based')>حسب الحضور</option>
+                            <option value="leave_based" @selected(request('calculation_type') === 'leave_based')>حسب الإجازات</option>
+                        </select>
+
+                        <button type="submit" class="admin-btn admin-btn-primary">
+                            <i class="ri-search-line"></i>
+                            بحث
+                        </button>
+                        <a href="{{ route('admin.salary-components.index') }}" class="admin-btn admin-btn-danger">
+                            <i class="ri-filter-off-line"></i>
+                            إعادة تعيين
+                        </a>
+                    </form>
+                    <span id="components-loading" class="spinner-border spinner-border-sm text-primary d-none ms-2"
+                          role="status" aria-hidden="true"></span>
+                </div>
+
+                <div class="admin-table-wrap">
+                    <div class="table-responsive">
+                        <table class="admin-data-table">
+                            <thead>
+                                <tr>
+                                    <th>الكود</th>
+                                    <th>الاسم</th>
+                                    <th>النوع</th>
+                                    <th>طريقة الحساب</th>
+                                    <th>القيمة</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="components-table-body">
+                                @include('admin.pages.salary-components._index_rows', ['components' => $components])
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="admin-table-footer">
+                    <div class="admin-table-meta" id="components-meta">
+                        @include('admin.pages.salary-components._index_meta', ['components' => $components])
+                    </div>
+                    <div class="admin-pagination" id="components-pagination">
+                        @include('admin.pages.salary-components._index_pagination', ['components' => $components])
                     </div>
                 </div>
             </div>
         </div>
     </div>
 @stop
-

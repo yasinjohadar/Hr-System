@@ -35,5 +35,9 @@
 
 <!-- Custom Css -->
 <link rel="stylesheet" href="{{ asset('assets/css/custom.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/footer-brand.css') }}">
+
+<!-- Theme Panel (إعدادات العرض) Css -->
+<link rel="stylesheet" href="{{ asset('assets/css/theme-panel.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/css/flat-surfaces.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/css/admin-confirm-modal.css') }}">

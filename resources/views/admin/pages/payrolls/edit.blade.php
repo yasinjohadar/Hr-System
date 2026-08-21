@@ -5,33 +5,35 @@
 @stop
 
 @section('content')
-    @if ($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li class="small">{{ $error }}</li>
-                @endforeach
-            </ul>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-
     <div class="main-content app-content">
-        <div class="container-fluid">
-            <div class="page-header d-flex justify-content-between align-items-center my-4">
-                <h5 class="page-title mb-0">تعديل كشف الراتب - {{ $payroll->payroll_code }}</h5>
-                <a href="{{ route('admin.payrolls.show', $payroll->id) }}" class="btn btn-secondary btn-sm">رجوع</a>
+        <div class="container-fluid admin-page-shell">
+            @include('admin.pages.users.partials.alerts')
+
+            <div class="admin-page-banner">
+                <div class="admin-page-banner-main">
+                    <span class="admin-page-banner-icon"><i class="ri-edit-box-line"></i></span>
+                    <div class="admin-page-banner-text">
+                        <h1>تعديل كشف الراتب</h1>
+                        <p>{{ $payroll->payroll_code }} — {{ $payroll->employee->full_name ?? '' }}</p>
+                    </div>
+                </div>
+                <div class="admin-page-banner-actions">
+                    <a href="{{ route('admin.payrolls.show', $payroll->id) }}" class="admin-btn admin-btn-light">
+                        <i class="ri-arrow-right-line"></i>
+                        عودة للكشف
+                    </a>
+                </div>
             </div>
 
-            <div class="card">
-                <div class="card-body">
-                    <form method="POST" action="{{ route('admin.payrolls.update', $payroll->id) }}">
-                        @csrf
-                        @method('PUT')
+            <div class="admin-page-card">
+                <form class="admin-form" method="POST" action="{{ route('admin.payrolls.update', $payroll->id) }}">
+                    @csrf
+                    @method('PUT')
 
+                    <div class="admin-form-body">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">الراتب الأساسي</label>
+                                <label class="admin-form-label">الراتب الأساسي</label>
                                 <input type="number" step="0.01" class="form-control @error('base_salary') is-invalid @enderror" 
                                        name="base_salary" value="{{ old('base_salary', $payroll->base_salary) }}" min="0">
                                 @error('base_salary')
@@ -40,7 +42,7 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">العملة</label>
+                                <label class="admin-form-label">العملة</label>
                                 <select class="form-select" name="currency_id">
                                     <option value="">اختر العملة</option>
                                     @foreach ($currencies as $currency)
@@ -52,17 +54,21 @@
                             </div>
 
                             <div class="col-md-12">
-                                <label class="form-label">ملاحظات</label>
+                                <label class="admin-form-label">ملاحظات</label>
                                 <textarea class="form-control" name="notes" rows="3">{{ old('notes', $payroll->notes) }}</textarea>
                             </div>
                         </div>
 
-                        <div class="mt-4">
-                            <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
-                            <a href="{{ route('admin.payrolls.show', $payroll->id) }}" class="btn btn-secondary">إلغاء</a>
-                        </div>
-                    </form>
-                </div>
+                    </div>
+
+                    <div class="admin-form-footer">
+                        <a href="{{ route('admin.payrolls.show', $payroll->id) }}" class="admin-btn admin-btn-secondary">إلغاء</a>
+                        <button type="submit" class="admin-btn admin-btn-primary">
+                            <i class="ri-save-line"></i>
+                            حفظ التغييرات
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

@@ -1,0 +1,46 @@
+/* ==========================================================================
+   فوتر النظام — تصميم وبرمجة مؤسسة كلاودسوفت
+
+   مشترك بين بوابتي الإدارة والموظف (بلا نطاق .admin-portal).
+   خلفية الفوتر تأتي من .bg-white وهي في القالب
+   background-color: var(--custom-white) — و--custom-white يقلب مع
+   data-theme-mode، فالفوتر يتبع الوضع الليلي/النهاري تلقائياً.
+   ========================================================================== */
+
+.hr-footer .hr-footer__text {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    font-size: 0.8125rem;
+    line-height: 1.7;
+    color: var(--text-muted);
+}
+
+.hr-footer .hr-footer__sep {
+    opacity: 0.45;
+}
+
+/* اسم المؤسسة والمبرمج بارزان عن بقية السطر */
+.hr-footer .hr-footer__org {
+    font-weight: 700;
+    color: var(--default-text-color);
+}
+
+.hr-footer .hr-footer__author {
+    font-weight: 700;
+    color: rgb(var(--primary-rgb));
+}
+
+/* على الشاشات الضيّقة يلتفّ السطر بلا تلاصق */
+@media (max-width: 576px) {
+    .hr-footer .hr-footer__text {
+        gap: 0.25rem;
+        font-size: 0.75rem;
+    }
+
+    .hr-footer .hr-footer__sep {
+        display: none;
+    }
+}

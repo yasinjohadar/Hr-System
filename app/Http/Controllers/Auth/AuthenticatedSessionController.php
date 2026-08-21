@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +17,49 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): View
     {
-        return view('auth.login');
+        return view('auth.login', [
+            'quickLoginAccounts' => $this->quickLoginAccounts(),
+        ]);
+    }
+
+    /**
+     * حسابات الدخول السريع لبيئة التطوير (مصفوفة فارغة في أي بيئة أخرى).
+     *
+     * لا نثبّت البريد في الإعدادات: نستخرج أول حساب نشط لكل دور من قاعدة
+     * البيانات، فتبقى الأزرار صحيحة بعد إعادة تشغيل الـ seeders.
+     */
+    private function quickLoginAccounts(): array
+    {
+        if (! app()->environment('local') || ! config('dev.quick_login.enabled')) {
+            return [];
+        }
+
+        $password = config('dev.quick_login.password');
+
+        return collect(config('dev.quick_login.accounts', []))
+            ->map(function (array $account) use ($password) {
+                // الأقل أدواراً أولاً: يعطي حساباً "نقياً" لاختبار الدور المطلوب وحده
+                $user = User::query()
+                    ->where('is_active', true)
+                    ->whereHas('roles', fn ($q) => $q->where('name', $account['role']))
+                    ->withCount('roles')
+                    ->orderBy('roles_count')
+                    ->orderBy('id')
+                    ->first();
+
+                if (! $user) {
+                    return null;
+                }
+
+                return $account + [
+                    'email'    => $user->email,
+                    'user'     => $user->name,
+                    'password' => $password,
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
     }
 
     /**
@@ -32,7 +75,7 @@ class AuthenticatedSessionController extends Controller
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
-            
+
             return back()->withErrors([
                 'email' => 'تم إلغاء تفعيل حسابك. يرجى التواصل مع الإدارة.',
             ]);

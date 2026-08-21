@@ -10,6 +10,18 @@ class ApprovalDelegation extends Model
 {
     use SoftDeletes;
 
+    /**
+     * أنواع سير العمل القابلة للتفويض. ثابت واحد يستخدمه نموذج الإنشاء
+     * (خيارات الحقل) وعرض القائمة (ترجمة القيم المخزَّنة) معاً، بدل تكرار
+     * الخريطة في الكنترولر والعرض كما كان سابقاً.
+     */
+    public const WORKFLOW_TYPES = [
+        'leave_request' => 'طلب الإجازة',
+        'expense_request' => 'طلب المصروفات',
+        'employee_job_change' => 'تغيير الوظيفة',
+        'overtime_request' => 'العمل الإضافي',
+    ];
+
     protected $fillable = [
         'delegator_id',
         'delegate_id',
@@ -50,6 +62,24 @@ class ApprovalDelegation extends Model
             'cancelled' => 'ملغي',
             default => $this->status,
         };
+    }
+
+    /**
+     * أسماء أنواع الطلبات بالعربية — كانت تُعرض بمفاتيحها الخام
+     * (leave_request بدل «طلب الإجازة») في قائمة التفويضات.
+     *
+     * @return array<int, string>
+     */
+    public function getWorkflowTypeLabelsAttribute(): array
+    {
+        if (empty($this->workflow_types)) {
+            return [];
+        }
+
+        return array_map(
+            fn (string $type) => self::WORKFLOW_TYPES[$type] ?? $type,
+            $this->workflow_types
+        );
     }
 
     public function isActive(): bool

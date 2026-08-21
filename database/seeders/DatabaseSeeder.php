@@ -29,7 +29,8 @@ class DatabaseSeeder extends Seeder
             // ========== المرحلة 3: المستخدمين والموظفين ==========
             AdminUserSeeder::class,
             EmployeeSeeder::class,
-            
+            DepartmentStructureSeeder::class,
+
             // ========== المرحلة 4: الإجازات ==========
             LeaveTypeSeeder::class,
             LeaveBalanceSeeder::class,
@@ -102,6 +103,7 @@ class DatabaseSeeder extends Seeder
             // ========== المرحلة 14: سير العمل والتعاقب ==========
             WorkflowSeeder::class,
             WorkflowInstanceSeeder::class,
+            ApprovalDelegationSeeder::class,
             SuccessionPlanSeeder::class,
             SuccessionCandidateSeeder::class,
             

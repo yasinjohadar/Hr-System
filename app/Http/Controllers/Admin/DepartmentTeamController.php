@@ -168,7 +168,14 @@ class DepartmentTeamController extends Controller
 
         $tree = $this->buildDepartmentTree($departments, null);
 
-        return view('admin.pages.team.structure', compact('tree', 'departments'));
+        // إحصاءات البنر — من نفس المجموعة المُحمَّلة أصلاً، بلا استعلامات إضافية
+        $stats = [
+            'departments' => $departments->count(),
+            'sub_departments' => $departments->whereNotNull('parent_id')->count(),
+            'employees' => $departments->sum(fn ($dept) => $dept->employees->count()),
+        ];
+
+        return view('admin.pages.team.structure', compact('tree', 'departments', 'stats'));
     }
 
     protected function getMyPendingApprovalsCount($user, array $employeeIds): int

@@ -43,7 +43,11 @@
 
 <!-- Custom-Switcher JS -->
 <script src="{{ asset('assets/js/custom-switcher.min.js') }}"></script>
+<script src="{{ asset('assets/js/rtl-lock.js') }}"></script>
 
 <!-- Custom JS -->
 <script src="{{ asset('assets/js/custom.js') }}"></script>
+
+<!-- Theme Panel (إعدادات العرض) JS -->
+<script src="{{ asset('assets/js/theme-panel.js') }}"></script>
 <script src="{{ asset('assets/js/admin-confirm.js') }}"></script>

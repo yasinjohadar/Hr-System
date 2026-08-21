@@ -42,7 +42,26 @@ class CountryController extends Controller
 
         $countries = $countriesQuery->orderBy('sort_order')->orderBy('name')->paginate(20);
 
-        return view("admin.pages.countries.index", compact("countries"));
+        // فلترة عبر AJAX: نرجّع الأجزاء المتغيّرة فقط.
+        // الإحصاءات ليست ضمنها لأنها إجماليات عامة لا تتأثّر بالفلاتر.
+        if ($request->ajax() || $request->boolean('ajax')) {
+            return response()->json([
+                'html_rows'       => view('admin.pages.countries._index_rows', compact('countries'))->render(),
+                'html_pagination' => view('admin.pages.countries._index_pagination', compact('countries'))->render(),
+                'html_meta'       => view('admin.pages.countries._index_meta', compact('countries'))->render(),
+                'total'           => $countries->total(),
+            ]);
+        }
+
+        // إحصاءات البنر — أربعة استعلامات بسيطة (لا حاجة لتجميع؛ عمودان بوليانيان فقط)
+        $stats = [
+            'total'         => (int) Country::count(),
+            'active'        => (int) Country::where('is_active', true)->count(),
+            'inactive'      => (int) Country::where('is_active', false)->count(),
+            'with_branches' => (int) Country::has('branches')->count(),
+        ];
+
+        return view("admin.pages.countries.index", compact("countries", "stats"));
     }
 
     /**
@@ -150,9 +169,13 @@ class CountryController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request)
+    public function destroy(Request $request, string $id)
     {
-        $country = Country::findOrFail($request->id);
+        // كان يقرأ $request->id من حقل مخفي في مودال الحذف القديم بدل
+        // معرّف المسار — يعمل فقط مع ذلك المودال بالذات. النموذج المركزي
+        // الجديد (data-delete-url) يرسل _token فقط، فيجب قراءة المعرّف
+        // من المسار كبقية النظام.
+        $country = Country::findOrFail($id);
         $country->delete();
 
         return redirect()->route("admin.countries.index")->with("success", "تم حذف الدولة بنجاح");

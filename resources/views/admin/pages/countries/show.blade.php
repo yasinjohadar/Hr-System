@@ -4,96 +4,102 @@
     تفاصيل الدولة
 @stop
 
-@section('css')
-@stop
-
 @section('content')
     <div class="main-content app-content">
-        <div class="container-fluid">
-            <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
-                <div class="my-auto">
-                    <h5 class="page-title fs-21 mb-1">تفاصيل الدولة: {{ $country->name_ar ?? $country->name }}</h5>
+        <div class="container-fluid admin-page-shell">
+            @include('admin.pages.users.partials.alerts')
+
+            <div class="admin-page-banner">
+                <div class="admin-page-banner-main">
+                    <span class="admin-page-banner-icon">
+                        @if ($country->flag)
+                            <span class="fs-4">{{ $country->flag }}</span>
+                        @else
+                            <i class="ri-earth-line"></i>
+                        @endif
+                    </span>
+                    <div class="admin-page-banner-text">
+                        <h1>{{ $country->name_ar ?? $country->name }}</h1>
+                        <p>{{ $country->code }} @if ($country->code3) — {{ $country->code3 }} @endif</p>
+                    </div>
                 </div>
-                <div>
-                    <a href="{{ route('admin.countries.index') }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-right me-2"></i>العودة للقائمة
-                    </a>
+                <div class="admin-page-banner-actions">
                     @can('country-edit')
-                    <a href="{{ route('admin.countries.edit', $country->id) }}" class="btn btn-primary">
-                        <i class="fas fa-edit me-2"></i>تعديل
-                    </a>
+                        <a href="{{ route('admin.countries.edit', $country->id) }}" class="admin-btn admin-btn-light">
+                            <i class="ri-pencil-line"></i>
+                            تعديل
+                        </a>
                     @endcan
+                    <a href="{{ route('admin.countries.index') }}" class="admin-btn admin-btn-secondary">
+                        <i class="ri-arrow-right-line"></i>
+                        العودة للقائمة
+                    </a>
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-xl-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">معلومات الدولة</h5>
+            <div class="admin-report-stats admin-report-stats-4 mb-4">
+                <div class="admin-report-stat admin-report-stat-static admin-report-stat-blue">
+                    <span class="admin-report-stat-icon"><i class="ri-team-line"></i></span>
+                    <span class="admin-report-stat-label">عدد الموظفين</span>
+                    <span class="admin-report-stat-value" style="color:#2563eb;">{{ $country->employees_count ?? 0 }}</span>
+                </div>
+                <div class="admin-report-stat admin-report-stat-static admin-report-stat-cyan">
+                    <span class="admin-report-stat-icon"><i class="ri-building-2-line"></i></span>
+                    <span class="admin-report-stat-label">عدد الفروع</span>
+                    <span class="admin-report-stat-value" style="color:#0891b2;">{{ $country->branches_count ?? 0 }}</span>
+                </div>
+                <div class="admin-report-stat admin-report-stat-static admin-report-stat-green">
+                    <span class="admin-report-stat-icon"><i class="ri-hashtag"></i></span>
+                    <span class="admin-report-stat-label">ترتيب العرض</span>
+                    <span class="admin-report-stat-value" style="color:#059669;">{{ $country->sort_order }}</span>
+                </div>
+                <div class="admin-report-stat admin-report-stat-static admin-report-stat-amber">
+                    <span class="admin-report-stat-icon"><i class="ri-shield-check-line"></i></span>
+                    <span class="admin-report-stat-label">الحالة</span>
+                    <span class="admin-report-stat-value" style="color:{{ $country->is_active ? '#059669' : '#dc2626' }};">
+                        {{ $country->is_active ? 'نشط' : 'غير نشط' }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="admin-page-card">
+                <div class="card-toolbar">
+                    <h5 class="mb-0 fw-bold">معلومات الدولة</h5>
+                </div>
+                <div class="admin-form-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="admin-form-label mb-0">اسم الدولة (إنجليزي)</label>
+                            <div>{{ $country->name }}</div>
                         </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">اسم الدولة (إنجليزي):</label>
-                                    <p class="form-control-plaintext">{{ $country->name }}</p>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">اسم الدولة (عربي):</label>
-                                    <p class="form-control-plaintext">{{ $country->name_ar ?? '-' }}</p>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label fw-bold">كود الدولة (2 أحرف):</label>
-                                    <p class="form-control-plaintext"><span class="badge bg-info">{{ $country->code }}</span></p>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label fw-bold">كود الدولة (3 أحرف):</label>
-                                    <p class="form-control-plaintext">{{ $country->code3 ?? '-' }}</p>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label fw-bold">رمز الهاتف:</label>
-                                    <p class="form-control-plaintext">{{ $country->phone_code ?? '-' }}</p>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label fw-bold">رمز العملة:</label>
-                                    <p class="form-control-plaintext">{{ $country->currency_code ?? '-' }}</p>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label fw-bold">العلم:</label>
-                                    <p class="form-control-plaintext">
-                                        @if ($country->flag)
-                                            <span style="font-size: 32px;">{{ $country->flag }}</span>
-                                        @else
-                                            <span class="badge bg-secondary">{{ $country->code }}</span>
-                                        @endif
-                                    </p>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label fw-bold">ترتيب العرض:</label>
-                                    <p class="form-control-plaintext">{{ $country->sort_order }}</p>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label fw-bold">الحالة:</label>
-                                    <p class="form-control-plaintext">
-                                        @if ($country->is_active)
-                                            <span class="badge bg-success">نشط</span>
-                                        @else
-                                            <span class="badge bg-danger">غير نشط</span>
-                                        @endif
-                                    </p>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">عدد الموظفين:</label>
-                                    <p class="form-control-plaintext">
-                                        <span class="badge bg-primary">{{ $country->employees_count ?? 0 }}</span>
-                                    </p>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">عدد الفروع:</label>
-                                    <p class="form-control-plaintext">
-                                        <span class="badge bg-primary">{{ $country->branches_count ?? 0 }}</span>
-                                    </p>
-                                </div>
+                        <div class="col-md-6">
+                            <label class="admin-form-label mb-0">اسم الدولة (عربي)</label>
+                            <div>{{ $country->name_ar ?? '—' }}</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="admin-form-label mb-0">كود الدولة (2 أحرف)</label>
+                            <div><span class="admin-badge admin-badge-role">{{ $country->code }}</span></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="admin-form-label mb-0">كود الدولة (3 أحرف)</label>
+                            <div>{{ $country->code3 ?? '—' }}</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="admin-form-label mb-0">رمز الهاتف</label>
+                            <div>{{ $country->phone_code ? '+' . ltrim($country->phone_code, '+') : '—' }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="admin-form-label mb-0">رمز العملة</label>
+                            <div>{{ $country->currency_code ?? '—' }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="admin-form-label mb-0">العلم</label>
+                            <div>
+                                @if ($country->flag)
+                                    <span class="fs-4">{{ $country->flag }}</span>
+                                @else
+                                    <span class="admin-badge admin-badge-muted">{{ $country->code }}</span>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -102,7 +108,3 @@
         </div>
     </div>
 @stop
-
-@section('js')
-@stop
-

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Admin\Concerns\ScopesByDepartment;
 use App\Http\Controllers\Controller;
+use App\Support\FormulaEvaluator;
+use Illuminate\Support\Facades\Log;
 use App\Support\AuditableAction;
 use App\Models\Payroll;
 use App\Models\PayrollItem;
@@ -73,7 +75,34 @@ class PayrollController extends Controller
         $employees = $this->scopeEmployeesQuery(Employee::where('is_active', true))->get();
         $currencies = Currency::where('is_active', true)->get();
 
-        return view('admin.pages.payrolls.index', compact('payrolls', 'employees', 'currencies'));
+        // إحصاءات البنر — تمرّ بنفس نطاق الأقسام حتى لا يرى رئيس القسم
+        // أرقاماً تشمل موظفين خارج نطاقه. استعلام واحد مجمّع لا خمسة count().
+        $statsQuery = Payroll::query();
+        $this->scopeByEmployeeQuery($statsQuery);
+        $counts = $statsQuery->selectRaw('status, COUNT(*) as aggregate')
+            ->groupBy('status')
+            ->pluck('aggregate', 'status');
+
+        $stats = [
+            'total'      => (int) $counts->sum(),
+            'draft'      => (int) $counts->get('draft', 0),
+            'calculated' => (int) $counts->get('calculated', 0),
+            'approved'   => (int) $counts->get('approved', 0),
+            'paid'       => (int) $counts->get('paid', 0),
+        ];
+
+        // فلترة عبر AJAX: نرجّع الأجزاء المتغيّرة فقط.
+        // الإحصاءات ليست ضمنها لأنها إجماليات عامة لا تتأثّر بالفلاتر.
+        if ($request->ajax() || $request->boolean('ajax')) {
+            return response()->json([
+                'html_rows'       => view('admin.pages.payrolls._index_rows', compact('payrolls'))->render(),
+                'html_pagination' => view('admin.pages.payrolls._index_pagination', compact('payrolls'))->render(),
+                'html_meta'       => view('admin.pages.payrolls._index_meta', compact('payrolls'))->render(),
+                'total'           => $payrolls->total(),
+            ]);
+        }
+
+        return view('admin.pages.payrolls.index', compact('payrolls', 'employees', 'currencies', 'stats'));
     }
 
     public function create()
@@ -448,21 +477,73 @@ class PayrollController extends Controller
     }
 
     /**
-     * تقييم الصيغة
+     * ساعات العمل اليومية المفترضة عند حساب أجر الساعة.
+     *
+     * لا يوجد إعداد لها في النظام حتى الآن، و8 هو العُرف السائد. تتماشى مع
+     * قاعدة الراتب اليومي المستخدمة في calculateLeaves (الراتب / 30).
+     */
+    private const WORK_HOURS_PER_DAY = 8;
+
+    /**
+     * المتغيّرات المتاحة لصيغ مكوّنات الرواتب.
+     *
+     * أي متغيّر غير مذكور هنا يجعل الصيغة تفشل بأمان (تُرجع صفراً ويُسجّل
+     * تحذير) بدل أن تنهار الصفحة.
+     *
+     * @return array<string, float>
+     */
+    private function formulaVariables(float $baseSalary, Employee $employee, Payroll $payroll): array
+    {
+        $dailySalary = $baseSalary / 30;
+
+        return [
+            'base_salary'    => $baseSalary,
+            'daily_rate'     => $dailySalary,
+            'hourly_rate'    => $dailySalary / self::WORK_HOURS_PER_DAY,
+            'working_days'   => (float) ($payroll->working_days ?? 0),
+            'present_days'   => (float) ($payroll->present_days ?? 0),
+            'absent_days'    => (float) ($payroll->absent_days ?? 0),
+            'leave_days'     => (float) ($payroll->leave_days ?? 0),
+            'late_days'      => (float) ($payroll->late_days ?? 0),
+            // hours و overtime_hours مترادفان — الصيغ المخزّنة تستخدم hours
+            'hours'          => (float) ($payroll->overtime_hours ?? 0),
+            'overtime_hours' => (float) ($payroll->overtime_hours ?? 0),
+        ];
+    }
+
+    /**
+     * تقييم صيغة مكوّن الراتب.
+     *
+     * كان هذا التابع يستدعي eval() على نصّ الصيغة القادم من قاعدة البيانات:
+     * ثغرة تنفيذ كود (من يعدّل صيغة مكوّن ينفّذ PHP على الخادم)، وكان ينهار
+     * أيضاً لأن المعرّف غير المعروف يرمي \Error لا \Exception فلا يلتقطه
+     * catch (\Exception) — وهو سبب خطأ 500 في زرّ «حساب».
+     *
+     * البديل App\Support\FormulaEvaluator: مُحلِّل حسابي لا ينفّذ أي كود.
      */
     private function evaluateFormula(string $formula, float $baseSalary, Employee $employee, Payroll $payroll): float
     {
-        // استبدال المتغيرات في الصيغة
-        $formula = str_replace('{base_salary}', $baseSalary, $formula);
-        $formula = str_replace('{present_days}', $payroll->present_days, $formula);
-        $formula = str_replace('{working_days}', $payroll->working_days, $formula);
-        
-        // تقييم الصيغة (يجب التأكد من الأمان)
+        $formula = trim($formula);
+
+        if ($formula === '') {
+            return 0.0;
+        }
+
         try {
-            $result = @eval("return $formula;");
-            return is_numeric($result) ? (float)$result : 0;
-        } catch (\Exception $e) {
-            return 0;
+            return FormulaEvaluator::evaluate(
+                $formula,
+                $this->formulaVariables($baseSalary, $employee, $payroll)
+            );
+        } catch (\Throwable $e) {
+            // نُسجّل ونُرجع صفراً: صيغة واحدة معطوبة لا يجوز أن تُسقط
+            // احتساب الكشف كاملاً.
+            Log::warning('تعذّر تقييم صيغة مكوّن راتب', [
+                'formula' => $formula,
+                'payroll' => $payroll->id,
+                'reason'  => $e->getMessage(),
+            ]);
+
+            return 0.0;
         }
     }
 

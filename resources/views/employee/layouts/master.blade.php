@@ -18,7 +18,7 @@
     @stack('styles')
 </head>
 
-<body>
+<body class="employee-portal">
 
 
     @include('employee.layouts.switcher')

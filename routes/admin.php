@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\EmployeeController;
+use App\Http\Controllers\Admin\GlobalSearchController;
+use App\Http\Controllers\Admin\HeaderPanelController;
 use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\DepartmentHeadController;
 use App\Http\Controllers\Admin\BranchController;
@@ -118,6 +120,12 @@ Route::middleware(['auth', 'check.user.active', 'ensure.admin', 'two.factor'])->
     Route::post('employees/{employee}/login-as', [EmployeeController::class, 'loginAs'])->name('employees.login-as');
     Route::post('employees/{employee}/toggle-active', [EmployeeController::class, 'toggleActive'])->name('employees.toggle-active');
     Route::resource('employees', EmployeeController::class);
+
+    // بحث الهيدر السريع عن الأشخاص (موظفين ومستخدمين)
+    Route::get('search/people', [GlobalSearchController::class, 'people'])->name('search.people');
+
+    // لوحة الهيدر الجانبية: النشطون الآن وأصحاب الصلاحيات الإدارية
+    Route::get('header-panel/people', [HeaderPanelController::class, 'people'])->name('header-panel.people');
 
     // Routes للمستخدمين
     Route::get('users/search', [UserController::class, 'search'])->name('users.search');

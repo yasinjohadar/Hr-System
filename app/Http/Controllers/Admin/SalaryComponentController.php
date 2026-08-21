@@ -41,9 +41,37 @@ class SalaryComponentController extends Controller
             $query->where('is_active', $request->input('is_active'));
         }
 
+        // فلتر طريقة الحساب — العمود موجود ويُعرض في الجدول، ولم يكن مفلتراً
+        if ($request->filled('calculation_type')) {
+            $query->where('calculation_type', $request->input('calculation_type'));
+        }
+
         $components = $query->latest()->paginate(20);
 
-        return view('admin.pages.salary-components.index', compact('components'));
+        // فلترة عبر AJAX: نرجّع الأجزاء المتغيّرة فقط.
+        // الإحصاءات ليست ضمنها لأنها إجماليات عامة لا تتأثّر بالفلاتر.
+        if ($request->ajax() || $request->boolean('ajax')) {
+            return response()->json([
+                'html_rows'       => view('admin.pages.salary-components._index_rows', compact('components'))->render(),
+                'html_pagination' => view('admin.pages.salary-components._index_pagination', compact('components'))->render(),
+                'html_meta'       => view('admin.pages.salary-components._index_meta', compact('components'))->render(),
+                'total'           => $components->total(),
+            ]);
+        }
+
+        // إحصاءات البنر — استعلام واحد مجمّع بدل أربعة count() منفصلة
+        $counts = SalaryComponent::selectRaw('type, COUNT(*) as aggregate')
+            ->groupBy('type')
+            ->pluck('aggregate', 'type');
+
+        $stats = [
+            'total'      => (int) $counts->sum(),
+            'allowance'  => (int) $counts->get('allowance', 0),
+            'deduction'  => (int) $counts->get('deduction', 0),
+            'bonus'      => (int) $counts->get('bonus', 0),
+        ];
+
+        return view('admin.pages.salary-components.index', compact('components', 'stats'));
     }
 
     public function create()

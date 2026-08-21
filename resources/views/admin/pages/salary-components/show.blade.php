@@ -6,25 +6,39 @@
 
 @section('content')
     <div class="main-content app-content">
-        <div class="container-fluid">
-            <div class="page-header d-flex justify-content-between align-items-center my-4">
-                <h5 class="page-title mb-0">تفاصيل مكون الراتب</h5>
-                <div class="d-flex gap-2">
-                    <a href="{{ route('admin.salary-components.index') }}" class="btn btn-secondary btn-sm">رجوع</a>
+        <div class="container-fluid admin-page-shell">
+            @include('admin.pages.users.partials.alerts')
+
+            <div class="admin-page-banner">
+                <div class="admin-page-banner-main">
+                    <span class="admin-page-banner-icon"><i class="ri-list-settings-line"></i></span>
+                    <div class="admin-page-banner-text">
+                        <h1>تفاصيل مكوّن الراتب</h1>
+                        <p>{{ $component->name_ar ?? $component->name }} — {{ $component->code }}</p>
+                    </div>
+                </div>
+                <div class="admin-page-banner-actions">
                     @can('salary-component-edit')
-                    <a href="{{ route('admin.salary-components.edit', $component->id) }}" class="btn btn-primary btn-sm">تعديل</a>
+                        <a href="{{ route('admin.salary-components.edit', $component->id) }}" class="admin-btn admin-btn-light">
+                            <i class="ri-pencil-line"></i>
+                            تعديل
+                        </a>
                     @endcan
+                    <a href="{{ route('admin.salary-components.index') }}" class="admin-btn admin-btn-secondary">
+                        <i class="ri-arrow-right-line"></i>
+                        العودة للقائمة
+                    </a>
                 </div>
             </div>
 
             <div class="row">
                 <div class="col-md-8">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">معلومات المكون</h5>
+                    <div class="admin-page-card">
+                        <div class="card-toolbar">
+                            <h5 class="mb-0 fw-bold">معلومات المكون</h5>
                         </div>
-                        <div class="card-body">
-                            <table class="table table-bordered">
+                        <div class="admin-form-body">
+                            <table class="admin-data-table admin-data-table-sm">
                                 <tr>
                                     <th width="200">الكود</th>
                                     <td>{{ $component->code }}</td>
@@ -40,7 +54,7 @@
                                 <tr>
                                     <th>النوع</th>
                                     <td>
-                                        <span class="badge bg-{{ match($component->type) {
+                                        <span class="admin-badge admin-badge-{{ match($component->type) {
                                             'allowance' => 'success',
                                             'deduction' => 'danger',
                                             'bonus' => 'info',
@@ -86,7 +100,7 @@
                                 <tr>
                                     <th>الحالة</th>
                                     <td>
-                                        <span class="badge bg-{{ $component->is_active ? 'success' : 'secondary' }}">
+                                        <span class="admin-badge admin-badge-{{ $component->is_active ? 'success' : 'muted' }}">
                                             {{ $component->is_active ? 'نشط' : 'غير نشط' }}
                                         </span>
                                     </td>

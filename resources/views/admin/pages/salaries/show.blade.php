@@ -37,21 +37,33 @@
 
 @section('content')
     <div class="main-content app-content">
-        <div class="container-fluid">
-            <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
-                <div class="my-auto">
-                    <h5 class="page-title fs-21 mb-1">تفاصيل الراتب</h5>
-                    <p class="text-muted small mb-0">{{ $salary->month_name }} {{ $salary->salary_year }} — {{ $salary->employee->full_name ?? $salary->employee->first_name . ' ' . $salary->employee->last_name }}</p>
+        <div class="container-fluid admin-page-shell">
+            @include('admin.pages.users.partials.alerts')
+
+            {{--
+                البنر موحّد مع بقية الصفحات، لكن بقية هذه الصفحة تحتفظ
+                بتصميمها الخاص (salary-show-hero / salary-breakdown-table)
+                لأنه مبني لعرض تفاصيل الراتب تحديداً لا جدول بيانات عاماً.
+            --}}
+            <div class="admin-page-banner">
+                <div class="admin-page-banner-main">
+                    <span class="admin-page-banner-icon"><i class="ri-file-list-3-line"></i></span>
+                    <div class="admin-page-banner-text">
+                        <h1>تفاصيل الراتب</h1>
+                        <p>{{ $salary->month_name }} {{ $salary->salary_year }} — {{ $salary->employee->full_name ?? $salary->employee->first_name . ' ' . $salary->employee->last_name }}</p>
+                    </div>
                 </div>
-                <div class="d-flex flex-wrap gap-2 mt-2 mt-md-0">
-                    <a href="{{ route('admin.salaries.index') }}" class="btn btn-secondary btn-sm">
-                        <i class="fas fa-arrow-right me-1"></i>العودة للقائمة
-                    </a>
+                <div class="admin-page-banner-actions">
                     @can('salary-edit')
-                        <a href="{{ route('admin.salaries.edit', $salary->id) }}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-edit me-1"></i>تعديل
+                        <a href="{{ route('admin.salaries.edit', $salary->id) }}" class="admin-btn admin-btn-light">
+                            <i class="ri-pencil-line"></i>
+                            تعديل
                         </a>
                     @endcan
+                    <a href="{{ route('admin.salaries.index') }}" class="admin-btn admin-btn-secondary">
+                        <i class="ri-arrow-right-line"></i>
+                        العودة للقائمة
+                    </a>
                 </div>
             </div>
 
@@ -204,7 +216,7 @@
                             <div class="card-body p-0">
                                 <div class="table-responsive">
                                     <table class="table table-striped table-hover align-middle mb-0">
-                                        <thead class="table-light">
+                                        <thead>
                                             <tr>
                                                 <th class="ps-4">النوع</th>
                                                 <th>الوصف</th>
@@ -259,7 +271,7 @@
                         <div class="card-body p-0">
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle mb-0 salary-timeline-table">
-                                    <thead class="table-light">
+                                    <thead>
                                         <tr>
                                             <th class="ps-4">المصدر</th>
                                             <th>الفترة</th>
@@ -304,7 +316,7 @@
                                                     @endif
                                                 </td>
                                                 <td class="pe-4 text-end">
-                                                    <a href="{{ $row['url'] }}" class="btn btn-sm btn-outline-primary">
+                                                    <a href="{{ $row['url'] }}" class="admin-btn admin-btn-primary admin-btn-sm">
                                                         عرض التفاصيل <i class="fas fa-chevron-left ms-1 small"></i>
                                                     </a>
                                                 </td>

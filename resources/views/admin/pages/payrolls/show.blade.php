@@ -6,25 +6,42 @@
 
 @section('content')
     <div class="main-content app-content">
-        <div class="container-fluid">
-            <div class="page-header d-flex justify-content-between align-items-center my-4">
-                <h5 class="page-title mb-0">تفاصيل كشف الراتب - {{ $payroll->payroll_code }}</h5>
-                <div class="d-flex gap-2">
-                    <a href="{{ route('admin.payrolls.index') }}" class="btn btn-secondary btn-sm">رجوع</a>
-                    @if($payroll->status == 'calculated' || $payroll->status == 'approved')
-                    <a href="{{ route('admin.payrolls.payslip', $payroll->id) }}" class="btn btn-info btn-sm" target="_blank">طباعة كشف الراتب</a>
-                    <a href="{{ route('admin.payrolls.payslip.pdf', $payroll->id) }}" class="btn btn-danger btn-sm" target="_blank">تحميل PDF</a>
+        <div class="container-fluid admin-page-shell">
+            @include('admin.pages.users.partials.alerts')
+
+            <div class="admin-page-banner">
+                <div class="admin-page-banner-main">
+                    <span class="admin-page-banner-icon"><i class="ri-file-paper-2-line"></i></span>
+                    <div class="admin-page-banner-text">
+                        <h1>تفاصيل كشف الراتب</h1>
+                        <p>{{ $payroll->payroll_code }} &mdash; {{ $payroll->employee->full_name }}</p>
+                    </div>
+                </div>
+                <div class="admin-page-banner-actions">
+                    @if (in_array($payroll->status, ['calculated', 'approved'], true))
+                        <a href="{{ route('admin.payrolls.payslip', $payroll->id) }}" class="admin-btn admin-btn-light" target="_blank" rel="noopener">
+                            <i class="ri-printer-line"></i>
+                            طباعة كشف الراتب
+                        </a>
+                        <a href="{{ route('admin.payrolls.payslip.pdf', $payroll->id) }}" class="admin-btn admin-btn-danger" target="_blank" rel="noopener">
+                            <i class="ri-file-pdf-line"></i>
+                            تحميل PDF
+                        </a>
                     @endif
+                    <a href="{{ route('admin.payrolls.index') }}" class="admin-btn admin-btn-secondary">
+                        <i class="ri-arrow-right-line"></i>
+                        العودة للقائمة
+                    </a>
                 </div>
             </div>
 
             <div class="row">
                 <div class="col-md-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">معلومات الموظف</h5>
+                    <div class="admin-page-card">
+                        <div class="card-toolbar">
+                            <h5 class="mb-0 fw-bold">معلومات الموظف</h5>
                         </div>
-                        <div class="card-body">
+                        <div class="admin-form-body">
                             <div class="row">
                                 <div class="col-md-3">
                                     <strong>الموظف:</strong> {{ $payroll->employee->full_name }}
@@ -37,7 +54,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <strong>الحالة:</strong>
-                                    <span class="badge bg-{{ match($payroll->status) {
+                                    <span class="admin-badge admin-badge-{{ match($payroll->status) {
                                         'draft' => 'secondary',
                                         'calculated' => 'info',
                                         'approved' => 'warning',
@@ -55,12 +72,12 @@
 
             <div class="row mt-3">
                 <div class="col-md-8">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">تفاصيل الراتب</h5>
+                    <div class="admin-page-card">
+                        <div class="card-toolbar">
+                            <h5 class="mb-0 fw-bold">تفاصيل الراتب</h5>
                         </div>
-                        <div class="card-body">
-                            <table class="table table-bordered">
+                        <div class="admin-form-body">
+                            <table class="admin-data-table">
                                 <thead>
                                     <tr>
                                         <th>البند</th>
@@ -110,12 +127,12 @@
                     </div>
 
                     @if($payroll->items->count() > 0)
-                    <div class="card mt-3">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">بنود الراتب</h5>
+                    <div class="admin-page-card mt-3">
+                        <div class="card-toolbar">
+                            <h5 class="mb-0 fw-bold">بنود الراتب</h5>
                         </div>
-                        <div class="card-body">
-                            <table class="table table-sm">
+                        <div class="admin-form-body">
+                            <table class="admin-data-table admin-data-table-sm">
                                 <thead>
                                     <tr>
                                         <th>النوع</th>
@@ -126,7 +143,7 @@
                                 <tbody>
                                     @foreach ($payroll->items as $item)
                                         <tr>
-                                            <td><span class="badge bg-{{ $item->item_type == 'allowance' ? 'success' : ($item->item_type == 'deduction' ? 'danger' : 'info') }}">{{ $item->item_type_name_ar }}</span></td>
+                                            <td><span class="admin-badge admin-badge-{{ $item->item_type == 'allowance' ? 'success' : ($item->item_type == 'deduction' ? 'danger' : 'role') }}">{{ $item->item_type_name_ar }}</span></td>
                                             <td>{{ $item->item_name_ar ?? $item->item_name }}</td>
                                             <td>{{ number_format($item->amount, 2) }}</td>
                                         </tr>
@@ -139,11 +156,11 @@
                 </div>
 
                 <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">معلومات الحضور</h5>
+                    <div class="admin-page-card">
+                        <div class="card-toolbar">
+                            <h5 class="mb-0 fw-bold">معلومات الحضور</h5>
                         </div>
-                        <div class="card-body">
+                        <div class="admin-form-body">
                             <p><strong>أيام العمل:</strong> {{ $payroll->working_days }}</p>
                             <p><strong>أيام الحضور:</strong> {{ $payroll->present_days }}</p>
                             <p><strong>أيام الغياب:</strong> {{ $payroll->absent_days }}</p>
@@ -151,29 +168,48 @@
                         </div>
                     </div>
 
-                    <div class="card mt-3">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">الإجراءات</h5>
+                    <div class="admin-page-card mt-3">
+                        <div class="card-toolbar">
+                            <h5 class="mb-0 fw-bold">الإجراءات</h5>
                         </div>
-                        <div class="card-body">
-                            @if($payroll->status == 'draft')
-                            <form action="{{ route('admin.payrolls.calculate', $payroll->id) }}" method="POST" class="mb-2">
-                                @csrf
-                                <button type="submit" class="btn btn-success w-100">حساب الراتب تلقائياً</button>
-                            </form>
+                        <div class="admin-form-body">
+                            {{--
+                                الحساب والموافقة عمليتان تغيّران حالة الكشف ولا رجعة فيهما
+                                من الواجهة، فتمرّان بمودال التأكيد المركزي (data-confirm).
+                                سابقاً كانتا تُنفَّذان بنقرة واحدة بلا أي تأكيد.
+                            --}}
+                            {{-- نفس آلية الفهرس: admin-post-action.js يبني نموذج POST عند التأكيد --}}
+                            @if ($payroll->status === 'draft')
+                                <button type="button" class="admin-btn admin-btn-primary w-100 mb-2"
+                                        data-post-url="{{ route('admin.payrolls.calculate', $payroll->id) }}"
+                                        data-post-confirm="احتساب كشف <strong>{{ $payroll->payroll_code }}</strong> تلقائياً؟"
+                                        data-post-title="احتساب الراتب"
+                                        data-post-type="info"
+                                        data-post-btn="احتساب">
+                                    <i class="ri-calculator-line"></i>
+                                    حساب الراتب تلقائياً
+                                </button>
                             @endif
 
-                            @if($payroll->status == 'calculated')
-                            <form action="{{ route('admin.payrolls.approve', $payroll->id) }}" method="POST" class="mb-2">
-                                @csrf
-                                <button type="submit" class="btn btn-warning w-100">الموافقة على الراتب</button>
-                            </form>
+                            @if ($payroll->status === 'calculated')
+                                <button type="button" class="admin-btn admin-btn-primary w-100 mb-2"
+                                        data-post-url="{{ route('admin.payrolls.approve', $payroll->id) }}"
+                                        data-post-confirm="الموافقة على كشف <strong>{{ $payroll->payroll_code }}</strong> بصافي {{ number_format($payroll->net_salary, 2) }}؟"
+                                        data-post-title="الموافقة على الراتب"
+                                        data-post-type="warning"
+                                        data-post-btn="موافقة">
+                                    <i class="ri-shield-check-line"></i>
+                                    الموافقة على الراتب
+                                </button>
                             @endif
 
                             @can('payroll-edit')
-                            @if($payroll->status != 'paid')
-                            <a href="{{ route('admin.payrolls.edit', $payroll->id) }}" class="btn btn-primary w-100 mb-2">تعديل</a>
-                            @endif
+                                @if ($payroll->status !== 'paid')
+                                    <a href="{{ route('admin.payrolls.edit', $payroll->id) }}" class="admin-btn admin-btn-secondary w-100 mb-2">
+                                        <i class="ri-pencil-line"></i>
+                                        تعديل
+                                    </a>
+                                @endif
                             @endcan
                         </div>
                     </div>

@@ -4,9 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class LeaveAccrualRule extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'leave_type_id',
         'country_id',

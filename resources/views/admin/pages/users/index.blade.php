@@ -6,7 +6,7 @@
 
 @section('content')
     <div class="main-content app-content">
-        <div class="container-fluid">
+        <div class="container-fluid admin-page-shell">
             @include('admin.pages.users.partials.alerts')
 
             <div class="admin-page-banner">

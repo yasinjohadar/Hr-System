@@ -1,0 +1,18 @@
+    /**
+     * تقييم الصيغة
+     */
+    private function evaluateFormula(string $formula, float $baseSalary, Employee $employee, Payroll $payroll): float
+    {
+        // استبدال المتغيرات في الصيغة
+        $formula = str_replace('{base_salary}', $baseSalary, $formula);
+        $formula = str_replace('{present_days}', $payroll->present_days, $formula);
+        $formula = str_replace('{working_days}', $payroll->working_days, $formula);
+        
+        // تقييم الصيغة (يجب التأكد من الأمان)
+        try {
+            $result = @eval("return $formula;");
+            return is_numeric($result) ? (float)$result : 0;
+        } catch (\Exception $e) {
+            return 0;
+        }
+    }

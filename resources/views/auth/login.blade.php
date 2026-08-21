@@ -95,6 +95,31 @@
                     </div>
                 @endif
 
+                {{-- دخول سريع (بيئة التطوير فقط) --}}
+                @if (! empty($quickLoginAccounts ?? []))
+                    <div class="auth-quick" data-quick-login>
+                        <div class="auth-quick-head">
+                            <span class="auth-quick-badge">بيئة التطوير</span>
+                            <span class="auth-quick-title">دخول سريع</span>
+                        </div>
+                        <div class="auth-quick-grid">
+                            @foreach ($quickLoginAccounts as $account)
+                                <button
+                                    type="button"
+                                    class="auth-quick-btn"
+                                    data-quick-email="{{ $account['email'] }}"
+                                    data-quick-password="{{ $account['password'] }}"
+                                    title="{{ $account['hint'] ?? '' }}"
+                                >
+                                    <span class="auth-quick-btn-label">{{ $account['label'] }}</span>
+                                    <span class="auth-quick-btn-meta">{{ $account['email'] }}</span>
+                                </button>
+                            @endforeach
+                        </div>
+                        <p class="auth-quick-note">تعبئة تلقائية وتسجيل دخول فوري. تُعطّل بـ <code>DEV_QUICK_LOGIN=false</code>.</p>
+                    </div>
+                @endif
+
                 <form method="POST" action="{{ route('login') }}" id="login-form" novalidate>
                     @csrf
 
