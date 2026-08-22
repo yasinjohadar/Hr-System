@@ -3,11 +3,8 @@
 
             <!-- Start::main-sidebar-header -->
             <div class="main-sidebar-header">
-                <a href="index.html" class="header-logo">
-                    <img src="../assets/images/brand-logos/desktop-logo.png" alt="logo" class="desktop-logo">
-                    <img src="../assets/images/brand-logos/toggle-logo.png" alt="logo" class="toggle-logo">
-                    <img src="../assets/images/brand-logos/desktop-white.png" alt="logo" class="desktop-white">
-                    <img src="../assets/images/brand-logos/toggle-white.png" alt="logo" class="toggle-white">
+                <a href="{{ route('employee.dashboard') }}" class="header-logo hr-brand">
+                    <span class="hr-brand__title">نظام الموارد البشرية</span>
                 </a>
             </div>
             <!-- End::main-sidebar-header -->

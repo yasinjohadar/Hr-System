@@ -37,10 +37,6 @@
 
 
 
-        @include('employee.layouts.offcanvas-sidebar')
-
-
-
         @include('employee.layouts.main-sidebar')
 
 

@@ -41,3 +41,9 @@
 <link rel="stylesheet" href="{{ asset('assets/css/theme-panel.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/css/flat-surfaces.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/css/admin-confirm-modal.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/sidebar-nav-critical.css') }}">
+
+<!-- Sidebar icons + header search/icons + collapse button (نفس تصميم بوابة الإدارة) Css -->
+<link rel="stylesheet" href="{{ asset('assets/css/admin-sidebar.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/admin-sidebar-brand.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/admin-header.css') }}">

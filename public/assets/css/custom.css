@@ -8,112 +8,14 @@ a {
     font-weight: bold !important;
 }
 
-/* ===== Sidebar (بوابة الموظف) — colored icons & active state =====
-   أُعيد نطاق هذه القواعد من .app-sidebar إلى .employee-portal .app-sidebar
-   عند نقل تصميم شريط الإدارة من مشروع claudSoft-lms_laravel.
-   السبب: هذه القواعد تستخدم !important على الحشو ووزن الخط، فكانت
-   تتغلّب على القواعد المنقولة في assets/css/admin-sidebar.css. التقييد
-   بالبوابة يُبقي شريط الموظف كما كان بالضبط ويُخلي الطريق لشريط الإدارة. */
-.employee-portal .app-sidebar .main-menu {
-    padding: 0.5rem 0 1rem;
-}
-
-.employee-portal .app-sidebar .slide-menu .side-menu__item {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-}
-
+/* ===== Sidebar (بوابة الموظف) =====
+   نفس تصميم شريط الإدارة (assets/css/admin-sidebar.css) يُطبَّق حرفياً
+   على .employee-portal .app-sidebar أيضاً بطلب صريح — الأيقونات الملوّنة
+   والمسافات والخط كلها من ذلك الملف. القواعد القديمة هنا كانت تستخدم
+   !important فتتغلّب عليه، فأُزيلت وأُبقي فقط إخفاء فواصل التصنيف
+   (slide__category) الخاصة ببوابة الموظف والتي لا وجود لها في شريط الإدارة. */
 .employee-portal .app-sidebar .slide__category {
     display: none !important;
-}
-
-.employee-portal .app-sidebar .main-menu > .slide > .side-menu__item {
-    padding-block: 0.6rem !important;
-    padding-inline: 0.85rem 1rem !important;
-    margin-inline: 0.65rem;
-    margin-block: 0.1rem;
-    border-radius: 12px;
-    font-weight: 600 !important;
-    transition: background 0.2s ease, color 0.2s ease;
-}
-
-.employee-portal .app-sidebar .slide-menu.child1 .side-menu__item,
-.employee-portal .app-sidebar .slide-menu.child2 .side-menu__item {
-    padding-block: 0.45rem !important;
-    padding-inline: 0.75rem 0.65rem !important;
-    margin-inline: 0.5rem 0.75rem;
-    border-radius: 10px;
-    font-weight: 600 !important;
-}
-
-.employee-portal .app-sidebar .slide-menu.child1 .side-menu__item::before,
-.employee-portal .app-sidebar .slide-menu.child2 .side-menu__item::before,
-.employee-portal .app-sidebar .slide-menu.child3 .side-menu__item::before {
-    display: none !important;
-}
-
-.employee-portal .app-sidebar .slide.has-sub .slide-menu {
-    padding-inline-start: 0.35rem !important;
-    padding-block: 0.15rem 0.25rem;
-}
-
-/* العنصر النشط — تمييز لطيف */
-.employee-portal .app-sidebar .side-menu__item.active::before {
-    display: none !important;
-}
-
-.employee-portal .app-sidebar .side-menu__item.active {
-    position: relative;
-    font-weight: 700 !important;
-    color: rgb(var(--primary-rgb, 74, 125, 255)) !important;
-    background: rgba(var(--primary-rgb, 74, 125, 255), 0.07) !important;
-    box-shadow: inset 2px 0 0 0 rgba(var(--primary-rgb, 74, 125, 255), 0.55);
-}
-
-.employee-portal .app-sidebar .side-menu__item.active .side-menu__label {
-    color: rgb(var(--primary-rgb, 74, 125, 255)) !important;
-    font-weight: 700 !important;
-}
-
-.employee-portal .app-sidebar .side-menu__item.active .menu-icon-box {
-    opacity: 1;
-}
-
-.employee-portal .app-sidebar .slide.has-sub.open > .side-menu__item.active {
-    background: rgba(var(--primary-rgb, 74, 125, 255), 0.05) !important;
-    box-shadow: inset 2px 0 0 0 rgba(var(--primary-rgb, 74, 125, 255), 0.4);
-}
-
-.employee-portal .app-sidebar .slide.has-sub.open > .side-menu__item .side-menu__angle {
-    transform: rotate(90deg);
-    color: rgb(var(--primary-rgb, 74, 125, 255));
-    opacity: 0.85;
-}
-
-.employee-portal .app-sidebar .slide.active > .side-menu__item:not(.active) {
-    color: var(--menu-prime-color);
-}
-
-.employee-portal .app-sidebar .side-menu__item:not(.active):hover {
-    background: rgba(var(--primary-rgb, 74, 125, 255), 0.04);
-    border-radius: 12px;
-}
-
-[data-theme-mode="dark"] .employee-portal .app-sidebar .side-menu__item.active {
-    background: rgba(var(--primary-rgb, 74, 125, 255), 0.12) !important;
-    color: #a5c4fc !important;
-    box-shadow: inset 2px 0 0 0 rgba(147, 197, 253, 0.7);
-}
-
-[data-theme-mode="dark"] .employee-portal .app-sidebar .side-menu__item.active .side-menu__label {
-    color: #a5c4fc !important;
-}
-
-.employee-portal .app-sidebar .side-menu__label {
-    font-size: 0.84rem;
-    line-height: 1.35;
-    font-weight: 600 !important;
 }
 
 .menu-icon-box {
